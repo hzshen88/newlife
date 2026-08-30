@@ -34,6 +34,12 @@ class StructuralOwnershipConflictError(ContractError):
     pass
 
 
+class StageValidationError(SpecValidationError):
+    """Staging declaration violations (v0.1b R2): malformed schedule staging
+    schema, unknown/self-looping `after` references, cyclic DAGs, missing
+    declarations, mixed Step/Process stages, cross-stage wiring roots."""
+
+
 class ReadOnlyStateError(ContractError):
     pass
 
