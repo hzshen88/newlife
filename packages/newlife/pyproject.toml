@@ -1,0 +1,18 @@
+[project]
+name = "newlife"
+version = "0.1.0"
+description = "A verifiable profile layer for composable biological simulation: path authority, effect validation, single-path lowering, canonical evidence traces."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+dependencies = ["proofroot"]
+
+[project.optional-dependencies]
+process-bigraph = ["process-bigraph==1.8.3"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv.sources]
+proofroot = { workspace = true }

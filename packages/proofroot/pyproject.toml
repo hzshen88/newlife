@@ -1,0 +1,12 @@
+[project]
+name = "proofroot"
+version = "0.1.0"
+description = "Language-neutral trust core for reproducible simulation: named RNG stream derivation, run phases, evidence tiers, canonical serialization."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

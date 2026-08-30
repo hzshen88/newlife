@@ -1,0 +1,8 @@
+[project]
+name = "newlife-monorepo"
+version = "0.0.0"
+description = "Workspace root for the newlife monorepo (proofroot + newlife)."
+requires-python = ">=3.12"
+
+[tool.uv.workspace]
+members = ["packages/*"]
