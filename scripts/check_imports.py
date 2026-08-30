@@ -45,6 +45,19 @@ def is_stdlib(module: str) -> bool:
 
 violations: list[str] = []
 
+# R4.2 (v0.1a preregistration): the removed bypass field must never be
+# referenced anywhere in shipped source — not even in comments/docstrings,
+# so the free-form update channel cannot quietly grow back.
+BANNED_IDENTIFIERS = {"engine_update"}
+
+for py in sorted(NEWLIFE_SRC.rglob("*.py")):
+    source = py.read_text(encoding="utf-8")
+    for banned in BANNED_IDENTIFIERS:
+        if banned in source:
+            violations.append(
+                f"{py}: removed bypass identifier {banned!r} referenced (rule R4.2)"
+            )
+
 for src_dir in (PROOFROOT_SRC, NEWLIFE_SRC):
     for py in sorted(src_dir.rglob("*.py")):
         for module, lineno in imported_roots(py):
