@@ -1,0 +1,95 @@
+{
+  "expected_final_state": {
+    "parameters": {
+      "mutation_rate": "0.2"
+    },
+    "population": {
+      "p0": {
+        "fitness": "1.0",
+        "genome": "B"
+      }
+    }
+  },
+  "expected_trace": [
+    {
+      "after": "0.2",
+      "before": "0.1",
+      "effect": {
+        "kind": "StateDelta",
+        "operation": "set",
+        "value": "0.2"
+      },
+      "kind": "StateDeltaCommitted",
+      "source": "MutationRateIntervention",
+      "target_path": [
+        "parameters",
+        "mutation_rate"
+      ],
+      "time": "0.0"
+    },
+    {
+      "after": "B",
+      "before": "A",
+      "kind": "StructuralRewrite",
+      "source": "MutationMechanism",
+      "target_path": [
+        "population",
+        "p0",
+        "genome"
+      ],
+      "time": "0.0"
+    },
+    {
+      "kind": "Event",
+      "payload": {
+        "fitness": "1.0",
+        "genome": "B",
+        "organism": "p0"
+      },
+      "source": "FitnessObserver",
+      "time": "0.0",
+      "type": "FitnessObserved"
+    }
+  ],
+  "fixture": "hook_authority",
+  "initial_state": {
+    "parameters": {
+      "mutation_rate": "0.1"
+    },
+    "population": {
+      "p0": {
+        "fitness": "1.0",
+        "genome": "A"
+      }
+    }
+  },
+  "negative_cases": [
+    {
+      "error": "ReadOnlyStateError",
+      "name": "observer_nested_alias_mutation",
+      "state_unchanged": true,
+      "trace_unchanged": true
+    },
+    {
+      "error": "InterventionScopeError",
+      "name": "intervention_genome_write",
+      "state_unchanged": true,
+      "trace_unchanged": true
+    },
+    {
+      "error": "UnknownEffectKindError",
+      "name": "sixth_effect_registration",
+      "registry_unchanged": true
+    }
+  ],
+  "required_assertions": [
+    "exact_trace",
+    "exact_final_state",
+    "observer_has_no_biological_write",
+    "intervention_exact_scope",
+    "closed_effect_union",
+    "byte_identical_replay"
+  ],
+  "schema_version": 1,
+  "scope": "formal-confirmatory"
+}

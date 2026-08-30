@@ -1,0 +1,121 @@
+{
+  "expected_final_state": {
+    "cells": {
+      "d0": {
+        "biomass": "1.0",
+        "position": "2.5"
+      },
+      "d1": {
+        "biomass": "1.0",
+        "position": "2.5"
+      }
+    }
+  },
+  "expected_trace": [
+    {
+      "kind": "ContributionAccepted",
+      "resolver_id": "MechanicsResolver",
+      "source": "Adhesion",
+      "target_path": [
+        "cells",
+        "mother",
+        "position"
+      ],
+      "time": "1.0",
+      "value": "2.0"
+    },
+    {
+      "kind": "ContributionAccepted",
+      "resolver_id": "MechanicsResolver",
+      "source": "Repulsion",
+      "target_path": [
+        "cells",
+        "mother",
+        "position"
+      ],
+      "time": "1.0",
+      "value": "-0.5"
+    },
+    {
+      "after": "2.5",
+      "before": "1.0",
+      "contributors": [
+        "Adhesion",
+        "Repulsion"
+      ],
+      "kind": "ResolverCommit",
+      "resolved_delta": "1.5",
+      "source": "MechanicsResolver",
+      "target_path": [
+        "cells",
+        "mother",
+        "position"
+      ],
+      "time": "1.0"
+    },
+    {
+      "after": {
+        "d0": {
+          "biomass": "1.0",
+          "position": "2.5"
+        },
+        "d1": {
+          "biomass": "1.0",
+          "position": "2.5"
+        }
+      },
+      "before": {
+        "mother": {
+          "biomass": "2.0",
+          "position": "2.5"
+        }
+      },
+      "kind": "StructuralRewrite",
+      "source": "DivisionMechanism",
+      "target_path": [
+        "cells"
+      ],
+      "time": "1.0"
+    }
+  ],
+  "fixture": "coupled_mechanics_division",
+  "initial_state": {
+    "cells": {
+      "mother": {
+        "biomass": "2.0",
+        "position": "1.0"
+      }
+    }
+  },
+  "negative_cases": [
+    {
+      "error": "CommitAuthorityError",
+      "name": "adhesion_direct_commit",
+      "state_unchanged": true,
+      "trace_unchanged": true
+    },
+    {
+      "error": "CommitAuthorityError",
+      "name": "repulsion_direct_commit",
+      "state_unchanged": true,
+      "trace_unchanged": true
+    },
+    {
+      "error": "StructuralOwnershipConflictError",
+      "name": "competing_division",
+      "state_unchanged": true,
+      "trace_unchanged": true
+    }
+  ],
+  "required_assertions": [
+    "exact_trace",
+    "exact_final_state",
+    "one_atomic_resolver_commit",
+    "no_intermediate_position_commit",
+    "biomass_sum_is_2.0",
+    "independent_contributors",
+    "byte_identical_replay"
+  ],
+  "schema_version": 1,
+  "scope": "formal-confirmatory"
+}

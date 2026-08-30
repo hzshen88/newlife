@@ -1,0 +1,127 @@
+{
+  "expected_final_state": {
+    "execution_budget": {
+      "A": 2,
+      "B": 1
+    },
+    "organisms": {
+      "A": {
+        "executed": 2,
+        "merit": "2"
+      },
+      "B": {
+        "executed": 1,
+        "merit": "1"
+      }
+    }
+  },
+  "expected_trace": [
+    {
+      "kind": "ContributionAccepted",
+      "payload": {
+        "available_instructions": 3,
+        "resolver_id": "BudgetResolver",
+        "weights": {
+          "A": 2,
+          "B": 1
+        }
+      },
+      "source": "MeritAllocator",
+      "time": "0.0"
+    },
+    {
+      "contributors": [
+        "MeritAllocator"
+      ],
+      "kind": "ResolverCommit",
+      "source": "BudgetResolver",
+      "target_path": [
+        "execution_budget"
+      ],
+      "time": "0.0",
+      "value": {
+        "A": 2,
+        "B": 1
+      }
+    },
+    {
+      "effect": {
+        "kind": "StateDelta",
+        "operation": "add",
+        "value": 1
+      },
+      "kind": "InstructionExecuted",
+      "source": "InstructionMechanism[A]",
+      "target_path": [
+        "organisms",
+        "A",
+        "executed"
+      ],
+      "time": "0.5"
+    },
+    {
+      "effect": {
+        "kind": "StateDelta",
+        "operation": "add",
+        "value": 1
+      },
+      "kind": "InstructionExecuted",
+      "source": "InstructionMechanism[A]",
+      "target_path": [
+        "organisms",
+        "A",
+        "executed"
+      ],
+      "time": "1.0"
+    },
+    {
+      "effect": {
+        "kind": "StateDelta",
+        "operation": "add",
+        "value": 1
+      },
+      "kind": "InstructionExecuted",
+      "source": "InstructionMechanism[B]",
+      "target_path": [
+        "organisms",
+        "B",
+        "executed"
+      ],
+      "time": "1.0"
+    }
+  ],
+  "fixture": "execution_budget",
+  "initial_state": {
+    "execution_budget": {
+      "A": 0,
+      "B": 0
+    },
+    "organisms": {
+      "A": {
+        "executed": 0,
+        "merit": "2"
+      },
+      "B": {
+        "executed": 0,
+        "merit": "1"
+      }
+    }
+  },
+  "negative_cases": [
+    {
+      "error": "PlaneAuthorityError",
+      "name": "scheduler_state_write",
+      "state_unchanged": true,
+      "trace_unchanged": true
+    }
+  ],
+  "required_assertions": [
+    "exact_trace",
+    "exact_final_state",
+    "management_has_no_effect_authority",
+    "separate_instruction_mechanisms",
+    "byte_identical_replay"
+  ],
+  "schema_version": 1,
+  "scope": "formal-confirmatory"
+}

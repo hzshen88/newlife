@@ -1,0 +1,92 @@
+{
+  "expected_draw_consumption": {
+    "ReactionChannel[A]": [
+      "0.2",
+      "0.5"
+    ],
+    "ReactionChannel[B]": [
+      "0.5",
+      "0.5"
+    ]
+  },
+  "expected_final_state": {
+    "counts": {
+      "A": 2,
+      "B": 2
+    }
+  },
+  "expected_trace": [
+    {
+      "kind": "Event",
+      "payload": {
+        "channel": "A",
+        "count": 1
+      },
+      "source": "ReactionChannel[A]",
+      "time": "0.2",
+      "type": "ReactionOccurred"
+    },
+    {
+      "kind": "Event",
+      "payload": {
+        "channel": "B",
+        "count": 1
+      },
+      "source": "ReactionChannel[B]",
+      "time": "0.5",
+      "type": "ReactionOccurred"
+    },
+    {
+      "kind": "Event",
+      "payload": {
+        "channel": "A",
+        "count": 2
+      },
+      "source": "ReactionChannel[A]",
+      "time": "0.7",
+      "type": "ReactionOccurred"
+    },
+    {
+      "kind": "Event",
+      "payload": {
+        "channel": "B",
+        "count": 2
+      },
+      "source": "ReactionChannel[B]",
+      "time": "1.0",
+      "type": "ReactionOccurred"
+    }
+  ],
+  "fixture": "continuous_next_event",
+  "initial_state": {
+    "counts": {
+      "A": 0,
+      "B": 0
+    }
+  },
+  "negative_cases": [
+    {
+      "clock_unchanged": true,
+      "error": "InvalidIntervalError",
+      "name": "zero_interval",
+      "state_unchanged": true,
+      "value": "0.0"
+    },
+    {
+      "clock_unchanged": true,
+      "error": "InvalidIntervalError",
+      "name": "negative_interval",
+      "state_unchanged": true,
+      "value": "-0.1"
+    }
+  ],
+  "required_assertions": [
+    "exact_trace",
+    "exact_final_state",
+    "exact_named_draw_consumption",
+    "minimum_due_time_order",
+    "byte_identical_replay"
+  ],
+  "schema_version": 1,
+  "scope": "formal-confirmatory"
+}

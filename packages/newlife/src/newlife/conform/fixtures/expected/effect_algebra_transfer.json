@@ -1,0 +1,44 @@
+{
+  "expected_final_state": {
+    "cell": {
+      "energy": "1.25"
+    },
+    "medium": {
+      "nutrient": "0.75"
+    }
+  },
+  "expected_trace": [
+    {
+      "amount": "0.25",
+      "destination_path": [
+        "cell",
+        "energy"
+      ],
+      "kind": "TransferCommitted",
+      "source": "TransportMechanism",
+      "source_path": [
+        "medium",
+        "nutrient"
+      ],
+      "time": "0.0"
+    }
+  ],
+  "fixture": "effect_algebra_transfer",
+  "initial_state": {
+    "cell": {
+      "energy": "1.0"
+    },
+    "medium": {
+      "nutrient": "1.0"
+    }
+  },
+  "required_assertions": [
+    "exact_trace",
+    "exact_final_state",
+    "source_plus_destination_is_2.0",
+    "atomic_two_path_commit"
+  ],
+  "schema_version": 1,
+  "scope": "formal-confirmatory-contract-microfixture",
+  "target": "reference-contract-only"
+}
