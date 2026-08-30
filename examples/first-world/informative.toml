@@ -1,0 +1,38 @@
+protocol_version = "resource-foraging-v1"
+name = "resource-foraging-informative"
+condition = "informative"
+
+[world]
+width = 32
+height = 32
+ticks = 5000
+initial_population = 128
+
+[resource]
+initial_cell_resource = 2.0
+cell_capacity = 8.0
+probability = 0.35
+heterogeneity = 0.25
+quantum = 1.0
+
+[life]
+initial_energy = 8.0
+harvest_limit = 2.0
+conversion_efficiency = 0.8
+maintenance_cost = 0.30
+movement_cost = 0.10
+reproduction_threshold = 16.0
+offspring_energy = 6.0
+reproduction_cost = 1.0
+reproduction_attempt_cost = 0.05
+max_age = 200
+death_resource_fraction = 0.5
+mutation_rate = 0.02
+
+[observation]
+interval = 10
+
+[assay]
+sample_size = 16
+episodes = 4
+ticks = 100

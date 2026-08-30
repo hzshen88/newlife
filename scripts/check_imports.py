@@ -69,6 +69,13 @@ for py in sorted((NEWLIFE_SRC / "adapters" / "process_bigraph").glob("cases.py")
             f"{py}: manual Composite construction in the case path (rule R4.7)"
         )
 
+# v0.2 gate (proposal §2 goal 5): the application layer is configuration
+# data — any Python under examples/ is a runtime-code violation.
+examples_dir = ROOT / "examples"
+if examples_dir.is_dir():
+    for py in sorted(examples_dir.rglob("*.py")):
+        violations.append(f"{py}: runtime code in the application layer (rule v0.2-gate)")
+
 for src_dir in (PROOFROOT_SRC, NEWLIFE_SRC):
     for py in sorted(src_dir.rglob("*.py")):
         for module, lineno in imported_roots(py):

@@ -389,3 +389,30 @@ def run_world(config_path, seed: int, *, stream_factory: Callable[[int], Any] | 
     world = ForagingWorld(config, seed, stream_factory=stream_factory, bank=bank)
     result = world.run()
     return result
+
+
+def run_world_with_assay(config_path, seed: int, *, recorded_banks: dict | None = None) -> dict[str, Any]:
+    """run_resource_foraging analogue: train, then the frozen causal assay.
+    Under L2 injection, recorded_banks supplies the per-episode banks."""
+    from newlife.mechanisms.resource_foraging.assay import run_assay
+
+    config = load_config(config_path)
+    world = ForagingWorld(config, seed)
+    result = world.run()
+    assay = run_assay(world, recorded_banks=recorded_banks)
+    return {
+        "tick": result.tick,
+        "population": result.population,
+        "extinct": result.extinct,
+        "history": result.history,
+        "lineage": result.lineage,
+        "assay": {
+            "sampled_genomes": assay.sampled_genomes,
+            "paired_episodes": assay.paired_episodes,
+            "mean_true_harvest": assay.mean_true_harvest,
+            "mean_ablated_harvest": assay.mean_ablated_harvest,
+            "harvest_contribution": assay.harvest_contribution,
+            "true_alignment_rate": assay.true_alignment_rate,
+            "ablated_alignment_rate": assay.ablated_alignment_rate,
+        },
+    }
