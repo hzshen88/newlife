@@ -1,20 +1,32 @@
 [
   {
     "classification": "implementation clarification",
-    "correction": "pass validated Effects through unchanged; alias isolation is provided at the write boundary (update's deep-copied return), which is where the side-channel negative probes it",
+    "correction": "enforced at compiler entry (staging.py) before any composite runs \u2014 the frozen R2 error semantics (StageValidationError) are preserved",
     "criterion_changed": false,
-    "issue": "deep-copying Effects in stage() crashed on Event payloads (frozen immutable mapping views are not deep-copyable)"
+    "issue": "R2 lists the Step/Process mixed-stage check under profile validation, but node types are adapter knowledge invisible to the profile"
   },
   {
     "classification": "implementation clarification",
-    "correction": "control implemented as add\u2192set on fixture A and set\u2192add on fixture C (both detected via the final-state half of the frozen byte comparison); the trace half's teeth are proven by the anti-masking probes, and the transfer microfixture adds a conservation-skimming probe",
+    "correction": "composite node state keys are positional (node_0, \u2026); the mechanism identity travels in the node config (mechanism_id)",
     "criterion_changed": false,
-    "issue": "the tampered-lowering control's set\u2192add flip is byte-invisible on fixture A's zero-initialized budget store, and no lowering tamper can alter mechanism-handwritten trace records"
+    "issue": "mechanism identities contain characters like '[' that the engine parses in state path segments, so composite node state keys cannot be mechanism ids"
   },
   {
     "classification": "implementation clarification",
-    "correction": "added the list-direct store type (set = whole-list overwrite) to the dispatch table",
+    "correction": "the producer's declared output schema is declared at the wiring layer (output_schemas) \u2014 the same declaration, readable where the derivation runs",
     "criterion_changed": false,
-    "issue": "the vivarium-side payload side-channel negative needed a list-store lowering binding"
+    "issue": "P1's schema-zero initialization needs the producer's declared output schema, which lives on the process class where the compiler cannot read it without instantiating the engine"
+  },
+  {
+    "classification": "implementation clarification",
+    "correction": "run_orchestration threads carried-root values from the previous stage's committed state (the basis term); the P1 root SET remains compile-time and programmatically asserted",
+    "criterion_changed": false,
+    "issue": "compile-time plans carry the declared initial state, so later stages would start from initial values instead of the prior stage's committed state"
+  },
+  {
+    "classification": "evidence-engineering correction",
+    "correction": "logs split into IMPLEMENTATION_LOG_V01A/_V01B; this bundle re-issued with the true v0.1b log (5 entries); no_criterion_deviation now checks the union of both experiments' logs; ruff F811 added to the CI gate; every verdict bundle write is read back and verified",
+    "criterion_changed": false,
+    "issue": "this v0.1b log was shadowed by a duplicate v0.1a IMPLEMENTATION_LOG definition later in this module (Python name rebinding), so the first evidence bundle, its manifest, and the no_criterion_deviation conjunction consumed the PREVIOUS experiment's log \u2014 caught in acceptance review"
   }
 ]

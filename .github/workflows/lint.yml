@@ -11,6 +11,10 @@ jobs:
         with:
           python-version: "3.12"
       - run: python scripts/check_imports.py
+      - name: ruff (F811 shadowed definitions)
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: check --select F811 packages scripts
 
   tests:
     runs-on: ubuntu-latest

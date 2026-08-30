@@ -104,7 +104,7 @@ FROZEN_P4 = {
     },
 }
 
-IMPLEMENTATION_LOG: list[dict[str, Any]] = [
+IMPLEMENTATION_LOG_V01B: list[dict[str, Any]] = [
     {
         "classification": "implementation clarification",
         "issue": "R2 lists the Step/Process mixed-stage check under profile "
@@ -144,8 +144,25 @@ IMPLEMENTATION_LOG: list[dict[str, Any]] = [
         "SET remains compile-time and programmatically asserted",
         "criterion_changed": False,
     },
+    {
+        "classification": "evidence-engineering correction",
+        "issue": "this v0.1b log was shadowed by a duplicate v0.1a "
+        "IMPLEMENTATION_LOG definition later in this module (Python name "
+        "rebinding), so the first evidence bundle, its manifest, and the "
+        "no_criterion_deviation conjunction consumed the PREVIOUS "
+        "experiment's log — caught in acceptance review",
+        "correction": "logs split into IMPLEMENTATION_LOG_V01A/_V01B; this "
+        "bundle re-issued with the true v0.1b log (5 entries); "
+        "no_criterion_deviation now checks the union of both experiments' "
+        "logs; ruff F811 added to the CI gate; every verdict bundle write "
+        "is read back and verified",
+        "criterion_changed": False,
+    },
 ]
-IMPLEMENTATION_LOG: list[dict[str, Any]] = [
+IMPLEMENTATION_LOG_V01A: list[dict[str, Any]] = [
+    # The v0.1a experiment's log, archived with its bundle
+    # (results/v0.1a, exloop artifacts/lowering-results). Kept here so the
+    # no_criterion_deviation conjunction covers both experiments' logs.
     {
         "classification": "implementation clarification",
         "issue": "deep-copying Effects in stage() crashed on Event payloads "
@@ -205,6 +222,12 @@ def timeout(seconds: int) -> Iterator[None]:
 def write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    # Read-back verification: a claimed bundle write must be re-read and
+    # compared — the acceptance-review shadowed-log defect is exactly the
+    # failure mode this closes.
+    reread = json.loads(path.read_text(encoding="utf-8"))
+    if reread != value:
+        raise RuntimeError(f"bundle write verification failed: {path}")
 
 
 def negative_cases_exact(case_result, fixture: dict[str, Any]) -> bool:
@@ -307,7 +330,7 @@ def execute(output: Path, pytest_text: str) -> dict[str, Any]:
         "named_negative_types_v0_1a": 10,
         "named_negative_types_v0_1b": 8,
     }
-    manifest["implementation_log"] = IMPLEMENTATION_LOG
+    manifest["implementation_log"] = IMPLEMENTATION_LOG_V01B
 
     frozen_data_exact = fixture_hashes() == FROZEN_FIXTURE_SHA256
     import_lint = subprocess.run(
@@ -341,7 +364,8 @@ def execute(output: Path, pytest_text: str) -> dict[str, Any]:
         "import_lint_clean": import_lint.returncode == 0,
         "pytest_suite": pytest_output_passed(pytest_text),
         "no_criterion_deviation": not any(
-            entry["criterion_changed"] for entry in IMPLEMENTATION_LOG
+            entry["criterion_changed"]
+            for entry in IMPLEMENTATION_LOG_V01A + IMPLEMENTATION_LOG_V01B
         ),
     }
     staging_verdict = compute_verdict(
@@ -372,7 +396,8 @@ def execute(output: Path, pytest_text: str) -> dict[str, Any]:
         "import_lint_clean": import_lint.returncode == 0,
         "pytest_suite": pytest_output_passed(pytest_text),
         "no_criterion_deviation": not any(
-            entry["criterion_changed"] for entry in IMPLEMENTATION_LOG
+            entry["criterion_changed"]
+            for entry in IMPLEMENTATION_LOG_V01A + IMPLEMENTATION_LOG_V01B
         ),
     }
     verdict = compute_verdict(cell_checks, engineering_checks)
@@ -394,7 +419,7 @@ def execute(output: Path, pytest_text: str) -> dict[str, Any]:
     }
     write_json(output / "manifest.json", manifest)
     write_json(output / "summary.json", summary)
-    write_json(output / "implementation-log.json", IMPLEMENTATION_LOG)
+    write_json(output / "implementation-log.json", IMPLEMENTATION_LOG_V01B)
     return summary
 
 
