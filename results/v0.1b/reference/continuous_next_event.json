@@ -1,0 +1,93 @@
+{
+  "assertions": {
+    "byte_identical_replay": true,
+    "declared_stage_order_valid": true,
+    "exact_final_state": true,
+    "exact_named_draw_consumption": true,
+    "exact_trace": true,
+    "minimum_due_time_order": true,
+    "negative_clock_unchanged": true,
+    "negative_errors_exact": true,
+    "negative_state_unchanged": true,
+    "negative_trace_unchanged": true
+  },
+  "final_state": {
+    "counts": {
+      "A": 2,
+      "B": 2
+    }
+  },
+  "fixture": "continuous_next_event",
+  "metadata": {},
+  "negative_cases_exact": true,
+  "negative_results": [
+    {
+      "clock_unchanged": true,
+      "error": "InvalidIntervalError",
+      "expected_error": "InvalidIntervalError",
+      "name": "zero_interval",
+      "state_unchanged": true,
+      "trace_unchanged": true,
+      "value": "0.0"
+    },
+    {
+      "clock_unchanged": true,
+      "error": "InvalidIntervalError",
+      "expected_error": "InvalidIntervalError",
+      "name": "negative_interval",
+      "state_unchanged": true,
+      "trace_unchanged": true,
+      "value": "-0.1"
+    }
+  ],
+  "passed": true,
+  "replay": {
+    "byte_identical": true,
+    "state_sha256": "d04161f26d0d9970fd3a5802b258ecf44900c27b0221408c93a5b12179f46a2f",
+    "trace_sha256": "d9f9af19af8069ccfc5d62ef6ab00bbccf183edd6188eefd5bf8ea6995278a7c"
+  },
+  "required_assertions_exact": true,
+  "target": "reference",
+  "trace": [
+    {
+      "kind": "Event",
+      "payload": {
+        "channel": "A",
+        "count": 1
+      },
+      "source": "ReactionChannel[A]",
+      "time": "0.2",
+      "type": "ReactionOccurred"
+    },
+    {
+      "kind": "Event",
+      "payload": {
+        "channel": "B",
+        "count": 1
+      },
+      "source": "ReactionChannel[B]",
+      "time": "0.5",
+      "type": "ReactionOccurred"
+    },
+    {
+      "kind": "Event",
+      "payload": {
+        "channel": "A",
+        "count": 2
+      },
+      "source": "ReactionChannel[A]",
+      "time": "0.7",
+      "type": "ReactionOccurred"
+    },
+    {
+      "kind": "Event",
+      "payload": {
+        "channel": "B",
+        "count": 2
+      },
+      "source": "ReactionChannel[B]",
+      "time": "1.0",
+      "type": "ReactionOccurred"
+    }
+  ]
+}

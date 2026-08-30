@@ -1,0 +1,166 @@
+{
+  "assertions": {
+    "biomass_sum_is_2.0": true,
+    "byte_identical_replay": true,
+    "exact_final_state": true,
+    "exact_trace": true,
+    "independent_contributors": true,
+    "negative_errors_exact": true,
+    "negative_state_unchanged": true,
+    "negative_trace_unchanged": true,
+    "no_intermediate_position_commit": true,
+    "one_atomic_resolver_commit": true,
+    "one_mechanism_per_runtime_node": true
+  },
+  "final_state": {
+    "cells": {
+      "d0": {
+        "biomass": "1.0",
+        "position": "2.5"
+      },
+      "d1": {
+        "biomass": "1.0",
+        "position": "2.5"
+      }
+    }
+  },
+  "fixture": "coupled_mechanics_division",
+  "metadata": {
+    "orchestration": {
+      "carried_roots": [
+        "cells"
+      ],
+      "stages": [
+        {
+          "duration": 1.0,
+          "internal_roots": [],
+          "label": "mechanics",
+          "mechanisms": [
+            "Adhesion",
+            "Repulsion"
+          ],
+          "state_roots": [
+            "cells"
+          ]
+        },
+        {
+          "duration": 1.0,
+          "internal_roots": [],
+          "label": "division",
+          "mechanisms": [
+            "DivisionMechanism"
+          ],
+          "state_roots": [
+            "cells"
+          ]
+        }
+      ]
+    },
+    "runtime_nodes": {
+      "contributor-Adhesion": "Adhesion",
+      "contributor-Repulsion": "Repulsion",
+      "division-process": "DivisionMechanism",
+      "resolver-handler": "MechanicsResolver"
+    }
+  },
+  "negative_cases_exact": true,
+  "negative_results": [
+    {
+      "error": "CommitAuthorityError",
+      "expected_error": "CommitAuthorityError",
+      "name": "adhesion_direct_commit",
+      "state_unchanged": true,
+      "trace_unchanged": true
+    },
+    {
+      "error": "CommitAuthorityError",
+      "expected_error": "CommitAuthorityError",
+      "name": "repulsion_direct_commit",
+      "state_unchanged": true,
+      "trace_unchanged": true
+    },
+    {
+      "error": "StructuralOwnershipConflictError",
+      "expected_error": "StructuralOwnershipConflictError",
+      "name": "competing_division",
+      "registry_unchanged": true,
+      "state_unchanged": true,
+      "trace_unchanged": true
+    }
+  ],
+  "passed": true,
+  "replay": {
+    "byte_identical": true,
+    "state_sha256": "d5c8ec1b587cbb92a58333f0cccf96c32e4087f3800f939a94e932d014c26df2",
+    "trace_sha256": "c1c81ddbe6d847f6d525f2e282a23775647f0904b669e46cd1fbdc68f109e730"
+  },
+  "required_assertions_exact": true,
+  "target": "vivarium",
+  "trace": [
+    {
+      "kind": "ContributionAccepted",
+      "resolver_id": "MechanicsResolver",
+      "source": "Adhesion",
+      "target_path": [
+        "cells",
+        "mother",
+        "position"
+      ],
+      "time": "1.0",
+      "value": "2.0"
+    },
+    {
+      "kind": "ContributionAccepted",
+      "resolver_id": "MechanicsResolver",
+      "source": "Repulsion",
+      "target_path": [
+        "cells",
+        "mother",
+        "position"
+      ],
+      "time": "1.0",
+      "value": "-0.5"
+    },
+    {
+      "after": "2.5",
+      "before": "1.0",
+      "contributors": [
+        "Adhesion",
+        "Repulsion"
+      ],
+      "kind": "ResolverCommit",
+      "resolved_delta": "1.5",
+      "source": "MechanicsResolver",
+      "target_path": [
+        "cells",
+        "mother",
+        "position"
+      ],
+      "time": "1.0"
+    },
+    {
+      "after": {
+        "d0": {
+          "biomass": "1.0",
+          "position": "2.5"
+        },
+        "d1": {
+          "biomass": "1.0",
+          "position": "2.5"
+        }
+      },
+      "before": {
+        "mother": {
+          "biomass": "2.0",
+          "position": "2.5"
+        }
+      },
+      "kind": "StructuralRewrite",
+      "source": "DivisionMechanism",
+      "target_path": [
+        "cells"
+      ],
+      "time": "1.0"
+    }
+  ]
+}

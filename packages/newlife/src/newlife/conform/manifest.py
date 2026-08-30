@@ -19,7 +19,7 @@ from newlife.adapters.process_bigraph.wrapper import PROFILE_VERSION
 from newlife.conform.fixtures import EXPECTED_FIXTURE_NAMES, EXPECTED_ROOT, sha256_file
 
 CONTRACT_VERSION = "v1"  # Effect taxonomy v1; v0.1a does not extend payloads
-CONFORM_SUITE_VERSION = "1.0.0"  # re-derived contract-level suite
+CONFORM_SUITE_VERSION = "1.1.0"  # re-derived suite + v0.1b staging negatives
 MECHANISM_VERSION = "1.0.0"  # frozen fixture mechanisms
 UPSTREAM_COMMITS = {
     "process-bigraph": "40fdb161cfc6d38df5af2571cbf64526549585a1",

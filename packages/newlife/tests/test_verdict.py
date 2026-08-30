@@ -51,6 +51,18 @@ def test_missing_check_key_is_an_error_not_a_pass():
         validate_manifest(manifest)
 
 
+def test_staging_verdict_uses_its_own_pass_value():
+    from newlife.conform.verdict import STAGING_VERDICT_PASS
+
+    verdict = compute_verdict(
+        {"unit_a": True}, {"eng_a": True}, pass_verdict=STAGING_VERDICT_PASS
+    )
+    assert verdict == STAGING_VERDICT_PASS
+    # a withheld staging verdict must also carry the staging-specific name
+    withheld = compute_verdict({"unit_a": True}, {"eng_a": False}, pass_verdict=STAGING_VERDICT_PASS)
+    assert withheld == VERDICT_WITHHELD
+
+
 def test_pytest_output_requires_an_exact_success_summary():
     assert pytest_output_passed("................................ [100%]\n89 passed in 1.52s\n")
     assert not pytest_output_passed("88 passed, 1 error in 1.52s\n")

@@ -1,0 +1,20 @@
+[
+  {
+    "classification": "implementation clarification",
+    "correction": "pass validated Effects through unchanged; alias isolation is provided at the write boundary (update's deep-copied return), which is where the side-channel negative probes it",
+    "criterion_changed": false,
+    "issue": "deep-copying Effects in stage() crashed on Event payloads (frozen immutable mapping views are not deep-copyable)"
+  },
+  {
+    "classification": "implementation clarification",
+    "correction": "control implemented as add\u2192set on fixture A and set\u2192add on fixture C (both detected via the final-state half of the frozen byte comparison); the trace half's teeth are proven by the anti-masking probes, and the transfer microfixture adds a conservation-skimming probe",
+    "criterion_changed": false,
+    "issue": "the tampered-lowering control's set\u2192add flip is byte-invisible on fixture A's zero-initialized budget store, and no lowering tamper can alter mechanism-handwritten trace records"
+  },
+  {
+    "classification": "implementation clarification",
+    "correction": "added the list-direct store type (set = whole-list overwrite) to the dispatch table",
+    "criterion_changed": false,
+    "issue": "the vivarium-side payload side-channel negative needed a list-store lowering binding"
+  }
+]

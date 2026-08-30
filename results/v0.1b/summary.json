@@ -1,0 +1,60 @@
+{
+  "cell_checks": {
+    "all_reference_cells": true,
+    "all_vivarium_cells": true,
+    "cross_target_exact": true,
+    "transfer_microfixture": true
+  },
+  "cell_passes": {
+    "reference": {
+      "continuous_next_event": true,
+      "coupled_mechanics_division": true,
+      "execution_budget": true,
+      "hook_authority": true
+    },
+    "vivarium": {
+      "continuous_next_event": true,
+      "coupled_mechanics_division": true,
+      "execution_budget": true,
+      "hook_authority": true
+    }
+  },
+  "engineering_checks": {
+    "api_shape_bypass_removed": true,
+    "atomic_batch_rollback": true,
+    "closed_effect_union": true,
+    "frozen_data_unchanged": true,
+    "import_lint_clean": true,
+    "installed_sources_unchanged": true,
+    "no_criterion_deviation": true,
+    "no_fixture_specific_dispatch": true,
+    "normalizer_anti_masking": true,
+    "public_surface_audit": true,
+    "pytest_suite": true
+  },
+  "limitations": [
+    "completeness for four frozen slices on contract v1 only",
+    "no claim of universal lowering, biological validity, or performance",
+    "trace-format switching to the proofroot spec deferred to v0.2"
+  ],
+  "schema_version": 1,
+  "scope": "v0.1b-staging-declarability-frozen-slices",
+  "single_write_path_verdict": "compatible_for_frozen_slices_v1_lowered",
+  "staging_checks": {
+    "all_vivarium_cells": true,
+    "p4_orchestration_predictions": true
+  },
+  "staging_engineering_checks": {
+    "declaration_side_channel": true,
+    "frozen_data_unchanged": true,
+    "import_lint_clean": true,
+    "installed_sources_unchanged": true,
+    "no_criterion_deviation": true,
+    "no_manual_composite_in_cases": true,
+    "orchestration_tamper_control": true,
+    "pytest_suite": true,
+    "reference_stage_order_predicate": true,
+    "staging_validation_negatives": true
+  },
+  "staging_verdict": "staging_declarable_for_frozen_slices"
+}

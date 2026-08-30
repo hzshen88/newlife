@@ -34,8 +34,11 @@ from newlife.conform.probes import (
     api_shape_probe,
     atomic_rollback_probe,
     closed_effect_union_probe,
+    declaration_side_channel_probe,
     no_fixture_specific_dispatch_probe,
+    orchestration_tamper_probe,
     public_surface_audit_probe,
+    staging_validation_negatives_probe,
     transfer_microfixture_probe,
 )
 
@@ -44,6 +47,104 @@ SUITE_TIMEOUT_SECONDS = 20 * 60
 VERDICT_PASS = "compatible_for_frozen_slices_v1_lowered"
 VERDICT_REJECT = "reject"
 VERDICT_WITHHELD = "verdict_withheld_evidence_engineering_failure"
+STAGING_VERDICT_PASS = "staging_declarable_for_frozen_slices"
+
+# Frozen formal prediction P4 (preregistration 2026-08-31): the expected
+# composite sequences per slice; the compiler's record must equal these.
+FROZEN_P4 = {
+    "execution_budget": {
+        "carried_roots": ["execution_budget", "organisms"],
+        "stages": [
+            {"label": "allocate", "duration": 0.0,
+             "mechanisms": ["BudgetResolver", "MeritAllocator"],
+             "state_roots": ["budget_proposal", "execution_budget", "organisms"],
+             "internal_roots": ["budget_proposal"]},
+            {"label": "instruct-a", "duration": 1.0,
+             "mechanisms": ["InstructionMechanism[A]"],
+             "state_roots": ["execution_budget", "organisms"],
+             "internal_roots": []},
+            {"label": "instruct-b", "duration": 1.0,
+             "mechanisms": ["InstructionMechanism[B]"],
+             "state_roots": ["execution_budget", "organisms"],
+             "internal_roots": []},
+        ],
+    },
+    "coupled_mechanics_division": {
+        "carried_roots": ["cells"],
+        "stages": [
+            {"label": "mechanics", "duration": 1.0,
+             "mechanisms": ["Adhesion", "Repulsion"],
+             "state_roots": ["cells"], "internal_roots": []},
+            {"label": "division", "duration": 1.0,
+             "mechanisms": ["DivisionMechanism"],
+             "state_roots": ["cells"], "internal_roots": []},
+        ],
+    },
+    "hook_authority": {
+        "carried_roots": ["parameters", "population"],
+        "stages": [
+            {"label": "intervene", "duration": 1.0,
+             "mechanisms": ["MutationRateIntervention"],
+             "state_roots": ["parameters", "population"], "internal_roots": []},
+            {"label": "mutate", "duration": 1.0,
+             "mechanisms": ["MutationMechanism"],
+             "state_roots": ["parameters", "population"], "internal_roots": []},
+            {"label": "observe", "duration": 1.0,
+             "mechanisms": ["FitnessObserver"],
+             "state_roots": ["parameters", "population"], "internal_roots": []},
+        ],
+    },
+    "continuous_next_event": {
+        "carried_roots": ["counts"],
+        "stages": [
+            {"label": "react", "duration": 1.0,
+             "mechanisms": ["ReactionChannel[A]", "ReactionChannel[B]"],
+             "state_roots": ["counts"], "internal_roots": []},
+        ],
+    },
+}
+
+IMPLEMENTATION_LOG: list[dict[str, Any]] = [
+    {
+        "classification": "implementation clarification",
+        "issue": "R2 lists the Step/Process mixed-stage check under profile "
+        "validation, but node types are adapter knowledge invisible to the "
+        "profile",
+        "correction": "enforced at compiler entry (staging.py) before any "
+        "composite runs — the frozen R2 error semantics (StageValidationError) "
+        "are preserved",
+        "criterion_changed": False,
+    },
+    {
+        "classification": "implementation clarification",
+        "issue": "mechanism identities contain characters like '[' that the "
+        "engine parses in state path segments, so composite node state keys "
+        "cannot be mechanism ids",
+        "correction": "composite node state keys are positional (node_0, …); "
+        "the mechanism identity travels in the node config (mechanism_id)",
+        "criterion_changed": False,
+    },
+    {
+        "classification": "implementation clarification",
+        "issue": "P1's schema-zero initialization needs the producer's "
+        "declared output schema, which lives on the process class where the "
+        "compiler cannot read it without instantiating the engine",
+        "correction": "the producer's declared output schema is declared at "
+        "the wiring layer (output_schemas) — the same declaration, readable "
+        "where the derivation runs",
+        "criterion_changed": False,
+    },
+    {
+        "classification": "implementation clarification",
+        "issue": "compile-time plans carry the declared initial state, so "
+        "later stages would start from initial values instead of the prior "
+        "stage's committed state",
+        "correction": "run_orchestration threads carried-root values from "
+        "the previous stage's committed state (the basis term); the P1 root "
+        "SET remains compile-time and programmatically asserted",
+        "criterion_changed": False,
+    },
+]
 IMPLEMENTATION_LOG: list[dict[str, Any]] = [
     {
         "classification": "implementation clarification",
@@ -126,13 +227,17 @@ def required_assertions_exact(case_result, fixture: dict[str, Any]) -> bool:
     )
 
 
-def compute_verdict(cell_checks: dict[str, bool], engineering_checks: dict[str, bool]) -> str:
+def compute_verdict(
+    cell_checks: dict[str, bool],
+    engineering_checks: dict[str, bool],
+    pass_verdict: str = VERDICT_PASS,
+) -> str:
     """Frozen decision rules: cells ∧ engineering ⇒ pass; cells pass but
     engineering fails ⇒ withheld (a toothless ruler voids the positives);
     any cell fails ⇒ reject (with classification recorded separately)."""
     cells_pass = all(cell_checks.values())
     if cells_pass and all(engineering_checks.values()):
-        return VERDICT_PASS
+        return pass_verdict
     if cells_pass:
         return VERDICT_WITHHELD
     return VERDICT_REJECT
@@ -195,10 +300,12 @@ def execute(output: Path, pytest_text: str) -> dict[str, Any]:
     manifest["installed_source_sha256_after"] = after_hashes
     manifest["formal_counts"] = {
         "target_slice_cells": 8,
+        "staged_orchestration_units": 4,
         "positive_executions": positive_count,
         "negative_executions_cell_level": negative_count,
         "contract_microfixtures": 1,
-        "named_negative_types": 10,
+        "named_negative_types_v0_1a": 10,
+        "named_negative_types_v0_1b": 8,
     }
     manifest["implementation_log"] = IMPLEMENTATION_LOG
 
@@ -208,6 +315,38 @@ def execute(output: Path, pytest_text: str) -> dict[str, Any]:
     )
     counts_exact = positive_count == 16 and negative_count == 18
 
+    cases_source = (
+        Path(__file__).resolve().parents[1]
+        / "adapters" / "process_bigraph" / "cases.py"
+    ).read_text(encoding="utf-8")
+    staging_cell_checks = {
+        "all_vivarium_cells": all(cell_passes["vivarium"].values()),
+        "p4_orchestration_predictions": all(
+            primary["vivarium"][name]["metadata"].get("orchestration") == FROZEN_P4[name]
+            for name in VIVARIUM_CASES
+        ),
+    }
+    staging_engineering_checks = {
+        "staging_validation_negatives": staging_validation_negatives_probe(),
+        "declaration_side_channel": declaration_side_channel_probe(),
+        "orchestration_tamper_control": orchestration_tamper_probe(),
+        "reference_stage_order_predicate": all(
+            primary["reference"][name]["assertions"]["declared_stage_order_valid"]
+            for name in REFERENCE_CASES
+        ),
+        "no_manual_composite_in_cases": "Composite(" not in cases_source,
+        "installed_sources_unchanged": after_hashes
+        == manifest["installed_source_sha256_before"],
+        "frozen_data_unchanged": frozen_data_exact,
+        "import_lint_clean": import_lint.returncode == 0,
+        "pytest_suite": pytest_output_passed(pytest_text),
+        "no_criterion_deviation": not any(
+            entry["criterion_changed"] for entry in IMPLEMENTATION_LOG
+        ),
+    }
+    staging_verdict = compute_verdict(
+        staging_cell_checks, staging_engineering_checks, pass_verdict=STAGING_VERDICT_PASS
+    )
     cell_checks = {
         "all_reference_cells": all(cell_passes["reference"].values()),
         "all_vivarium_cells": all(cell_passes["vivarium"].values()),
@@ -239,7 +378,10 @@ def execute(output: Path, pytest_text: str) -> dict[str, Any]:
     verdict = compute_verdict(cell_checks, engineering_checks)
     summary = {
         "schema_version": 1,
-        "scope": "v0.1a-lowering-completeness-frozen-slices",
+        "scope": "v0.1b-staging-declarability-frozen-slices",
+        "staging_checks": staging_cell_checks,
+        "staging_engineering_checks": staging_engineering_checks,
+        "staging_verdict": staging_verdict,
         "cell_checks": cell_checks,
         "engineering_checks": engineering_checks,
         "cell_passes": cell_passes,
@@ -265,7 +407,11 @@ def main() -> int:
     with timeout(SUITE_TIMEOUT_SECONDS):
         summary = execute(args.output, pytest_text)
     print(json.dumps(summary, indent=2, sort_keys=True))
-    return 0 if summary["single_write_path_verdict"] == VERDICT_PASS else 1
+    passed = (
+        summary["single_write_path_verdict"] == VERDICT_PASS
+        and summary["staging_verdict"] == STAGING_VERDICT_PASS
+    )
+    return 0 if passed else 1
 
 
 if __name__ == "__main__":

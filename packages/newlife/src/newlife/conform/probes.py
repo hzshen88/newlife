@@ -18,6 +18,74 @@ from newlife.conform.contract.canonical_ruler import (
 )
 from newlife.conform.fixtures import load_fixture
 from newlife.core.contracts import MechanismSpec, StateClaim, StateDelta, effect_tags
+from newlife.core.errors import StageValidationError
+
+
+def _staging_spec(identity, stage=None, after=()):
+    schedule = (
+        {"stage": stage, "after": list(after)}
+        if stage is not None
+        else {"kind": "runtime-managed"}
+    )
+    return MechanismSpec(
+        identity=identity,
+        version="1",
+        plane="biological",
+        biological_role="staging probe",
+        ports=("state",),
+        claims=(),
+        schedule=schedule,
+        rng_streams=(),
+        allowed_effects=frozenset(),
+        invariants=(),
+    )
+
+
+def staging_validation_negatives_probe() -> bool:
+    """R4 negatives 1–4: exact typed errors, registry/state untouched
+    (pure validation — nothing else is observable)."""
+    from newlife.adapters.process_bigraph.staging import validate_staging
+
+    probes = (
+        [  # 1: DAG cycle
+            _staging_spec("a", "s1", ["s2"]),
+            _staging_spec("b", "s2", ["s1"]),
+        ],
+        [_staging_spec("a", "s1", ["s1"])],  # 2: self-loop
+        [_staging_spec("a", "s1", ["ghost"])],  # 3: unknown after reference
+        [_staging_spec("a", "s1"), _staging_spec("b")],  # 4: missing declaration
+    )
+    for specs in probes:
+        try:
+            validate_staging(specs)
+        except StageValidationError:
+            continue
+        except Exception:
+            return False
+        else:
+            return False
+    return True
+
+
+def declaration_side_channel_probe() -> bool:
+    """R4 negative 5: post-validation mutation of a nested after list must
+    not alter the validated artifact the orchestration consumes."""
+    from newlife.adapters.process_bigraph.staging import validate_staging
+
+    inner = ["s0"]
+    first = validate_staging([_staging_spec("z", "s0"), _staging_spec("a", "s1", inner)])
+    inner.append("s0")
+    return first["a"] == ("s1", ("s0",))
+
+
+def orchestration_tamper_probe() -> bool:
+    """R4 negative 8: the deliberately wrong declared DAG (merged
+    instruction stages) is detected by the byte comparison."""
+    from newlife.adapters.process_bigraph.cases import run_execution_budget
+
+    result = run_execution_budget(include_negatives=False, stage_plan="merged_instructions")
+    expected = load_fixture("execution_budget.json")
+    return canonical_bytes(result.trace) != canonical_bytes(expected["expected_trace"])
 
 
 def api_shape_probe() -> bool:

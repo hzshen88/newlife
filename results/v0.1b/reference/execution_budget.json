@@ -1,0 +1,124 @@
+{
+  "assertions": {
+    "byte_identical_replay": true,
+    "declared_stage_order_valid": true,
+    "exact_final_state": true,
+    "exact_trace": true,
+    "management_has_no_effect_authority": true,
+    "negative_errors_exact": true,
+    "negative_state_unchanged": true,
+    "negative_trace_unchanged": true,
+    "separate_instruction_mechanisms": true
+  },
+  "final_state": {
+    "execution_budget": {
+      "A": 2,
+      "B": 1
+    },
+    "organisms": {
+      "A": {
+        "executed": 2,
+        "merit": "2"
+      },
+      "B": {
+        "executed": 1,
+        "merit": "1"
+      }
+    }
+  },
+  "fixture": "execution_budget",
+  "metadata": {},
+  "negative_cases_exact": true,
+  "negative_results": [
+    {
+      "error": "PlaneAuthorityError",
+      "expected_error": "PlaneAuthorityError",
+      "name": "scheduler_state_write",
+      "state_unchanged": true,
+      "trace_unchanged": true
+    }
+  ],
+  "passed": true,
+  "replay": {
+    "byte_identical": true,
+    "state_sha256": "d33f3e90fc18bc1b069084f61690bf82e6c5bb16f89e8311f9a64c1f08db9e37",
+    "trace_sha256": "27ade3718fab9ed3f315bbe7aef9ecaa8624c2ae3dae0030a73e39145482efcf"
+  },
+  "required_assertions_exact": true,
+  "target": "reference",
+  "trace": [
+    {
+      "kind": "ContributionAccepted",
+      "payload": {
+        "available_instructions": 3,
+        "resolver_id": "BudgetResolver",
+        "weights": {
+          "A": 2,
+          "B": 1
+        }
+      },
+      "source": "MeritAllocator",
+      "time": "0.0"
+    },
+    {
+      "contributors": [
+        "MeritAllocator"
+      ],
+      "kind": "ResolverCommit",
+      "source": "BudgetResolver",
+      "target_path": [
+        "execution_budget"
+      ],
+      "time": "0.0",
+      "value": {
+        "A": 2,
+        "B": 1
+      }
+    },
+    {
+      "effect": {
+        "kind": "StateDelta",
+        "operation": "add",
+        "value": 1
+      },
+      "kind": "InstructionExecuted",
+      "source": "InstructionMechanism[A]",
+      "target_path": [
+        "organisms",
+        "A",
+        "executed"
+      ],
+      "time": "0.5"
+    },
+    {
+      "effect": {
+        "kind": "StateDelta",
+        "operation": "add",
+        "value": 1
+      },
+      "kind": "InstructionExecuted",
+      "source": "InstructionMechanism[A]",
+      "target_path": [
+        "organisms",
+        "A",
+        "executed"
+      ],
+      "time": "1.0"
+    },
+    {
+      "effect": {
+        "kind": "StateDelta",
+        "operation": "add",
+        "value": 1
+      },
+      "kind": "InstructionExecuted",
+      "source": "InstructionMechanism[B]",
+      "target_path": [
+        "organisms",
+        "B",
+        "executed"
+      ],
+      "time": "1.0"
+    }
+  ]
+}
