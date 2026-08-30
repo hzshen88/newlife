@@ -309,7 +309,7 @@ v0.1 拆分的理由：五合一复合实验违反预注册纪律的适用边界
 | **2. v0.1a 预注册** ✅ 冻结 `62d6d91`、戳记 `2cd12c0`，0-warning | 问题、判据、否定条件、冻结清单 | **冻结前不写任何 lowering 实现代码**——这是纪律的核心。预注册必须钉死：判定用的 canonical 形式（§5.9 坑）、IR 形状、H0 具名候选（set/add 候选经源码核查证伪后修正）、环境锁、anomaly protocol |
 | **3. 实现 → 运行 → 审计** ✅ 判定 H1 `compatible_for_frozen_slices_v1_lowered`（2026-08-30） | lowering 双 adapter 实现、封旁路、重推导 conform、跑判定 | 复用 `prereg.sh audit`（完整审计 0-warning，exloop `8fa0707`） |
 
-不做的事同样明确：`mechanisms/`、`examples/`、compare 逆向、Julia 注册包——全部在 gate 或 v0.3 之后。分工：预注册文档由维护方案的本会话起草（握有全部上下文），外部评审继续当审稿人——起草者与审稿者分开，与压力测试的红队结构同款。问题文档入口：[`docs/science-superpowers/questions/2026-08-30-newlife-lowering-completeness.md`](../../docs/science-superpowers/questions/2026-08-30-newlife-lowering-completeness.md)。
+不做的事同样明确：`mechanisms/`、`examples/`、compare 逆向、Julia 注册包——全部在 gate 或 v0.3 之后。分工：预注册文档由维护方案的本会话起草（握有全部上下文），外部评审继续当审稿人——起草者与审稿者分开，与压力测试的红队结构同款。问题文档入口：v0.1a [`questions/2026-08-30-newlife-lowering-completeness.md`](../../docs/science-superpowers/questions/2026-08-30-newlife-lowering-completeness.md)（已判定）；v0.1b [`questions/2026-08-31-newlife-staging-declarability.md`](../../docs/science-superpowers/questions/2026-08-31-newlife-staging-declarability.md)（已起草，待评审 → plan → 冻结）。
 
 ---
 
