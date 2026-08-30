@@ -1,0 +1,132 @@
+{
+ "schema": "proofroot.vectors.canonical",
+ "generated_by": "vectors/generate_canonical_vectors.py",
+ "canonical_bytes": [
+  {
+   "name": "empty_object",
+   "input": {},
+   "canonical_hex": "7b7d"
+  },
+  {
+   "name": "empty_array",
+   "input": [],
+   "canonical_hex": "5b5d"
+  },
+  {
+   "name": "nested_scalars",
+   "input": {
+    "b": 1,
+    "a": [
+     null,
+     true,
+     false,
+     -7
+    ],
+    "c": "x"
+   },
+   "canonical_hex": "7b2261223a5b6e756c6c2c747275652c66616c73652c2d375d2c2262223a312c2263223a2278227d"
+  },
+  {
+   "name": "codepoint_key_order",
+   "input": {
+    "é": 2,
+    "Z": 1,
+    "😀": 5,
+    "a": 3,
+    "中": 4
+   },
+   "canonical_hex": "7b225a223a312c2261223a332c22c3a9223a322c22e4b8ad223a342c22f09f9880223a357d"
+  },
+  {
+   "name": "unicode_strings",
+   "input": {
+    "k": "café 中 😀 \" \\ \n\t\u0001"
+   },
+   "canonical_hex": "7b226b223a22636166c3a920e4b8ad20f09f9880205c22205c5c205c6e5c745c7530303031227d"
+  },
+  {
+   "name": "deep_nesting",
+   "input": {
+    "a": [
+     {
+      "b": [
+       {
+        "c": []
+       }
+      ]
+     }
+    ]
+   },
+   "canonical_hex": "7b2261223a5b7b2262223a5b7b2263223a5b5d7d5d7d5d7d"
+  },
+  {
+   "name": "int_boundaries",
+   "input": {
+    "u64max": 18446744073709551615,
+    "neg": -9223372036854775808
+   },
+   "canonical_hex": "7b226e6567223a2d393232333337323033363835343737353830382c227536346d6178223a31383434363734343037333730393535313631357d"
+  }
+ ],
+ "float_bits": [
+  {
+   "decimal": "0.0",
+   "bits_hex": "0x0000000000000000",
+   "roundtrip_decimal": "0.0"
+  },
+  {
+   "decimal": "-0.0",
+   "bits_hex": "0x8000000000000000",
+   "roundtrip_decimal": "-0.0"
+  },
+  {
+   "decimal": "0.1",
+   "bits_hex": "0x3fb999999999999a",
+   "roundtrip_decimal": "0.1"
+  },
+  {
+   "decimal": "min_subnormal",
+   "bits_hex": "0x0000000000000001",
+   "roundtrip_decimal": "5e-324"
+  },
+  {
+   "decimal": "max_double",
+   "bits_hex": "0x7fefffffffffffff",
+   "roundtrip_decimal": "1.7976931348623157e+308"
+  },
+  {
+   "decimal": "infinity",
+   "bits_hex": "0x7ff0000000000000",
+   "roundtrip_decimal": "inf"
+  },
+  {
+   "decimal": "-infinity",
+   "bits_hex": "0xfff0000000000000",
+   "roundtrip_decimal": "-inf"
+  },
+  {
+   "decimal": "nan_quiet_default",
+   "bits_hex": "0x7ff8000000000000",
+   "roundtrip_decimal": "nan"
+  },
+  {
+   "decimal": "nan_payload_1",
+   "bits_hex": "0x7ff8000000000001",
+   "roundtrip_decimal": "nan"
+  },
+  {
+   "decimal": "nan_negative_quiet",
+   "bits_hex": "0xfff8000000000000",
+   "roundtrip_decimal": "nan"
+  },
+  {
+   "decimal": "one_third",
+   "bits_hex": "0x3fd5555555555555",
+   "roundtrip_decimal": "0.3333333333333333"
+  }
+ ],
+ "signed_zero_distinct": {
+  "zero": "0x0000000000000000",
+  "negzero": "0x8000000000000000"
+ }
+}

@@ -17,6 +17,7 @@ legacy UPPER-CASE phase spellings) stay in ParaLife's EvidenceCore.jl and are
 deliberately NOT ported here.
 """
 
+from .canonical import bits_to_float, canonical_bytes, float_to_bits
 from .phase import (
     EVIDENCE_TIER_CONFIRMATORY,
     EVIDENCE_TIER_EXPLORATION,
@@ -36,6 +37,9 @@ from .rng import (
 
 __all__ = [
     "EVIDENCECORE_RNG_V1",
+    "bits_to_float",
+    "canonical_bytes",
+    "float_to_bits",
     "EVIDENCE_TIER_CONFIRMATORY",
     "EVIDENCE_TIER_EXPLORATION",
     "EVIDENCE_TIER_UNKNOWN",
