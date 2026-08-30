@@ -186,7 +186,7 @@ def test_recorded_stream_roundtrip():
     assert stream.draw_float() == struct.unpack(">d", bytes.fromhex("3ff0000000000000"))[0]
     assert stream.pick((1, 2, 3)) == 3
     assert stream.draw_u64() == 0xDEADBEEFCAFEBABE
-    assert stream.permutation([(1, 1), (2, 1)]) == [[2, 1], [1, 1]]
+    assert stream.permutation([(1, 1), (2, 1)]) == [(2, 1), (1, 1)]
     assert stream.remaining() == 0
 
 
@@ -206,7 +206,7 @@ def test_recorded_stream_rejects_pick_outside_options():
 
 def test_recorded_bank_is_name_addressed(tmp_path: Path):
     log = tmp_path / "selection.jsonl"
-    log.write_text(json.dumps({"k": "p", "v": 2}) + "\n", encoding="utf-8")
+    log.write_text(json.dumps({"t": 0, "d": [{"k": "p", "v": 2}]}) + "\n", encoding="utf-8")
     (tmp_path / "environment.jsonl").write_text("", encoding="utf-8")
     bank = RecordedBank(101, {"selection": load_stream_log(log), "environment": []})
     assert bank.rng_stream("selection").pick((1, 2)) == 2

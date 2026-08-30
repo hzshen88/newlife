@@ -47,14 +47,22 @@ def set_path(state: dict[str, Any], path: tuple[str, ...], value: Any) -> None:
 
 
 def numeric_add(left: Any, right: Any) -> Any:
+    """Addition semantics for `add` effects.
+
+    Real-valued state requires IEEE754 binary addition (correctly rounded,
+    same as any host float pipeline — this is what let the World 1
+    trajectory match Julia bit-for-bit; the previous Decimal(str)-based
+    accumulation rounded differently in chained sums and silently shifted
+    reproduction timing). Integer state stays integral. The Decimal branch
+    remains for non-numeric (string) contract semantics only.
+    """
     if isinstance(left, bool) or isinstance(right, bool):
         raise TypeError("boolean StateDelta addition is undefined")
-    result = Decimal(str(left)) + Decimal(str(right))
     if isinstance(left, int) and isinstance(right, int):
-        return int(result)
-    if isinstance(left, float) or isinstance(right, float):
-        return float(result)
-    return str(result)
+        return left + right
+    if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+        return float(left) + float(right)
+    return str(Decimal(str(left)) + Decimal(str(right)))
 
 
 def apply_op(state: dict[str, Any], op: LoweredOp) -> None:

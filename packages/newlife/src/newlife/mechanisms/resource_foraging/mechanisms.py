@@ -190,6 +190,10 @@ def build_mechanism_specs(config) -> list[MechanismSpec]:
                     ("counters", "perceived_cue_counts"),
                 ],
                 "own",
+            )
+            + _claims(
+                [("counters", "true_cue_counts"), ("counters", "perceived_cue_counts")],
+                "read",
             ),
             {"StateDelta", "Event"},
             stage="perceive-move",
@@ -448,8 +452,16 @@ def movement_step(
         _add(("counters", "successful_moves"), successful),
         _add(("counters", "decisions"), decisions),
         _add(("counters", "aligned_actions"), aligned),
-        _set(("counters", "true_cue_counts"), true_cue_counts),
-        _set(("counters", "perceived_cue_counts"), perceived_cue_counts),
+        # Run-level cue counters accumulate over the whole run (Julia's
+        # world.true_cue_counts): read committed, add this tick's tally.
+        _set(
+            ("counters", "true_cue_counts"),
+            [a + b for a, b in zip(view[("counters", "true_cue_counts")], true_cue_counts)],
+        ),
+        _set(
+            ("counters", "perceived_cue_counts"),
+            [a + b for a, b in zip(view[("counters", "perceived_cue_counts")], perceived_cue_counts)],
+        ),
     ]
     return MechanismStep(tuple(effects), ())
 

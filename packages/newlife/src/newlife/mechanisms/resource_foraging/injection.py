@@ -77,6 +77,8 @@ class RecordedStream:
 
     def pick(self, options: Sequence) -> Any:
         value = self._next("p")["v"]
+        if isinstance(value, list):
+            value = tuple(value)  # JSON round-trips tuples as lists
         if value not in options:
             raise DrawLogMismatch(
                 f"recorded pick {value!r} not among options {list(options)!r}"
@@ -88,10 +90,12 @@ class RecordedStream:
 
     def permutation(self, items: Sequence) -> list:
         permuted = self._next("perm")["v"]
-        # JSON round-trips tuples as lists — compare element-wise.
-        if sorted(map(list, permuted)) != sorted(map(list, items)):
+        # JSON round-trips tuples as lists — compare element-wise and return
+        # the same element type as the input items.
+        normalized = [tuple(position) if isinstance(position, list) else position for position in permuted]
+        if sorted(map(list, normalized)) != sorted(map(list, items)):
             raise DrawLogMismatch("recorded permutation is not a permutation of the items")
-        return [list(position) for position in permuted]
+        return normalized
 
     def remaining(self) -> int:
         return len(self._records) - self._cursor
@@ -111,21 +115,32 @@ class RecordedBank:
 
 
 def load_stream_log(path: Path | str) -> list[dict[str, Any]]:
-    return [
-        json.loads(line)
-        for line in Path(path).read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+    """The recorder writes one JSON object per tick: {"t": tick, "d": [draws]}.
+    The loader flattens the per-tick draw lists into the strict consumption
+    order (the tick envelope is debugging metadata)."""
+    records: list[dict[str, Any]] = []
+    for line in Path(path).read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        records.extend(json.loads(line)["d"])
+    return records
 
 
 def load_recorded_bank(
     root_seed: int, log_dir: Path | str
 ) -> RecordedBank:
-    """Load a recorded bank from <log_dir>/<stream>.jsonl for all six streams."""
+    """Load a recorded bank from <log_dir>/<stream>.jsonl. Streams with no
+    recorded file (never drawn under this scope) bind an empty log — any
+    unexpected consumption raises DrawLogMismatch immediately."""
     from newlife.mechanisms.resource_foraging.model import RNG_STREAM_NAMES
 
     directory = Path(log_dir)
     logs = {
-        name: load_stream_log(directory / f"{name}.jsonl") for name in RNG_STREAM_NAMES
+        name: (
+            load_stream_log(directory / f"{name}.jsonl")
+            if (directory / f"{name}.jsonl").exists()
+            else []
+        )
+        for name in RNG_STREAM_NAMES
     }
     return RecordedBank(root_seed, logs)
