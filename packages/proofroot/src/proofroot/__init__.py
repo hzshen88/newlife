@@ -16,3 +16,35 @@ layers (parcells-rng-v1, parreact-rng-v1, parworlds-rng-v1 string encodings,
 legacy UPPER-CASE phase spellings) stay in ParaLife's EvidenceCore.jl and are
 deliberately NOT ported here.
 """
+
+from .phase import (
+    EVIDENCE_TIER_CONFIRMATORY,
+    EVIDENCE_TIER_EXPLORATION,
+    EVIDENCE_TIER_UNKNOWN,
+    EVIDENCE_TIERS,
+    RunPhase,
+    is_terminal,
+    parse_phase,
+    resolve_evidence_tier,
+)
+from .rng import (
+    EVIDENCECORE_RNG_V1,
+    RngBank,
+    RngDerivationError,
+    derive_stream_seed,
+)
+
+__all__ = [
+    "EVIDENCECORE_RNG_V1",
+    "EVIDENCE_TIER_CONFIRMATORY",
+    "EVIDENCE_TIER_EXPLORATION",
+    "EVIDENCE_TIER_UNKNOWN",
+    "EVIDENCE_TIERS",
+    "RunPhase",
+    "RngBank",
+    "RngDerivationError",
+    "derive_stream_seed",
+    "is_terminal",
+    "parse_phase",
+    "resolve_evidence_tier",
+]
