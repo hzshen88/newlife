@@ -16,3 +16,9 @@ build-backend = "hatchling.build"
 
 [tool.uv.sources]
 proofroot = { workspace = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/newlife"]
+
+[dependency-groups]
+dev = ["pytest>=8"]

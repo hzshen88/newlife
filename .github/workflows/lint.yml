@@ -1,4 +1,4 @@
-name: lint
+name: lint-and-test
 
 on: [push, pull_request]
 
@@ -11,3 +11,14 @@ jobs:
         with:
           python-version: "3.12"
       - run: python scripts/check_imports.py
+
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --package proofroot
+      - run: uv run --package proofroot pytest packages/proofroot/tests -q
+      - run: uv sync --package newlife
+      - run: uv run --package newlife pytest packages/newlife/tests -q
+        if: hashFiles('packages/newlife/tests/**') != ''
