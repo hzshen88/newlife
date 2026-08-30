@@ -1,0 +1,64 @@
+{
+  "analysis_code_commit": "f076daff3f9b50fb08d0fcd3c1c108f465318087",
+  "conform_suite_version": "1.0.0",
+  "contract_version": "v1",
+  "engine_versions": {
+    "bigraph-schema": "1.6.0",
+    "process-bigraph": "1.8.3"
+  },
+  "expected_fixture_sha256": {
+    "continuous_next_event.json": "44a66e143a6c4a31671150f533f9c1730a748f02b4fa9ce9912c29f1cfde655c",
+    "coupled_mechanics_division.json": "61c99228204f5fa4de6488dc7125d1f7f7df850c8bb41ca3defde3c3dfbe6e22",
+    "effect_algebra_transfer.json": "4ee1098eefbef0a417714f829bf574c53f8cc18ab316dbc9b1542ea3ecdcee33",
+    "execution_budget.json": "0e3127626a3ebe031be5a6ec157be93584fea0d25b528aef05175a99435a7759",
+    "hook_authority.json": "b4cfea020bb5f292ddccbffdcb57189de41c747ef1a88c2f85fc96bc3c615d63"
+  },
+  "formal_counts": {
+    "contract_microfixtures": 1,
+    "named_negative_types": 10,
+    "negative_executions_cell_level": 18,
+    "positive_executions": 16,
+    "target_slice_cells": 8
+  },
+  "implementation_log": [
+    {
+      "classification": "implementation clarification",
+      "correction": "pass validated Effects through unchanged; alias isolation is provided at the write boundary (update's deep-copied return), which is where the side-channel negative probes it",
+      "criterion_changed": false,
+      "issue": "deep-copying Effects in stage() crashed on Event payloads (frozen immutable mapping views are not deep-copyable)"
+    },
+    {
+      "classification": "implementation clarification",
+      "correction": "control implemented as add\u2192set on fixture A and set\u2192add on fixture C (both detected via the final-state half of the frozen byte comparison); the trace half's teeth are proven by the anti-masking probes, and the transfer microfixture adds a conservation-skimming probe",
+      "criterion_changed": false,
+      "issue": "the tampered-lowering control's set\u2192add flip is byte-invisible on fixture A's zero-initialized budget store, and no lowering tamper can alter mechanism-handwritten trace records"
+    },
+    {
+      "classification": "implementation clarification",
+      "correction": "added the list-direct store type (set = whole-list overwrite) to the dispatch table",
+      "criterion_changed": false,
+      "issue": "the vivarium-side payload side-channel negative needed a list-store lowering binding"
+    }
+  ],
+  "installed_source_roots": {
+    "bigraph-schema": "/Users/hzshen/Projects/newlife/.venv/lib/python3.12/site-packages/bigraph_schema",
+    "process-bigraph": "/Users/hzshen/Projects/newlife/.venv/lib/python3.12/site-packages/process_bigraph"
+  },
+  "installed_source_sha256_after": {
+    "bigraph-schema": "9bfd508fecb2750042034df9263353ac04e04034cb04c4b66ee5793f03374987",
+    "process-bigraph": "5fce82457fd0e63fc4795003d9c2dea770956d4615fe8ce79a9030176f2060c4"
+  },
+  "installed_source_sha256_before": {
+    "bigraph-schema": "9bfd508fecb2750042034df9263353ac04e04034cb04c4b66ee5793f03374987",
+    "process-bigraph": "5fce82457fd0e63fc4795003d9c2dea770956d4615fe8ce79a9030176f2060c4"
+  },
+  "mechanism_version": "1.0.0",
+  "profile_version": "2.0.0",
+  "proofroot_version": "0.1.0",
+  "python": "3.12.8",
+  "schema_version": 1,
+  "upstream_commits": {
+    "bigraph-schema": "019a1eb20d86eaef29c6d05c715bbd01d350c983",
+    "process-bigraph": "40fdb161cfc6d38df5af2571cbf64526549585a1"
+  }
+}

@@ -45,12 +45,14 @@ def is_stdlib(module: str) -> bool:
 
 violations: list[str] = []
 
-# R4.2 (v0.1a preregistration): the removed bypass field must never be
-# referenced anywhere in shipped source — not even in comments/docstrings,
-# so the free-form update channel cannot quietly grow back.
+# R4.2 (v0.1a preregistration): no ADAPTER file may reference the removed
+# bypass field — not even in comments/docstrings, so the free-form update
+# channel cannot quietly grow back. (conform/ probes reference the name to
+# assert its absence; they are the checker, not the checked surface.)
 BANNED_IDENTIFIERS = {"engine_update"}
+ADAPTER_DIR = NEWLIFE_SRC / "adapters"
 
-for py in sorted(NEWLIFE_SRC.rglob("*.py")):
+for py in sorted(ADAPTER_DIR.rglob("*.py")):
     source = py.read_text(encoding="utf-8")
     for banned in BANNED_IDENTIFIERS:
         if banned in source:

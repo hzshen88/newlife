@@ -1,0 +1,108 @@
+{
+  "assertions": {
+    "byte_identical_replay": true,
+    "closed_effect_union": true,
+    "exact_final_state": true,
+    "exact_trace": true,
+    "intervention_exact_scope": true,
+    "negative_errors_exact": true,
+    "negative_state_unchanged": true,
+    "negative_trace_unchanged": true,
+    "observer_has_no_biological_write": true,
+    "one_mechanism_per_runtime_node": true,
+    "registry_unchanged": true
+  },
+  "final_state": {
+    "parameters": {
+      "mutation_rate": "0.2"
+    },
+    "population": {
+      "p0": {
+        "fitness": "1.0",
+        "genome": "B"
+      }
+    }
+  },
+  "fixture": "hook_authority",
+  "metadata": {
+    "runtime_nodes": {
+      "intervention-process": "MutationRateIntervention",
+      "mutation-process": "MutationMechanism",
+      "observer-process": "FitnessObserver"
+    }
+  },
+  "negative_cases_exact": true,
+  "negative_results": [
+    {
+      "error": "ReadOnlyStateError",
+      "expected_error": "ReadOnlyStateError",
+      "name": "observer_nested_alias_mutation",
+      "state_unchanged": true,
+      "trace_unchanged": true
+    },
+    {
+      "error": "InterventionScopeError",
+      "expected_error": "InterventionScopeError",
+      "name": "intervention_genome_write",
+      "state_unchanged": true,
+      "trace_unchanged": true
+    },
+    {
+      "error": "UnknownEffectKindError",
+      "expected_error": "UnknownEffectKindError",
+      "name": "sixth_effect_registration",
+      "registry_unchanged": true,
+      "state_unchanged": true,
+      "trace_unchanged": true
+    }
+  ],
+  "passed": true,
+  "replay": {
+    "byte_identical": true,
+    "state_sha256": "24456ced1b83b32f59c46e6a7837730ab81c447965b8674b4753c6324c88994a",
+    "trace_sha256": "f9326dcabbc5c8500b0a442d9e29fcd3c889d1b2553e5287011c5116f32a07d7"
+  },
+  "required_assertions_exact": true,
+  "target": "vivarium",
+  "trace": [
+    {
+      "after": "0.2",
+      "before": "0.1",
+      "effect": {
+        "kind": "StateDelta",
+        "operation": "set",
+        "value": "0.2"
+      },
+      "kind": "StateDeltaCommitted",
+      "source": "MutationRateIntervention",
+      "target_path": [
+        "parameters",
+        "mutation_rate"
+      ],
+      "time": "0.0"
+    },
+    {
+      "after": "B",
+      "before": "A",
+      "kind": "StructuralRewrite",
+      "source": "MutationMechanism",
+      "target_path": [
+        "population",
+        "p0",
+        "genome"
+      ],
+      "time": "0.0"
+    },
+    {
+      "kind": "Event",
+      "payload": {
+        "fitness": "1.0",
+        "genome": "B",
+        "organism": "p0"
+      },
+      "source": "FitnessObserver",
+      "time": "0.0",
+      "type": "FitnessObserved"
+    }
+  ]
+}

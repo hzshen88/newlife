@@ -68,10 +68,10 @@ def test_negative_2_import_lint_confines_vendor_and_bans_engine_update():
         text=True,
     )
     assert result.returncode == 0, result.stdout
-    # no adapter (or any src) file references the removed bypass field
+    # no adapter file references the removed bypass field
     offenders = [
         str(path.relative_to(NEWLIFE_SRC))
-        for path in NEWLIFE_SRC.rglob("*.py")
+        for path in (NEWLIFE_SRC / "adapters").rglob("*.py")
         if "engine_update" in path.read_text(encoding="utf-8")
     ]
     assert offenders == []

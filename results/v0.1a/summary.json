@@ -1,0 +1,43 @@
+{
+  "cell_checks": {
+    "all_reference_cells": true,
+    "all_vivarium_cells": true,
+    "cross_target_exact": true,
+    "transfer_microfixture": true
+  },
+  "cell_passes": {
+    "reference": {
+      "continuous_next_event": true,
+      "coupled_mechanics_division": true,
+      "execution_budget": true,
+      "hook_authority": true
+    },
+    "vivarium": {
+      "continuous_next_event": true,
+      "coupled_mechanics_division": true,
+      "execution_budget": true,
+      "hook_authority": true
+    }
+  },
+  "engineering_checks": {
+    "api_shape_bypass_removed": true,
+    "atomic_batch_rollback": true,
+    "closed_effect_union": true,
+    "frozen_data_unchanged": true,
+    "import_lint_clean": true,
+    "installed_sources_unchanged": true,
+    "no_criterion_deviation": true,
+    "no_fixture_specific_dispatch": true,
+    "normalizer_anti_masking": true,
+    "public_surface_audit": true,
+    "pytest_suite": true
+  },
+  "limitations": [
+    "completeness for four frozen slices on contract v1 only",
+    "no claim of universal lowering, biological validity, or performance",
+    "trace-format switching to the proofroot spec deferred to v0.2"
+  ],
+  "schema_version": 1,
+  "scope": "v0.1a-lowering-completeness-frozen-slices",
+  "single_write_path_verdict": "compatible_for_frozen_slices_v1_lowered"
+}

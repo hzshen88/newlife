@@ -40,7 +40,7 @@ from newlife.core.errors import (
 from newlife.conform.contract.canonical_ruler import canonical_bytes
 
 
-PROFILE_VERSION = "1.0.0"
+PROFILE_VERSION = "2.0.0"  # 2.0.0: single write path — hand-written update channel removed
 _ACTIVE_PROFILE: ContextVar[BiologicalProfile | None] = ContextVar(
     "biosim_pressure_profile", default=None
 )
