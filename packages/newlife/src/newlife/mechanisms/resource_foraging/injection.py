@@ -88,9 +88,10 @@ class RecordedStream:
 
     def permutation(self, items: Sequence) -> list:
         permuted = self._next("perm")["v"]
-        if sorted(map(str, permuted)) != sorted(map(str, items)):
+        # JSON round-trips tuples as lists — compare element-wise.
+        if sorted(map(list, permuted)) != sorted(map(list, items)):
             raise DrawLogMismatch("recorded permutation is not a permutation of the items")
-        return list(permuted)
+        return [list(position) for position in permuted]
 
     def remaining(self) -> int:
         return len(self._records) - self._cursor

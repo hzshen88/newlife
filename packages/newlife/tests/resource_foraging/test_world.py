@@ -142,7 +142,9 @@ def test_protocol_plane_cannot_submit_biological_effects():
             invariants=(),
         )
     )
-    with pytest.raises(Exception, match="InterventionScopeError|CommitAuthorityError|PlaneAuthorityError"):
+    from newlife.core.errors import InterventionScopeError
+
+    with pytest.raises(InterventionScopeError):
         kernel.apply_batch(
             "ExternalAssay",
             [StateDelta(("resources", "1,1"), "add", 1.0)],
@@ -151,7 +153,9 @@ def test_protocol_plane_cannot_submit_biological_effects():
 
 def test_mechanism_cannot_write_outside_its_claims():
     kernel = build_kernel()
-    with pytest.raises(Exception, match="CommitAuthorityError"):
+    from newlife.core.errors import CommitAuthorityError
+
+    with pytest.raises(CommitAuthorityError):
         # the environment owns resources — not the organism records
         kernel.apply_batch(
             "resource-environment",
