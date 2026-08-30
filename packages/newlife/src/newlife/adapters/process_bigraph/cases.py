@@ -1,12 +1,15 @@
-"""Frozen slices implemented as independent Process-Bigraph compositions."""
+"""Frozen slices as declared staging plans compiled by the adapter's staging
+module (v0.1b): mechanisms carry the schedule staging schema, cases declare
+node wiring, and `staging.compile_staging` derives the multi-Composite
+orchestration (P1–P4). No `Composite` is constructed in this file — that is
+the R4.7 lint boundary (negatives included)."""
 
 from __future__ import annotations
 
 import copy
+from dataclasses import replace
 from decimal import Decimal
 from typing import Any, Callable
-
-from process_bigraph import Composite
 
 from newlife.core.contracts import (
     Contribution,
@@ -21,6 +24,7 @@ from newlife.core.errors import InvalidIntervalError
 from newlife.conform.fixtures import load_fixture
 from newlife.conform.contract.canonical_ruler import canonical_bytes, canonical_state, canonical_trace
 from newlife.adapters.reference_kernel.kernel import CaseResult
+from newlife.adapters.process_bigraph import staging
 from newlife.adapters.process_bigraph.wrapper import (
     BiologicalProfile,
     GuardedProcess,
@@ -42,7 +46,14 @@ def _spec(
     claims: tuple[StateClaim, ...] = (),
     effects: frozenset[str] = frozenset(),
     rng_streams: tuple[str, ...] = (),
+    stage: str | None = None,
+    after: tuple[str, ...] = (),
 ) -> MechanismSpec:
+    schedule = (
+        {"stage": stage, "after": list(after)}
+        if stage is not None
+        else {"kind": "runtime-managed"}
+    )
     return MechanismSpec(
         identity=identity,
         version="1.0.0",
@@ -50,7 +61,7 @@ def _spec(
         biological_role=role,
         ports=("state",),
         claims=claims,
-        schedule={"kind": "runtime-managed"},
+        schedule=schedule,
         rng_streams=rng_streams,
         allowed_effects=effects,
         invariants=("frozen-fixture",),
@@ -97,6 +108,7 @@ def _result(
     negatives: list[dict[str, Any]],
     assertions: dict[str, bool],
     profile: BiologicalProfile,
+    orchestration: dict[str, Any] | None = None,
 ) -> CaseResult:
     normalized_state = canonical_state(final_state)
     normalized_trace = canonical_trace(trace)
@@ -115,6 +127,9 @@ def _result(
         "one_mechanism_per_runtime_node": profile.assert_one_mechanism_per_node(),
     }
     checks.update(assertions)
+    metadata: dict[str, Any] = {"runtime_nodes": dict(sorted(profile.runtime_nodes.items()))}
+    if orchestration is not None:
+        metadata["orchestration"] = orchestration
     return CaseResult(
         fixture=fixture["fixture"],
         target="vivarium",
@@ -122,7 +137,7 @@ def _result(
         trace=normalized_trace,
         negative_results=negatives,
         assertions=checks,
-        metadata={"runtime_nodes": dict(sorted(profile.runtime_nodes.items()))},
+        metadata=metadata,
     )
 
 
@@ -246,6 +261,7 @@ def _execution_profile() -> BiologicalProfile:
             role="execution allocation",
             claims=(StateClaim(target, "contribute"),),
             effects=frozenset({"Contribution"}),
+            stage="allocate",
         ),
         "allocator-step",
     )
@@ -256,6 +272,7 @@ def _execution_profile() -> BiologicalProfile:
             role="budget resolution",
             claims=(StateClaim(target, "commit"),),
             effects=frozenset({"StateDelta"}),
+            stage="allocate",
         ),
         "resolver-step",
     )
@@ -271,6 +288,8 @@ def _execution_profile() -> BiologicalProfile:
                 role="instruction execution",
                 claims=(StateClaim(path, "own"),),
                 effects=frozenset({"StateDelta"}),
+                stage=f"instruct-{organism.lower()}",
+                after=("allocate",),
             ),
             f"instruction-{organism}",
         )
@@ -280,18 +299,9 @@ def _execution_profile() -> BiologicalProfile:
     return profile
 
 
-def run_execution_budget(*, include_negatives: bool = True) -> CaseResult:
-    fixture = load_fixture("execution_budget.json")
-    profile = _execution_profile()
-    core = allocate_profile_core(
-        ("MeritAllocatorStep", MeritAllocatorStep),
-        ("BudgetResolverStep", BudgetResolverStep),
-        ("InstructionProcess", InstructionProcess),
-    )
-    allocation_state = copy.deepcopy(fixture["initial_state"])
-    allocation_state.update({
-        "budget_proposal": {"A": 0, "B": 0, "available": 0},
-        "allocator_node": step_node(
+def _execution_nodes() -> dict[str, dict[str, Any]]:
+    nodes = {
+        "MeritAllocator": step_node(
             "MeritAllocatorStep",
             "MeritAllocator",
             inputs={
@@ -300,22 +310,15 @@ def run_execution_budget(*, include_negatives: bool = True) -> CaseResult:
             },
             outputs={"proposal": ["budget_proposal"]},
         ),
-        "resolver_node": step_node(
+        "BudgetResolver": step_node(
             "BudgetResolverStep",
             "BudgetResolver",
             inputs={"proposal": ["budget_proposal"]},
             outputs={"budget": ["execution_budget"]},
         ),
-    })
-    allocation = Composite({"state": allocation_state}, core=core)
-    run_composite(allocation, 0.0, profile)
-    biological_state = {
-        "execution_budget": copy.deepcopy(allocation.state["execution_budget"]),
-        "organisms": copy.deepcopy(allocation.state["organisms"]),
     }
     for organism in ("A", "B"):
-        instruction_state = copy.deepcopy(biological_state)
-        instruction_state["instruction_node"] = process_node(
+        nodes[f"InstructionMechanism[{organism}]"] = process_node(
             "InstructionProcess",
             f"InstructionMechanism[{organism}]",
             inputs={"budget": ["execution_budget", organism]},
@@ -323,14 +326,50 @@ def run_execution_budget(*, include_negatives: bool = True) -> CaseResult:
             interval=1.0,
             config={"organism": organism},
         )
-        instruction = Composite({"state": instruction_state}, core=core)
-        run_composite(instruction, 1.0, profile)
-        biological_state = {
-            "execution_budget": copy.deepcopy(instruction.state["execution_budget"]),
-            "organisms": copy.deepcopy(instruction.state["organisms"]),
-        }
+    return nodes
+
+
+BUDGET_OUTPUT_SCHEMAS = {
+    ("MeritAllocator", "proposal"): {"A": "integer", "B": "integer", "available": "integer"},
+}
+
+
+def run_execution_budget(
+    *, include_negatives: bool = True, stage_plan: str | None = None
+) -> CaseResult:
+    fixture = load_fixture("execution_budget.json")
+    profile = _execution_profile()
+    core = allocate_profile_core(
+        ("MeritAllocatorStep", MeritAllocatorStep),
+        ("BudgetResolverStep", BudgetResolverStep),
+        ("InstructionProcess", InstructionProcess),
+    )
+    nodes = _execution_nodes()
+    participating = [
+        profile.registry.mechanisms[mech] for mech in nodes
+    ]
+    if stage_plan == "merged_instructions":
+        # R4 negative 8: a deliberately wrong declared DAG — the two chained
+        # per-organism instruction stages merged into one. Must be detected
+        # by the byte comparison (interleaved A/B timesteps).
+        participating = [
+            replace(
+                spec,
+                schedule={"stage": "instruct", "after": ["allocate"]}
+                if spec.identity.startswith("InstructionMechanism")
+                else spec.schedule,
+            )
+            for spec in participating
+        ]
+    orchestration = staging.compile_staging(
+        nodes, participating, fixture["initial_state"], BUDGET_OUTPUT_SCHEMAS
+    )
+    composites = staging.run_orchestration(orchestration, profile, core)
     trace = profile.take_trace()
-    final_state = biological_state
+    final_state = {
+        root: copy.deepcopy(composites[-1].state[root])
+        for root in orchestration.carried_roots
+    }
     negative = {"error": "PlaneAuthorityError"}
     negatives = []
     if include_negatives:
@@ -359,6 +398,7 @@ def run_execution_budget(*, include_negatives: bool = True) -> CaseResult:
             }.issubset(profile.registry.mechanisms),
         },
         profile,
+        orchestration.record(),
     )
 
 
@@ -450,6 +490,7 @@ def _mechanics_profile() -> BiologicalProfile:
                 role="mechanics contribution",
                 claims=(StateClaim(target, "contribute"),),
                 effects=frozenset({"Contribution"}),
+                stage="mechanics",
             ),
             f"contributor-{source}",
         )
@@ -478,6 +519,8 @@ def _mechanics_profile() -> BiologicalProfile:
             role="lifecycle division",
             claims=(StateClaim(("cells",), "own"),),
             effects=frozenset({"StructuralRewrite"}),
+            stage="division",
+            after=("mechanics",),
         ),
         "division-process",
     )
@@ -494,13 +537,13 @@ def _selective_disable_check() -> bool:
             role="mechanics contribution",
             claims=(StateClaim(target, "contribute"),),
             effects=frozenset({"Contribution"}),
+            stage="adhesion-only",
         ),
         "adhesion-only",
     )
     core = allocate_profile_core(("MechanicsContributor", MechanicsContributor))
-    state = {
-        "cells": {"mother": {"position": 1.0, "biomass": 2.0}},
-        "adhesion_node": process_node(
+    nodes = {
+        "Adhesion": process_node(
             "MechanicsContributor",
             "Adhesion",
             inputs={},
@@ -509,8 +552,12 @@ def _selective_disable_check() -> bool:
             config={"source": "Adhesion", "delta": 2.0},
         ),
     }
-    composite = Composite({"state": state}, core=core)
-    run_composite(composite, 1.0, profile)
+    initial = {"cells": {"mother": {"position": 1.0, "biomass": 2.0}}}
+    orchestration = staging.compile_staging(
+        nodes, [profile.registry.mechanisms["Adhesion"]], initial
+    )
+    (_, composite), = staging.build_composites(orchestration, core)
+    run_composite(composite, orchestration.plan[0].duration, profile)
     return (
         composite.state["cells"]["mother"]["position"] == 3.0
         and len(composite.process_paths) == 1
@@ -524,9 +571,8 @@ def run_coupled_mechanics_division(*, include_negatives: bool = True) -> CaseRes
         ("MechanicsContributor", MechanicsContributor),
         ("DivisionProcess", DivisionProcess),
     )
-    mechanics_state = {
-        "cells": {"mother": {"position": 1.0, "biomass": 2.0}},
-        "adhesion_node": process_node(
+    nodes = {
+        "Adhesion": process_node(
             "MechanicsContributor",
             "Adhesion",
             inputs={},
@@ -534,7 +580,7 @@ def run_coupled_mechanics_division(*, include_negatives: bool = True) -> CaseRes
             interval=1.0,
             config={"source": "Adhesion", "delta": 2.0},
         ),
-        "repulsion_node": process_node(
+        "Repulsion": process_node(
             "MechanicsContributor",
             "Repulsion",
             inputs={},
@@ -542,12 +588,7 @@ def run_coupled_mechanics_division(*, include_negatives: bool = True) -> CaseRes
             interval=1.0,
             config={"source": "Repulsion", "delta": -0.5},
         ),
-    }
-    mechanics = Composite({"state": mechanics_state}, core=core)
-    run_composite(mechanics, 1.0, profile)
-    division_state = {
-        "cells": copy.deepcopy(mechanics.state["cells"]),
-        "division_node": process_node(
+        "DivisionMechanism": process_node(
             "DivisionProcess",
             "DivisionMechanism",
             inputs={"cells": ["cells"]},
@@ -555,10 +596,15 @@ def run_coupled_mechanics_division(*, include_negatives: bool = True) -> CaseRes
             interval=1.0,
         ),
     }
-    division = Composite({"state": division_state}, core=core)
-    run_composite(division, 1.0, profile)
+    participating = [profile.registry.mechanisms[mech] for mech in nodes]
+    initial = {"cells": {"mother": {"position": 1.0, "biomass": 2.0}}}
+    orchestration = staging.compile_staging(nodes, participating, initial)
+    composites = staging.run_orchestration(orchestration, profile, core)
     trace = profile.take_trace()
-    final_state = {"cells": copy.deepcopy(division.state["cells"])}
+    final_state = {
+        root: copy.deepcopy(composites[-1].state[root])
+        for root in orchestration.carried_roots
+    }
 
     negatives = []
     if include_negatives:
@@ -616,6 +662,7 @@ def run_coupled_mechanics_division(*, include_negatives: bool = True) -> CaseRes
             ),
         },
         profile,
+        orchestration.record(),
     )
 
 
@@ -731,6 +778,7 @@ def _hook_profile() -> BiologicalProfile:
             role="parameter intervention",
             claims=(StateClaim(("parameters", "mutation_rate"), "own"),),
             effects=frozenset({"StateDelta"}),
+            stage="intervene",
         ),
         "intervention-process",
     )
@@ -741,6 +789,8 @@ def _hook_profile() -> BiologicalProfile:
             role="heredity variation",
             claims=(StateClaim(("population", "p0", "genome"), "own"),),
             effects=frozenset({"StructuralRewrite"}),
+            stage="mutate",
+            after=("intervene",),
         ),
         "mutation-process",
     )
@@ -751,26 +801,12 @@ def _hook_profile() -> BiologicalProfile:
             role="observation",
             claims=(StateClaim(("population",), "read"),),
             effects=frozenset({"Event"}),
+            stage="observe",
+            after=("mutate",),
         ),
         "observer-process",
     )
     return profile
-
-
-def _run_one(
-    state: dict[str, Any],
-    profile: BiologicalProfile,
-    core,
-    node: dict[str, Any],
-) -> dict[str, Any]:
-    runtime_state = copy.deepcopy(state)
-    runtime_state["mechanism_node"] = node
-    composite = Composite({"state": runtime_state}, core=core)
-    run_composite(composite, 1.0, profile)
-    return {
-        "parameters": copy.deepcopy(composite.state["parameters"]),
-        "population": copy.deepcopy(composite.state["population"]),
-    }
 
 
 def run_hook_authority(*, include_negatives: bool = True) -> CaseResult:
@@ -782,37 +818,24 @@ def run_hook_authority(*, include_negatives: bool = True) -> CaseResult:
         ("FitnessObserverProcess", FitnessObserverProcess),
         ("MutatingFitnessObserver", MutatingFitnessObserver),
     )
-    state = copy.deepcopy(fixture["initial_state"])
-    state["parameters"]["mutation_rate"] = 0.1
-    state = _run_one(
-        state,
-        profile,
-        core,
-        process_node(
+    initial = copy.deepcopy(fixture["initial_state"])
+    initial["parameters"]["mutation_rate"] = 0.1
+    nodes = {
+        "MutationRateIntervention": process_node(
             "MutationRateIntervention",
             "MutationRateIntervention",
             inputs={"rate": ["parameters", "mutation_rate"]},
             outputs={"rate": ["parameters", "mutation_rate"]},
             interval=1.0,
         ),
-    )
-    state = _run_one(
-        state,
-        profile,
-        core,
-        process_node(
+        "MutationMechanism": process_node(
             "MutationProcess",
             "MutationMechanism",
             inputs={"genome": ["population", "p0", "genome"]},
             outputs={"genome": ["population", "p0", "genome"]},
             interval=1.0,
         ),
-    )
-    state = _run_one(
-        state,
-        profile,
-        core,
-        process_node(
+        "FitnessObserver": process_node(
             "FitnessObserverProcess",
             "FitnessObserver",
             inputs={
@@ -822,24 +845,41 @@ def run_hook_authority(*, include_negatives: bool = True) -> CaseResult:
             outputs={},
             interval=1.0,
         ),
-    )
+    }
+    participating = [profile.registry.mechanisms[mech] for mech in nodes]
+    orchestration = staging.compile_staging(nodes, participating, initial)
+    composites = staging.run_orchestration(orchestration, profile, core)
     trace = profile.take_trace()
+    state = {
+        root: copy.deepcopy(composites[-1].state[root])
+        for root in orchestration.carried_roots
+    }
 
     negatives = []
     if include_negatives:
-        alias_state = copy.deepcopy(fixture["initial_state"])
-        alias_state["observer_node"] = process_node(
-            "MutatingFitnessObserver",
-            "FitnessObserver",
-            inputs={"population": ["population"]},
-            outputs={},
-            interval=1.0,
+        # The alias negative path also runs through declarations + compiled
+        # orchestration (R4.7: no Composite construction in this file, no
+        # lint exemptions). Its declaration is a self-contained single stage.
+        alias_spec = replace(
+            profile.registry.mechanisms["FitnessObserver"],
+            schedule={"stage": "observe", "after": []},
         )
-        alias_composite = Composite({"state": alias_state}, core=core)
+        alias_orchestration = staging.compile_staging(
+            {"FitnessObserver": process_node(
+                "MutatingFitnessObserver",
+                "FitnessObserver",
+                inputs={"population": ["population"]},
+                outputs={},
+                interval=1.0,
+            )},
+            [alias_spec],
+            copy.deepcopy(fixture["initial_state"]),
+        )
+        ((_, alias_composite),) = staging.build_composites(alias_orchestration, core)
         alias_state_before = canonical_bytes(alias_composite.state["population"])
         alias_trace_before = canonical_bytes(profile.pending_trace)
         try:
-            run_composite(alias_composite, 1.0, profile)
+            run_composite(alias_composite, alias_orchestration.plan[0].duration, profile)
         except Exception as error:
             alias_error = type(error).__name__
         else:
@@ -904,6 +944,7 @@ def run_hook_authority(*, include_negatives: bool = True) -> CaseResult:
             "registry_unchanged": registry_unchanged,
         },
         profile,
+        orchestration.record(),
     )
 
 
@@ -974,6 +1015,7 @@ def _reaction_profile() -> BiologicalProfile:
                 claims=(StateClaim(("counts", channel), "own"),),
                 effects=frozenset({"StateDelta", "Event"}),
                 rng_streams=(f"intervals:{channel}",),
+                stage="react",
             ),
             f"reaction-{channel}",
         )
@@ -984,31 +1026,34 @@ def run_continuous_next_event(*, include_negatives: bool = True) -> CaseResult:
     fixture = load_fixture("continuous_next_event.json")
     profile = _reaction_profile()
     core = allocate_profile_core(("ReactionProcess", ReactionProcess))
-    state = copy.deepcopy(fixture["initial_state"])
-    state.update(
-        {
-            "reaction_a_node": process_node(
-                "ReactionProcess",
-                "ReactionChannel[A]",
-                inputs={"count": ["counts", "A"]},
-                outputs={"count": ["counts", "A"]},
-                interval=1.0,
-                config={"channel": "A", "intervals": [0.2, 0.5]},
-            ),
-            "reaction_b_node": process_node(
-                "ReactionProcess",
-                "ReactionChannel[B]",
-                inputs={"count": ["counts", "B"]},
-                outputs={"count": ["counts", "B"]},
-                interval=1.0,
-                config={"channel": "B", "intervals": [0.5, 0.5]},
-            ),
-        }
+    nodes = {
+        "ReactionChannel[A]": process_node(
+            "ReactionProcess",
+            "ReactionChannel[A]",
+            inputs={"count": ["counts", "A"]},
+            outputs={"count": ["counts", "A"]},
+            interval=1.0,
+            config={"channel": "A", "intervals": [0.2, 0.5]},
+        ),
+        "ReactionChannel[B]": process_node(
+            "ReactionProcess",
+            "ReactionChannel[B]",
+            inputs={"count": ["counts", "B"]},
+            outputs={"count": ["counts", "B"]},
+            interval=1.0,
+            config={"channel": "B", "intervals": [0.5, 0.5]},
+        ),
+    }
+    participating = [profile.registry.mechanisms[mech] for mech in nodes]
+    orchestration = staging.compile_staging(
+        nodes, participating, copy.deepcopy(fixture["initial_state"])
     )
-    composite = Composite({"state": state}, core=core)
-    run_composite(composite, 1.0, profile)
+    composites = staging.run_orchestration(orchestration, profile, core)
     trace = profile.take_trace()
-    final_state = {"counts": copy.deepcopy(composite.state["counts"])}
+    final_state = {
+        root: copy.deepcopy(composites[-1].state[root])
+        for root in orchestration.carried_roots
+    }
     consumed = {"ReactionChannel[A]": [], "ReactionChannel[B]": []}
     for record in profile.runtime_audit:
         if record.get("stage") == "draw":
@@ -1018,9 +1063,8 @@ def run_continuous_next_event(*, include_negatives: bool = True) -> CaseResult:
     if include_negatives:
         for name, value in (("zero_interval", 0.0), ("negative_interval", -0.1)):
             negative_profile = _reaction_profile()
-            negative_state = {
-                "counts": {"A": 0, "B": 0},
-                "reaction_node": process_node(
+            negative_nodes = {
+                "ReactionChannel[A]": process_node(
                     "ReactionProcess",
                     "ReactionChannel[A]",
                     inputs={"count": ["counts", "A"]},
@@ -1029,11 +1073,18 @@ def run_continuous_next_event(*, include_negatives: bool = True) -> CaseResult:
                     config={"channel": "A", "intervals": [value]},
                 ),
             }
-            negative_composite = Composite({"state": negative_state}, core=core)
+            negative_orchestration = staging.compile_staging(
+                negative_nodes,
+                [negative_profile.registry.mechanisms["ReactionChannel[A]"]],
+                {"counts": {"A": 0, "B": 0}},
+            )
+            ((_, negative_composite),) = staging.build_composites(negative_orchestration, core)
             state_before = canonical_bytes(negative_composite.state["counts"])
             clock_before = negative_composite.state["global_time"]
             try:
-                run_composite(negative_composite, 1.0, negative_profile)
+                run_composite(
+                    negative_composite, negative_orchestration.plan[0].duration, negative_profile
+                )
             except Exception as error:
                 actual_error = type(error).__name__
             else:
@@ -1066,6 +1117,7 @@ def run_continuous_next_event(*, include_negatives: bool = True) -> CaseResult:
             ),
         },
         profile,
+        orchestration.record(),
     )
 
 

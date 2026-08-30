@@ -60,6 +60,15 @@ for py in sorted(ADAPTER_DIR.rglob("*.py")):
                 f"{py}: removed bypass identifier {banned!r} referenced (rule R4.2)"
             )
 
+# R4.7 (v0.1b preregistration): orchestration is compiled by staging.py —
+# the case path may not construct Composite directly, negatives included.
+# No exemptions: an exemption would be a hole.
+for py in sorted((NEWLIFE_SRC / "adapters" / "process_bigraph").glob("cases.py")):
+    if "Composite(" in py.read_text(encoding="utf-8"):
+        violations.append(
+            f"{py}: manual Composite construction in the case path (rule R4.7)"
+        )
+
 for src_dir in (PROOFROOT_SRC, NEWLIFE_SRC):
     for py in sorted(src_dir.rglob("*.py")):
         for module, lineno in imported_roots(py):

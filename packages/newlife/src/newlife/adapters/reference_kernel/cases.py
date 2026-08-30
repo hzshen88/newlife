@@ -19,6 +19,7 @@ from newlife.core.contracts import (
 from newlife.core.errors import InvalidIntervalError
 from newlife.conform.fixtures import load_fixture
 from newlife.conform.contract.canonical_ruler import canonical_bytes, canonical_state, canonical_trace
+from newlife.adapters.process_bigraph.staging import order_is_consistent_with_dag
 from newlife.adapters.reference_kernel.kernel import CaseResult, ReferenceKernel
 
 
@@ -30,7 +31,17 @@ def _spec(
     claims: tuple[StateClaim, ...] = (),
     effects: frozenset[str] = frozenset(),
     rng_streams: tuple[str, ...] = (),
+    stage: str | None = None,
+    after: tuple[str, ...] = (),
 ) -> MechanismSpec:
+    # R6: the reference cases declare the same staging schema as the
+    # Process-Bigraph side; their harness program order is validated
+    # against the declared DAG (validation, not compilation).
+    schedule = (
+        {"stage": stage, "after": list(after)}
+        if stage is not None
+        else {"kind": "fixture-defined"}
+    )
     return MechanismSpec(
         identity=identity,
         version="1.0.0",
@@ -38,11 +49,21 @@ def _spec(
         biological_role=role,
         ports=("state",),
         claims=claims,
-        schedule={"kind": "fixture-defined"},
+        schedule=schedule,
         rng_streams=rng_streams,
         allowed_effects=effects,
         invariants=("frozen-fixture",),
     )
+
+
+def _stage_order_valid(specs, program_order) -> bool:
+    stage_after: dict[str, set[str]] = {}
+    for spec in specs:
+        schedule = spec.schedule
+        if "stage" not in schedule:
+            continue
+        stage_after.setdefault(schedule["stage"], set()).update(schedule["after"])
+    return order_is_consistent_with_dag(stage_after, program_order)
 
 
 def _negative(
@@ -120,6 +141,7 @@ def _execution_kernel(initial_state: dict[str, Any]) -> ReferenceKernel:
             role="execution allocation",
             claims=(StateClaim(budget_path, "contribute"),),
             effects=frozenset({"Contribution"}),
+            stage="allocate",
         )
     )
     kernel.register_mechanism(
@@ -129,6 +151,7 @@ def _execution_kernel(initial_state: dict[str, Any]) -> ReferenceKernel:
             role="budget resolution",
             claims=(StateClaim(budget_path, "commit"),),
             effects=frozenset({"StateDelta"}),
+            stage="allocate",
         )
     )
     for organism in ("A", "B"):
@@ -140,6 +163,8 @@ def _execution_kernel(initial_state: dict[str, Any]) -> ReferenceKernel:
                 role="instruction execution",
                 claims=(StateClaim(path, "own"),),
                 effects=frozenset({"StateDelta"}),
+                stage=f"instruct-{organism.lower()}",
+                after=("allocate",),
             )
         )
     kernel.register_mechanism(
@@ -163,6 +188,7 @@ def _execution_kernel(initial_state: dict[str, Any]) -> ReferenceKernel:
 def run_execution_budget(*, include_negatives: bool = True) -> CaseResult:
     fixture = load_fixture("execution_budget.json")
     kernel = _execution_kernel(fixture["initial_state"])
+    program_order = ["allocate"]
     contribution = Contribution(
         "BudgetResolver",
         ("execution_budget",),
@@ -177,6 +203,7 @@ def run_execution_budget(*, include_negatives: bool = True) -> CaseResult:
     )
     for time, organism in (("0.5", "A"), ("1.0", "A"), ("1.0", "B")):
         source = f"InstructionMechanism[{organism}]"
+        program_order.append(f"instruct-{organism.lower()}")
         path = ("organisms", organism, "executed")
         kernel.apply_batch(
             source,
@@ -216,6 +243,9 @@ def run_execution_budget(*, include_negatives: bool = True) -> CaseResult:
                 name in kernel.registry.mechanisms
                 for name in ("InstructionMechanism[A]", "InstructionMechanism[B]")
             ),
+            "declared_stage_order_valid": _stage_order_valid(
+                list(kernel.registry.mechanisms.values()), program_order
+            ),
         },
     )
 
@@ -231,6 +261,7 @@ def _mechanics_kernel(initial_state: dict[str, Any]) -> ReferenceKernel:
                 role="mechanics contribution",
                 claims=(StateClaim(position, "contribute"),),
                 effects=frozenset({"Contribution"}),
+                stage="mechanics",
             )
         )
     kernel.register_mechanism(
@@ -240,6 +271,7 @@ def _mechanics_kernel(initial_state: dict[str, Any]) -> ReferenceKernel:
             role="mechanics resolution",
             claims=(StateClaim(position, "commit"),),
             effects=frozenset({"StateDelta"}),
+            stage="mechanics",
         )
     )
     kernel.register_mechanism(
@@ -249,6 +281,8 @@ def _mechanics_kernel(initial_state: dict[str, Any]) -> ReferenceKernel:
             role="lifecycle division",
             claims=(StateClaim(("cells",), "own"),),
             effects=frozenset({"StructuralRewrite"}),
+            stage="division",
+            after=("mechanics",),
         )
     )
     kernel.register_resolver(
@@ -275,6 +309,7 @@ def _mechanics_policy(before: Any, items: tuple[Contribution, ...]):
 def run_coupled_mechanics_division(*, include_negatives: bool = True) -> CaseResult:
     fixture = load_fixture("coupled_mechanics_division.json")
     kernel = _mechanics_kernel(fixture["initial_state"])
+    program_order = ["mechanics", "division"]
     path = ("cells", "mother", "position")
     contributions = [
         Contribution("MechanicsResolver", path, "Adhesion", "2.0"),
@@ -353,6 +388,9 @@ def run_coupled_mechanics_division(*, include_negatives: bool = True) -> CaseRes
             "independent_contributors": all(
                 name in kernel.registry.mechanisms for name in ("Adhesion", "Repulsion")
             ),
+            "declared_stage_order_valid": _stage_order_valid(
+                list(kernel.registry.mechanisms.values()), program_order
+            ),
         },
     )
 
@@ -366,6 +404,7 @@ def _hook_kernel(initial_state: dict[str, Any]) -> ReferenceKernel:
             role="parameter intervention",
             claims=(StateClaim(("parameters", "mutation_rate"), "own"),),
             effects=frozenset({"StateDelta"}),
+            stage="intervene",
         )
     )
     kernel.register_mechanism(
@@ -375,6 +414,8 @@ def _hook_kernel(initial_state: dict[str, Any]) -> ReferenceKernel:
             role="heredity variation",
             claims=(StateClaim(("population", "p0", "genome"), "own"),),
             effects=frozenset({"StructuralRewrite"}),
+            stage="mutate",
+            after=("intervene",),
         )
     )
     kernel.register_mechanism(
@@ -384,6 +425,8 @@ def _hook_kernel(initial_state: dict[str, Any]) -> ReferenceKernel:
             role="observation",
             claims=(StateClaim(("population",), "read"),),
             effects=frozenset({"Event"}),
+            stage="observe",
+            after=("mutate",),
         )
     )
     return kernel
@@ -392,6 +435,7 @@ def _hook_kernel(initial_state: dict[str, Any]) -> ReferenceKernel:
 def run_hook_authority(*, include_negatives: bool = True) -> CaseResult:
     fixture = load_fixture("hook_authority.json")
     kernel = _hook_kernel(fixture["initial_state"])
+    program_order = ["intervene", "mutate", "observe"]
     rate_path = ("parameters", "mutation_rate")
     genome_path = ("population", "p0", "genome")
     kernel.apply_batch(
@@ -505,6 +549,9 @@ def run_hook_authority(*, include_negatives: bool = True) -> CaseResult:
             == (StateClaim(rate_path, "own"),),
             "closed_effect_union": closed_union,
             "registry_unchanged": registry_unchanged,
+            "declared_stage_order_valid": _stage_order_valid(
+                list(kernel.registry.mechanisms.values()), program_order
+            ),
         },
     )
 
@@ -520,6 +567,7 @@ def _reaction_kernel(initial_state: dict[str, Any]) -> ReferenceKernel:
                 claims=(StateClaim(("counts", channel), "own"),),
                 effects=frozenset({"StateDelta", "Event"}),
                 rng_streams=(f"intervals:{channel}",),
+                stage="react",
             )
         )
     return kernel
@@ -535,6 +583,7 @@ def _validated_interval(value: str) -> Decimal:
 def run_continuous_next_event(*, include_negatives: bool = True) -> CaseResult:
     fixture = load_fixture("continuous_next_event.json")
     kernel = _reaction_kernel(fixture["initial_state"])
+    program_order: list[str] = []
     streams = {
         "A": list(fixture["expected_draw_consumption"]["ReactionChannel[A]"]),
         "B": list(fixture["expected_draw_consumption"]["ReactionChannel[B]"]),
@@ -547,6 +596,7 @@ def run_continuous_next_event(*, include_negatives: bool = True) -> CaseResult:
         time = due[channel]
         source = f"ReactionChannel[{channel}]"
         count = kernel.state["counts"][channel] + 1
+        program_order.append("react")
         consumed[source].append(streams[channel][cursor[channel]])
         kernel.apply_batch(
             source,
@@ -596,6 +646,9 @@ def run_continuous_next_event(*, include_negatives: bool = True) -> CaseResult:
             == ["0.2", "0.5", "0.7", "1.0"],
             "negative_clock_unchanged": all(
                 item["clock_unchanged"] for item in negatives
+            ),
+            "declared_stage_order_valid": _stage_order_valid(
+                list(kernel.registry.mechanisms.values()), program_order
             ),
         },
     )

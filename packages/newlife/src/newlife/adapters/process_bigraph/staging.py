@@ -303,21 +303,41 @@ def compile_staging(
 def build_composites(orchestration: Orchestration, core) -> list[tuple[StagePlan, Any]]:
     from process_bigraph import Composite
 
+    # Composite state keys for nodes are positional (node_0, node_1, …): the
+    # engine parses state path segments, and mechanism identities contain
+    # characters like '[' that must not appear in state keys. The mechanism
+    # identity travels in the node's config (mechanism_id), not the key.
     built = []
     for plan in orchestration.plan:
         state = copy.deepcopy(dict(plan.state))
-        state.update(copy.deepcopy(dict(plan.nodes)))
+        for index, node in enumerate(plan.nodes.values()):
+            state[f"node_{index}"] = copy.deepcopy(dict(node))
         built.append((plan, Composite({"state": state}, core=core)))
     return built
 
 
 def run_orchestration(orchestration: Orchestration, profile, core) -> list[Any]:
+    from process_bigraph import Composite
+
     from newlife.adapters.process_bigraph.wrapper import run_composite
 
-    composites = []
-    for plan, composite in build_composites(orchestration, core):
+    # State threading (the "committed state of prior stages" basis term):
+    # each stage's composite is built just-in-time — its carried roots take
+    # their VALUES from the previous stage's committed state (the first
+    # stage uses the declared initial state). Internal roots never thread.
+    composites: list[Any] = []
+    current: Any = None
+    for index, plan in enumerate(orchestration.plan):
+        state = copy.deepcopy(dict(plan.state))
+        if index > 0 and current is not None:
+            for root in orchestration.carried_roots:
+                state[root] = copy.deepcopy(current.state[root])
+        for node_index, node in enumerate(plan.nodes.values()):
+            state[f"node_{node_index}"] = copy.deepcopy(dict(node))
+        composite = Composite({"state": state}, core=core)
         run_composite(composite, plan.duration, profile)
         composites.append(composite)
+        current = composite
     return composites
 
 
