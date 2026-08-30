@@ -1,0 +1,83 @@
+"""Reference-kernel lowering: LoweredOp → kernel state application (R5 class ii).
+
+This is the whole of the adapter's "IR → update" translation for the default
+backend. It is a pure function of (LoweredOp, target state) — no mechanism
+dispatch, no fixture knowledge. Unit-tested against synthetic IR; the kernel
+only feeds it ops produced by `newlife.core.lowering_contract.lower_effect`.
+"""
+
+from __future__ import annotations
+
+import copy
+from decimal import Decimal
+from typing import Any, Mapping
+
+from newlife.core.errors import StatePathError
+from newlife.core.lowering_contract import (
+    OP_ADD,
+    OP_CONTRIBUTION_RESOLVE,
+    OP_EVENT,
+    OP_SET,
+    OP_STRUCTURAL,
+    OP_TRANSFER_PAIR,
+    LoweredOp,
+)
+
+
+def get_path(state: Mapping[str, Any], path: tuple[str, ...]) -> Any:
+    cursor: Any = state
+    try:
+        for part in path:
+            cursor = cursor[part]
+    except (KeyError, TypeError) as error:
+        raise StatePathError(f"missing state path: {path!r}") from error
+    return cursor
+
+
+def set_path(state: dict[str, Any], path: tuple[str, ...], value: Any) -> None:
+    cursor: Any = state
+    try:
+        for part in path[:-1]:
+            cursor = cursor[part]
+        # Deep-copy at the write boundary: a mutable payload container must
+        # not alias into committed state (R4 negative 10).
+        cursor[path[-1]] = copy.deepcopy(value)
+    except (KeyError, TypeError) as error:
+        raise StatePathError(f"missing state path: {path!r}") from error
+
+
+def numeric_add(left: Any, right: Any) -> Any:
+    if isinstance(left, bool) or isinstance(right, bool):
+        raise TypeError("boolean StateDelta addition is undefined")
+    result = Decimal(str(left)) + Decimal(str(right))
+    if isinstance(left, int) and isinstance(right, int):
+        return int(result)
+    if isinstance(left, float) or isinstance(right, float):
+        return float(result)
+    return str(result)
+
+
+def apply_op(state: dict[str, Any], op: LoweredOp) -> None:
+    """Apply one LoweredOp to kernel state. contribution_resolve/event are
+    state-neutral here: envelopes are consumed by the Resolver lowering, and
+    events carry no state semantics (frozen kernel behavior)."""
+    if op.op == OP_SET:
+        set_path(state, op.path, op.payload)  # payload IS the after value
+    elif op.op == OP_ADD:
+        before = get_path(state, op.path)
+        set_path(state, op.path, numeric_add(before, op.payload))
+    elif op.op == OP_TRANSFER_PAIR:
+        source_before = get_path(state, op.payload["source_path"])
+        destination_before = get_path(state, op.payload["destination_path"])
+        amount = Decimal(str(op.payload["amount"]))
+        set_path(state, op.payload["source_path"], numeric_add(source_before, -amount))
+        set_path(state, op.payload["destination_path"], numeric_add(destination_before, amount))
+    elif op.op == OP_STRUCTURAL:
+        actual = get_path(state, op.path)
+        if actual != op.payload["before"]:
+            raise StatePathError(f"StructuralRewrite before mismatch at {op.path!r}")
+        set_path(state, op.path, op.payload["after"])
+    elif op.op in (OP_CONTRIBUTION_RESOLVE, OP_EVENT):
+        return
+    else:
+        raise StatePathError(f"unlowerable op: {op.op!r}")
