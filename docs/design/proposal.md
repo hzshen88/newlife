@@ -2,7 +2,7 @@
 
 # BiologicalProfile 库建设方案
 
-- **日期**：2026-08-30　**状态**：v0.6 草案（四轮评审已采纳；v0.1a 问题文档已起草，待 plan → prereg 冻结）
+- **日期**：2026-08-31　**状态**：v0.7（v0.1a 已判定：H1 支持 `compatible_for_frozen_slices_v1_lowered`——见 §7 里程碑表与修订记录；下一预注册 v0.1b staging）
 - **性质**：完整建设方案——从背景、证据、架构到里程碑。自含背景，不依赖对话上下文。
 - **决策记录**：[`architecture-discussion-record.md`](architecture-discussion-record.md)（另一场对话的架构讨论）
 - **正式证据**：[`../process/03-formal-pressure-test.md`](../process/03-formal-pressure-test.md)
@@ -291,7 +291,7 @@ Profile/机制契约不进口 `Process`、`Composite` 等供应商类型；`proc
 
 | 里程碑 | 内容 | 验收 |
 |---|---|---|
-| **v0.1a lowering 完备性**（预注册实验；v0.1 拆分后唯一重预注册项） | 预注册问题："删除 engine_update 后，由 lowering 从 Effect 机械生成的 update，能否在四个切片上复现冻结 trace 逐字节一致"——判据**直接复用**压力测试冻结的 expected JSON 与规范 trace，不写新 expected。架构切两半以便失败可诊断：core 定义中间表示 `(path, op, payload, provenance)`，op ∈ `{set, add, transfer_pair, structural, event}`；adapter 只做 IR → runtime 形状的薄翻译。失败时定位为"Effect → IR 缺信息（契约问题，走 §5.6）"或"IR → update 翻译错（adapter bug）"。**具名否定条件**：StateDelta 现有载荷不区分 set 与 add（`{"genome": "B"}` 实为 overwrite、`{"budget": value}` 实为数值合并，一直被手写 update 掩盖）——预注册"载荷需增 set/add 显式区分字段"为否定点，命中即走 §5.6 升契约 v2，是有价值结论不是失败。同时完成：⓪ 移植信任核心 proofroot（只搬 D1 现行编码 + D4 不变量 + D2/D5，legacy 兼容层一律不搬；EvidenceCore.jl 冻结为 oracle 生成跨语言向量，§5.10）；封闭 engine_update 旁路、serialization spec 落地（§5.9）、重推导 conform 契约级套件、AST/import-lint CI | 冻结 trace 逐字节复现（或按 §5.6 记录否定结果）；重推导契约级套件全绿；import-lint 通过；旁路封闭以新增负例证明 |
+| **v0.1a lowering 完备性**（✅ 预注册实验已判定 2026-08-30；v0.1 拆分后唯一重预注册项） | 预注册问题："删除 engine_update 后，由 lowering 从 Effect 机械生成的 update，能否在四个切片上复现冻结 trace 逐字节一致"——判据**直接复用**压力测试冻结的 expected JSON 与规范 trace，不写新 expected。架构切两半以便失败可诊断：core 定义中间表示 `(path, op, payload, provenance)`，op ∈ `{set, add, transfer_pair, structural, contribution_resolve, event}`（R2，六值）；adapter 只做 IR → runtime 形状的逐 store 类型翻译。失败时定位为"Effect → IR 缺信息（契约问题，走 §5.6）"或"IR → update 翻译错（adapter bug）"。**H0（冻结版，经修正）**：至少一个冻结 cell 的 update 不是四元基 (Effect 载荷, 注册 schema 类型, 机制身份, 观测态视图) 的纯函数——hidden instance state、wall clock、live RNG 明确在基外。**修正记录**：起草期曾立"StateDelta 载荷不区分 set/add"为具名否定点，源码核查证伪（契约 v1 的 `StateDelta.operation ∈ {add, set}` 一直存在），plan 起草时替换为上述四元基 H0，冻结于 prereg `62d6d91`。同时完成：⓪ 移植信任核心 proofroot（只搬 D1 现行编码 + D4 不变量 + D2/D5，legacy 兼容层一律不搬；EvidenceCore.jl 冻结为 oracle 生成跨语言向量，§5.10）；封闭 engine_update 旁路、serialization spec 落地（§5.9）、重推导 conform 契约级套件、AST/import-lint CI | **判定（2026-08-30）：H1 支持，`compatible_for_frozen_slices_v1_lowered`**——冻结 trace 逐字节复现 ✓；重推导契约级套件全绿（94 项）✓；import-lint 通过（R4.2 引擎标识符禁令入 CI 门）✓；旁路封闭以新增负例证明 ✓；完整预注册审计 PASS（0 warning）。证据：newlife `results/v0.1a/`（活）与 exloop `artifacts/lowering-results/`（档案） |
 | **v0.1b staging 可声明化**（第二个预注册，依赖 0.1a） | 声明形状最小化：MechanismSpec 增 `stage` 标签 + `after` 列表；profile 校验 DAG 无环；`staging.py` 按拓扑序生成 Composite 编排。判据 = 复现压力测试 harness 手工连线产出的冻结 trace。单 Composite 语义保持开放（风险 3）——0.1b 只证明"多 Composite 编排可从声明推导"，已足以把调度语义从 harness 代码搬进声明 | 冻结 trace 复现；DAG 无环校验负例通过 |
 | **RNG 流（设计裁决，不预注册）** | 信任核心移植即裁决（§5.10）：只搬 `evidencecore-rng-v1` 现行编码 + D4 bank 语义不变量（声明制流、小写归一、名字正则、只前进不重播），legacy 兼容层不搬；唯一新决定是流内顺序推进 vs counter-based（后者多买并行安全，实现面稍大）；trace 记录 draw 计数两种都兼容。方案空间无真正竞争选项，预注册无不确定性的问题是浪费纪律 | 与 EvidenceCore.jl oracle 的向量对照测试逐位一致（§5.10 纪律 1） |
 | **v0.2 机制箱** | **Gate 填空（先决）：第一个世界问题 = 把 Parworlds 最干净的冻结研究 000/001 在 newlife 上重表达**。这个选择一次解决四件事：① 真问题——不是为库定制的表演性问题；② 已知答案——冻结的 Julia 结果即 known answer；③ 跨语言双实现比对——Julia 参考 vs Python newlife，压力测试方法学的放大版，serialization spec 第一天就有真实载荷；④ compare 归因判据的校准来源——该世界当年做过/想做的消融。**比对方法（种子可移植、序列不可移植）**：跨语言一致性验到派生种子层为止（§5.10 合同边界）；Julia 的 Xoshiro 流与 Python 生成器不同，"已知答案"**不靠活 RNG 的字节级 trace 比对**。两个可行方法，优先前者：① 录制 Julia 冻结 run 的 draw 序列注入 newlife——这正是压力测试已验证的注入方法，冻结 run binding 保证重跑可提取；② 退到观测量层的统计比较。不预先写明，这颗雷会在 v0.2 动工第一周爆。机制注册表条目全部由该问题导出；四个人造切片不作为生产机制迁入 | 世界问题文档化；按上述比对方法与 Julia 冻结结果可核对；注册表条目由该问题导出；示例应用零 runtime 代码（import-lint 证明）；**痛点对照**：同一研究在 ParaLife 的 harness 功夫 vs newlife 声明化程度——"痛点被解决了吗"的直接测量，任何 conform 计数都替代不了 |
@@ -304,10 +304,10 @@ v0.1 拆分的理由：五合一复合实验违反预注册纪律的适用边界
 
 | 步骤 | 内容 | 约束 |
 |---|---|---|
-| **0. 仓库骨架** | monorepo + uv workspace 双包、空模块结构、import-lint CI | 纯机械，无预注册约束，可立即做 |
-| **1. proofroot 移植** | 先用 EvidenceCore.jl（oracle）生成跨语言向量 → Python 实现 → 逐位对照，产出 proofroot 0.1 | 设计裁决非实验；可与步骤 2 并行 |
-| **2. v0.1a 预注册** | 问题、判据、否定条件、冻结清单 | **冻结前不写任何 lowering 实现代码**——这是纪律的核心。预注册必须钉死：判定用的 canonical 形式（§5.9 坑）、IR 形状、set/add 具名否定条件、环境锁、anomaly protocol |
-| **3. 实现 → 运行 → 审计** | lowering 双 adapter 实现、封旁路、重推导 conform、跑判定 | 复用 `prereg.sh audit` |
+| **0. 仓库骨架** ✅ `fc4753e` | monorepo + uv workspace 双包、空模块结构、import-lint CI | 纯机械，无预注册约束，可立即做 |
+| **1. proofroot 移植** ✅ `b092678`+`3b5607e`+`dc446f2` | 先用 EvidenceCore.jl（oracle）生成跨语言向量 → Python 实现 → 逐位对照，产出 proofroot 0.1（向量 48 项逐位一致） | 设计裁决非实验；可与步骤 2 并行 |
+| **2. v0.1a 预注册** ✅ 冻结 `62d6d91`、戳记 `2cd12c0`，0-warning | 问题、判据、否定条件、冻结清单 | **冻结前不写任何 lowering 实现代码**——这是纪律的核心。预注册必须钉死：判定用的 canonical 形式（§5.9 坑）、IR 形状、H0 具名候选（set/add 候选经源码核查证伪后修正）、环境锁、anomaly protocol |
+| **3. 实现 → 运行 → 审计** ✅ 判定 H1 `compatible_for_frozen_slices_v1_lowered`（2026-08-30） | lowering 双 adapter 实现、封旁路、重推导 conform、跑判定 | 复用 `prereg.sh audit`（完整审计 0-warning，exloop `8fa0707`） |
 
 不做的事同样明确：`mechanisms/`、`examples/`、compare 逆向、Julia 注册包——全部在 gate 或 v0.3 之后。分工：预注册文档由维护方案的本会话起草（握有全部上下文），外部评审继续当审稿人——起草者与审稿者分开，与压力测试的红队结构同款。问题文档入口：[`docs/science-superpowers/questions/2026-08-30-newlife-lowering-completeness.md`](../../docs/science-superpowers/questions/2026-08-30-newlife-lowering-completeness.md)。
 
@@ -374,5 +374,7 @@ v0.1 拆分的理由：五合一复合实验违反预注册纪律的适用边界
 1. （新坑，必须在冻结判据时排掉）§5.9 生效时序收窄：v0.1a 判定比较**沿用压力测试原 canonical 形式**（裁判 = 产出 expected 的那把尺子）；新 spec 在 v0.1a 只管 proofroot 自身向量；trace 格式切换推迟到 v0.2 跨语言比对开工前，切换时重跑 conform。否则冻结 trace 的字节比对会平凡失败——格式差异不是 lowering 错误。
 2. （不另立工作计划文档）§7 增加"v0.1 排程"执行顺序表：仓库骨架 → proofroot 移植（可与预注册并行）→ v0.1a 预注册（**冻结前不写 lowering 实现代码**）→ 实现/运行/审计；不做的事（mechanisms、examples、compare 逆向、Julia 注册包）显式列出。
 3. （分工）预注册由本会话起草、外部评审当审稿人（红队同款结构）；问题文档已起草：`docs/science-superpowers/questions/2026-08-30-newlife-lowering-completeness.md`，管道为 question → plan → prereg + `prereg.sh audit`。
+
+**v0.7（2026-08-31）——v0.1a 闭合**：① 排程步骤 2–3 完成：预注册冻结（exloop `62d6d91`，审计 PASS 0 warning）→ lowering 实现（proofroot 向量迁移、core IR、双 adapter、旁路删除、10 具名负例）→ 判定 **H1 支持，`compatible_for_frozen_slices_v1_lowered`**：8/8 cell、16 正向（含重放字节一致）、18 cell 级负例、篡改 lowering 对照被字节比对咬住、引擎摘要前后一致。lowering 完备性在契约 v1 + 四冻结切片范围成立，第六 Effect 未被需要，单一写入路径以负例 + CI 门双重钉死；判定不可外推。② H0 修正入表（起草期 set/add 候选证伪 → 四元纯函数基）与 R2 六值 op 枚举同步。③ 三条实现期澄清（stage 不拷 effects、篡改对照检出面=终态半边 + anti-masking、list-direct 翻译条目）均记 implementation clarification，零判据变更，见结果包 implementation-log。④ 下一预注册：v0.1b staging 可声明化。
 
 **v0.1（2026-08-30）——初稿**。
