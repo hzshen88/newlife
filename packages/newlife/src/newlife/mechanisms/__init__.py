@@ -1,1 +1,1 @@
-"""mechanisms subpackage (skeleton — filled per v0.1 schedule; no lowering code before preregistration freeze)."""
+"""Mechanism registry (v0.2): entries derived from the first world problem."""

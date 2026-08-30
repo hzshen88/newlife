@@ -63,6 +63,10 @@ class ReferenceKernel:
         self.trace: list[TraceRecord] = []
         self.registry = ContractRegistry()
         self._structural_owners: dict[tuple[str, ...], str] = {}
+        # (identity → {(path, permission)}) index for O(1) authorization —
+        # world-scale mechanisms carry per-cell claims; per-mechanism scope
+        # keeps authorization semantics identical. Pure speed.
+        self._claim_index: dict[str, set[tuple[tuple[str, ...], str]]] = {}
 
     def register_mechanism(self, spec: MechanismSpec) -> None:
         structural_paths = {
@@ -77,6 +81,9 @@ class ReferenceKernel:
                     f"structural path {path!r} already owned by {owner}"
                 )
         self.registry.register_mechanism(spec)
+        self._claim_index[spec.identity] = {
+            (claim.path, claim.permission) for claim in spec.claims
+        }
         for path in structural_paths:
             self._structural_owners[path] = spec.identity
 
@@ -90,6 +97,9 @@ class ReferenceKernel:
             raise SpecValidationError(f"undeclared mechanism: {source_id}") from error
 
     def _has_claim(self, spec: MechanismSpec, path: tuple[str, ...], *permissions: str) -> bool:
+        indexed = self._claim_index.get(spec.identity)
+        if indexed is not None:
+            return any((path, permission) in indexed for permission in permissions)
         return any(
             claim.path == path and claim.permission in permissions for claim in spec.claims
         )
