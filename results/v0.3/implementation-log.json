@@ -1,0 +1,8 @@
+[
+  {
+    "classification": "implementation clarification",
+    "correction": "the frozen R5 enumeration is authoritative: unit1(1) + unit2(2 seeds) + unit3(1) + unit4(1) + unit5(1) + unit6(3 sub-cases) + unit7(1) = 10 executions. results/v0.3/summary.json lists all 10 unit records; none were dropped, merged, or substituted — the verdict runner executed and asserted every one enumerated in R5. The parenthetical in the frozen text is corrected here rather than edited in place (the prereg is frozen and any edit would fail prereg.sh audit's INTEGRITY check).",
+    "criterion_changed": false,
+    "issue": "the frozen preregistration's 'Conjunction rule', 'Decision rules', and 'Stopping rule' sections each say '7 units (9 executions)', undercounting by one execution — the correct total, by the preregistration's own R5 enumeration, is 10 (7 base units + 1 extra seed on unit 2 + 2 extra sub-cases on unit 6 = 10, not 9)."
+  }
+]
