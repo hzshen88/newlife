@@ -52,3 +52,20 @@ cc -O2 -ffp-contract=off -std=gnu89 \
 question doc); the three `-Wno-error=` flags only suppress *warnings*
 about pre-C99 style, not floating-point or optimization behavior — they do
 not change what the program computes.
+
+## Verifying the frozen checksums — the script lives in exloop, not here
+
+`vendor/ms/` exists in **both** repos, but the checksum-verification script exists only
+on the governance side, next to the frozen preregistration it reads:
+
+```sh
+cd ~/Projects/exloop && sh vendor/ms/verify_frozen_checksums.sh
+```
+
+It parses the four SHA-256 values out of the frozen World 2 preregistration and compares
+them against exloop's copy of these sources (last run: 4/4 PASS). It cannot live here,
+because it resolves the preregistration relative to its own repo root.
+
+Do not conclude from this directory alone that no such script exists — that mistake has
+already been made once, and it caused a true statement to be removed from the scenario-matrix
+artifact as "unverified". Always repo-qualify `vendor/ms/...` paths when citing them.
