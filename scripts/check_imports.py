@@ -7,6 +7,9 @@ Rules (proposal v0.6 §5.1 / §4):
    packages/newlife/src/newlife/adapters/process_bigraph/ — vendor types
    never leak past the adapter layer.
 3. newlife may import proofroot; proofroot imports nothing but stdlib.
+4. (v0.3 compare prereg R6) newlife.core must not import newlife.mechanisms
+   or newlife.adapters — core stays domain-free even though rule 1's
+   zero-third-party check alone would not catch an intra-newlife leak.
 
 Run: python scripts/check_imports.py   (exit 0 = clean, 1 = violation)
 No third-party dependency needed — stdlib ast + pathlib only.
@@ -37,6 +40,21 @@ def imported_roots(path: Path) -> list[tuple[str, int]]:
         elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
             roots.append((node.module.split(".")[0], node.lineno))
     return roots
+
+
+def imported_full_modules(path: Path) -> list[tuple[str, int]]:
+    """Return (full dotted module path, lineno) for every import in a file —
+    unlike imported_roots, this keeps 'newlife.mechanisms' distinct from
+    'newlife.core' rather than collapsing both to 'newlife'."""
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    modules: list[tuple[str, int]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                modules.append((alias.name, node.lineno))
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            modules.append((node.module, node.lineno))
+    return modules
 
 
 def is_stdlib(module: str) -> bool:
@@ -74,7 +92,25 @@ for py in sorted((NEWLIFE_SRC / "adapters" / "process_bigraph").glob("cases.py")
 examples_dir = ROOT / "examples"
 if examples_dir.is_dir():
     for py in sorted(examples_dir.rglob("*.py")):
-        violations.append(f"{py}: runtime code in the application layer (rule v0.2-gate)")
+        violations.append(
+            f"{py}: runtime code in the application layer (rule v0.2-gate)"
+        )
+
+# R6 (v0.3 compare prereg): core stays domain-free — it may not import
+# newlife.mechanisms or newlife.adapters, even though rule 1's zero-third-
+# party check alone would not catch that intra-newlife leak.
+CORE_DIR = NEWLIFE_SRC / "core"
+FORBIDDEN_CORE_PREFIXES = ("newlife.mechanisms", "newlife.adapters")
+
+for py in sorted(CORE_DIR.rglob("*.py")):
+    for module, lineno in imported_full_modules(py):
+        if any(
+            module == prefix or module.startswith(prefix + ".")
+            for prefix in FORBIDDEN_CORE_PREFIXES
+        ):
+            violations.append(
+                f"{py}:{lineno}: newlife.core must not import '{module}' (rule R6)"
+            )
 
 for src_dir in (PROOFROOT_SRC, NEWLIFE_SRC):
     for py in sorted(src_dir.rglob("*.py")):
@@ -83,7 +119,9 @@ for src_dir in (PROOFROOT_SRC, NEWLIFE_SRC):
                 continue
             if module == "proofroot":
                 if src_dir == PROOFROOT_SRC:
-                    violations.append(f"{py}:{lineno}: proofroot must not import itself")
+                    violations.append(
+                        f"{py}:{lineno}: proofroot must not import itself"
+                    )
                 continue
             if module in VENDOR_MODULES:
                 if ADAPTER_PB not in py.parents:

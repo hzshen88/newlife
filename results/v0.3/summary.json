@@ -1,0 +1,249 @@
+{
+  "gate": "v0.3-compare-reverse-attribution",
+  "passed": true,
+  "schema": "newlife.world1.v0.3-compare-gate.v1",
+  "structural_checks": {
+    "registry_identity_holds": true,
+    "source_scan_passed": true
+  },
+  "units": [
+    {
+      "aggregate": "normal",
+      "checks": {
+        "aggregate": true,
+        "differing_fields": true,
+        "locus": true,
+        "per_field": true,
+        "registry_equal": true
+      },
+      "differing_fields": [
+        "condition",
+        "name"
+      ],
+      "locus": {
+        "index": 1,
+        "kind": "value",
+        "tick": 1
+      },
+      "name": "unit1-informative-vs-cue-neutral",
+      "passed": true,
+      "per_field": {
+        "condition": "causal",
+        "name": "incidental"
+      },
+      "regeneration_invocation": "informative vs cue-neutral, ticks=50, seed=101",
+      "registry_equal": true
+    },
+    {
+      "aggregate": "normal",
+      "checks": {
+        "aggregate": true,
+        "differing_fields": true,
+        "locus": true,
+        "per_field": true,
+        "registry_equal": true
+      },
+      "differing_fields": [
+        "condition"
+      ],
+      "locus": {
+        "index": 1,
+        "kind": "value",
+        "tick": 1
+      },
+      "name": "unit2-assay-seed101",
+      "passed": true,
+      "per_field": {
+        "condition": "causal"
+      },
+      "regeneration_invocation": "assay true/ablated, seed=101",
+      "registry_equal": true
+    },
+    {
+      "aggregate": "normal",
+      "checks": {
+        "aggregate": true,
+        "differing_fields": true,
+        "locus": true,
+        "per_field": true,
+        "registry_equal": true
+      },
+      "differing_fields": [
+        "condition"
+      ],
+      "locus": {
+        "index": 1,
+        "kind": "value",
+        "tick": 1
+      },
+      "name": "unit2-assay-seed202",
+      "passed": true,
+      "per_field": {
+        "condition": "causal"
+      },
+      "regeneration_invocation": "assay true/ablated, seed=202",
+      "registry_equal": true
+    },
+    {
+      "aggregate": "normal",
+      "checks": {
+        "aggregate": true,
+        "differing_fields": true,
+        "locus": true,
+        "per_field": true,
+        "registry_equal": true
+      },
+      "differing_fields": [
+        "name"
+      ],
+      "locus": null,
+      "name": "unit3-irrelevant-difference-control",
+      "passed": true,
+      "per_field": {
+        "name": "incidental"
+      },
+      "regeneration_invocation": "informative + name-only change, seed=101",
+      "registry_equal": true
+    },
+    {
+      "aggregate": "normal",
+      "checks": {
+        "aggregate": true,
+        "differing_fields": true,
+        "locus": true,
+        "per_field": true,
+        "registry_equal": true
+      },
+      "differing_fields": [],
+      "locus": null,
+      "name": "unit4-zero-delta-replay-control",
+      "passed": true,
+      "per_field": {},
+      "regeneration_invocation": "informative run twice independently, seed=101",
+      "registry_equal": true
+    },
+    {
+      "aggregate": "normal",
+      "checks": {
+        "aggregate": true,
+        "differing_fields": true,
+        "locus": true,
+        "per_field": true,
+        "registry_equal": true
+      },
+      "differing_fields": [
+        "alpha",
+        "beta",
+        "gamma"
+      ],
+      "locus": {
+        "index": 1,
+        "kind": "value",
+        "tick": 1
+      },
+      "name": "unit5-synthetic-n3",
+      "passed": true,
+      "per_field": {
+        "alpha": "causal",
+        "beta": "incidental",
+        "gamma": "incidental"
+      },
+      "regeneration_invocation": "synthetic n=3, defined in scripts/accept_v03_compare_gate.py:build_unit5_synthetic",
+      "registry_equal": true
+    },
+    {
+      "aggregate": "UNATTRIBUTED_DIVERGENCE",
+      "checks": {
+        "aggregate": true,
+        "differing_fields": true,
+        "locus": true,
+        "per_field": true,
+        "registry_equal": true
+      },
+      "differing_fields": [
+        "alpha",
+        "beta"
+      ],
+      "locus": {
+        "index": 1,
+        "kind": "value",
+        "tick": 1
+      },
+      "name": "unit6a-synthetic-unattributed-divergence",
+      "passed": true,
+      "per_field": {
+        "alpha": "incidental",
+        "beta": "incidental"
+      },
+      "regeneration_invocation": "synthetic unattributed divergence, build_unit6a_synthetic",
+      "registry_equal": true
+    },
+    {
+      "aggregate": "MULTI_CAUSAL_OR_UNRESOLVED",
+      "checks": {
+        "aggregate": true,
+        "differing_fields": true,
+        "locus": true,
+        "per_field": true,
+        "registry_equal": true
+      },
+      "differing_fields": [
+        "alpha",
+        "beta"
+      ],
+      "locus": {
+        "index": 1,
+        "kind": "value",
+        "tick": 1
+      },
+      "name": "unit6b-synthetic-multi-causal",
+      "passed": true,
+      "per_field": {
+        "alpha": "causal",
+        "beta": "causal"
+      },
+      "regeneration_invocation": "synthetic multi-causal, build_unit6b_synthetic",
+      "registry_equal": true
+    },
+    {
+      "aggregate": "MULTI_CAUSAL_OR_UNRESOLVED",
+      "checks": {
+        "aggregate": true,
+        "differing_fields": true,
+        "locus": true,
+        "per_field": true,
+        "registry_equal": true
+      },
+      "differing_fields": [
+        "alpha",
+        "beta"
+      ],
+      "locus": {
+        "index": 1,
+        "kind": "value",
+        "tick": 1
+      },
+      "name": "unit6c-synthetic-precedence",
+      "passed": true,
+      "per_field": {
+        "alpha": "unresolved",
+        "beta": "incidental"
+      },
+      "regeneration_invocation": "synthetic precedence regression, build_unit6c_synthetic",
+      "registry_equal": true
+    },
+    {
+      "checks": {
+        "locus_kind_is_length_mismatch": true
+      },
+      "locus": {
+        "index": 2,
+        "kind": "length_mismatch",
+        "tick": null
+      },
+      "name": "unit7-synthetic-length-mismatch",
+      "passed": true,
+      "regeneration_invocation": "synthetic length mismatch, build_unit7_synthetic"
+    }
+  ]
+}
