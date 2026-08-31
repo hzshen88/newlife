@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import Callable
 
 # `ms`'s getpars() default when -r is never supplied; fixed for this
 # minimal model (recombination, which is what varies nsites, is out of
@@ -70,7 +71,9 @@ class ReplicateResult:
 
 
 def _build_coalescent_tree(
-    nsam: int, draws: RecordedDrawStream
+    nsam: int,
+    draws: RecordedDrawStream,
+    on_merge: Callable[[dict], None] | None = None,
 ) -> tuple[list[float], list[int]]:
     """The `while(nchrom>1)` loop of `segtre_mig` (streec.c), specialized to
     the case every lineage always "has" the sole segment (no recombination,
@@ -88,6 +91,13 @@ def _build_coalescent_tree(
     internal nodes `nsam..2*nsam-2`; the root's own `abv` entry is never
     read by `ttime`/`pickb`/`tdesn`, matching `ms`'s zero-initialized,
     never-assigned array slot for it).
+
+    ``on_merge``, if given, is called with a plain ``{"time": tuple,
+    "abv": tuple}`` snapshot after each merge event — the single source of
+    truth callers that need one committed transition per merge (rather than
+    just the finished tree) build on, instead of re-deriving this loop. Kept
+    to a plain-dict callback so this module stays free of any dependency on
+    the contract layer (Task 1's "standalone, dependency-free" requirement).
     """
     n_nodes = 2 * nsam - 1
     time = [0.0] * n_nodes
@@ -131,6 +141,9 @@ def _build_coalescent_tree(
         active[c1] = new_node
         active[c2] = active[-1]
         active.pop()
+
+        if on_merge is not None:
+            on_merge({"time": tuple(time), "abv": tuple(abv)})
 
     return time, abv
 
@@ -189,19 +202,21 @@ def _tdesn(abv: list[int], tip: int, node: int) -> bool:
     return k == node
 
 
-def run_replicate(
-    nsam: int, theta: float, draws: RecordedDrawStream
-) -> ReplicateResult:
-    """One `ms` "gene tree" plus its placed mutations: `gensam()`'s
-    `segsitesin==0, theta>0` branch (ms.c:260-281), specialized to the
-    always-one-segment minimal model (`len==nsites` always, so
-    `tseg = len*(theta/nsites)` is exactly `theta`: scaling a finite double
-    by a power of two and back is exact under IEEE754, no rounding)."""
-    time, abv = _build_coalescent_tree(nsam, draws)
-    tt = _ttime(time, nsam)
-    segsit = _poisso(theta * tt, draws)
-
-    rows = [[] for _ in range(nsam)]
+def _place_mutations(
+    nsam: int,
+    time,
+    abv,
+    tt: float,
+    segsit: int,
+    draws: RecordedDrawStream,
+) -> list[str]:
+    """`make_gametes` (ms.c:802-817) + the draw-count-only position pass
+    (ms.c:278). One source of truth shared by `run_replicate` (Task 1) and
+    the observer mechanism (Task 2) — what tier (b) tests is whether the
+    contract layer carries this algorithm's state correctly, not a second,
+    independently-drifting reimplementation of it (see R5's decision-matrix
+    framing in the plan)."""
+    rows: list[list[str]] = [[] for _ in range(nsam)]
     for _ in range(segsit):
         node = _pickb(nsam, time, abv, tt, draws)
         for tip in range(nsam):
@@ -217,5 +232,19 @@ def run_replicate(
     # ms.c:192-193 prints genotype rows only when segsites > 0 — a
     # segsites==0 replicate has zero rows, not nsam empty-but-present ones
     # (R3's explicit warning; caught by round-1's independent reimpl.).
-    genotype_rows = ["".join(row) for row in rows] if segsit > 0 else []
+    return ["".join(row) for row in rows] if segsit > 0 else []
+
+
+def run_replicate(
+    nsam: int, theta: float, draws: RecordedDrawStream
+) -> ReplicateResult:
+    """One `ms` "gene tree" plus its placed mutations: `gensam()`'s
+    `segsitesin==0, theta>0` branch (ms.c:260-281), specialized to the
+    always-one-segment minimal model (`len==nsites` always, so
+    `tseg = len*(theta/nsites)` is exactly `theta`: scaling a finite double
+    by a power of two and back is exact under IEEE754, no rounding)."""
+    time, abv = _build_coalescent_tree(nsam, draws)
+    tt = _ttime(time, nsam)
+    segsit = _poisso(theta * tt, draws)
+    genotype_rows = _place_mutations(nsam, time, abv, tt, segsit, draws)
     return ReplicateResult(segsites=segsit, genotype_rows=genotype_rows)
