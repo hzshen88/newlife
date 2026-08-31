@@ -1,0 +1,26 @@
+{
+  "nsam": 4,
+  "replicate_index": 8,
+  "seed": "seedA",
+  "seeds": [
+    3579,
+    27011,
+    59243
+  ],
+  "theta": 2.0,
+  "tier_a": {
+    "genotype_hash": "adcaef74a8ad4cf9bd13868b07f88bdb6922f3b1534cec7aa326958402cd7760",
+    "genotype_matches_ms": true,
+    "index": 8,
+    "passed": true,
+    "segsites": 3,
+    "segsites_matches_ms": true
+  },
+  "tier_b": {
+    "genotype_hash": "adcaef74a8ad4cf9bd13868b07f88bdb6922f3b1534cec7aa326958402cd7760",
+    "index": 8,
+    "matches_tier_a": true,
+    "passed": true,
+    "segsites": 3
+  }
+}

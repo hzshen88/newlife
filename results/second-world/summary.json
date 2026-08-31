@@ -1,0 +1,66 @@
+{
+  "informational": {
+    "observed_mean_segsites": 3.1,
+    "watterson_expected_mean_segsites": 3.6666666666666665
+  },
+  "passed": true,
+  "replicate_count": 30,
+  "schema": "newlife.second-world.gate.v1",
+  "structural_checks": {
+    "r2_mapping_correctness": {
+      "passed": true,
+      "range_valid": true,
+      "round_trip_matches": true,
+      "truncation_observably_lossy": true
+    },
+    "segsites_zero_coverage": {
+      "counts": {
+        "seedA": 0,
+        "seedB": 4,
+        "seedC": 2
+      },
+      "passed": true,
+      "total": 6
+    }
+  },
+  "tiers": {
+    "tier_a": {
+      "seedA": {
+        "all_passed": true,
+        "draws_consumed": 177,
+        "draws_logged": 177,
+        "leftover": 0
+      },
+      "seedB": {
+        "all_passed": true,
+        "draws_consumed": 163,
+        "draws_logged": 163,
+        "leftover": 0
+      },
+      "seedC": {
+        "all_passed": true,
+        "draws_consumed": 191,
+        "draws_logged": 191,
+        "leftover": 0
+      }
+    },
+    "tier_b": {
+      "seedA": {
+        "all_passed": true,
+        "draws_consumed": 177,
+        "leftover": 0
+      },
+      "seedB": {
+        "all_passed": true,
+        "draws_consumed": 163,
+        "leftover": 0
+      },
+      "seedC": {
+        "all_passed": true,
+        "draws_consumed": 191,
+        "leftover": 0
+      }
+    }
+  },
+  "verdict": "ms_minimal_coalescent_reproducible"
+}
