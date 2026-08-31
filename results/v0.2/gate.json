@@ -13,8 +13,8 @@
   "gate": "v0.2-world1-resource-foraging",
   "import_lint_stdout": "import-lint OK: zero-dependency zones clean, vendor imports confined to adapter",
   "l2_reports": {
-    "cue_neutral": "/private/tmp/claude-501/-Users-hzshen-Projects-newlife/d50e9c33-38a4-4614-946f-193940c94d2f/scratchpad/newlife-world1-l2-gate-101/reports/cue_neutral.json",
-    "informative": "/private/tmp/claude-501/-Users-hzshen-Projects-newlife/d50e9c33-38a4-4614-946f-193940c94d2f/scratchpad/newlife-world1-l2-gate-101/reports/informative.json"
+    "cue_neutral": "results/v0.2/reports/cue_neutral.json",
+    "informative": "results/v0.2/reports/informative.json"
   },
   "l2_results": {
     "cue_neutral": {
