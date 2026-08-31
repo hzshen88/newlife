@@ -1,6 +1,6 @@
 # Vendored: Hudson's `ms` (coalescent simulator)
 
-Source: `home.uchicago.edu/~rhudson1/source/mksamples/msdir/{ms.c,streec.c,rand1.c}`, fetched 2026-08-31.
+Source: `home.uchicago.edu/~rhudson1/source/mksamples/msdir/{ms.c,streec.c,rand1.c,ms.h}`, fetched 2026-08-31. `ms.h` was missed on the first fetch (only discovered when the plan stage actually compiled `ms.c`/`streec.c`, which both `#include "ms.h"`) and fetched separately during plan drafting — recorded here rather than silently backfilled, per this project's standing rule about catching gaps by running things, not by re-reading a file list more carefully.
 
 Vendored verbatim, unmodified, as the reference oracle for the second-world
 question `docs/science-superpowers/questions/2026-08-31-newlife-second-world-ms-coalescent-declarability.md`
@@ -32,4 +32,23 @@ SHA-256 (`shasum -a 256`):
 9bb5da6755b56a719966176504485499e5feb3442a0875c09020e25cdfe25622  ms.c
 7574be71072ccdcbada67862987a4b89beb0c7ea8fdd977d07da9f34434c9cb4  streec.c
 70bd8a05a74e97340341cd45cef7b36b046b74f8c2d47564df6c18d7daf6bbfa  rand1.c
+7e22f96d48788b598d8d798753ea104955ecc7baa051fd05eb84601e5e603c98  ms.h
 ```
+
+**Build note**: `ms.c`/`streec.c` are 1990s-vintage K&R-style C (implicit
+`int`, implicit function declarations, `int`-typed functions that fall off
+the end without a `return`) that a modern clang (Xcode 16, this
+verification's toolchain) rejects by default under C17/C23 defaults. A
+reference build for cross-language comparison must compile with:
+
+```
+cc -O2 -ffp-contract=off -std=gnu89 \
+   -Wno-error=implicit-function-declaration \
+   -Wno-error=implicit-int -Wno-error=return-type \
+   ms.c streec.c rand1.c -o ms -lm
+```
+
+`-ffp-contract=off` is load-bearing (see the FMA finding above and the
+question doc); the three `-Wno-error=` flags only suppress *warnings*
+about pre-C99 style, not floating-point or optimization behavior — they do
+not change what the program computes.
