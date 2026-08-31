@@ -7,6 +7,10 @@ covers that separately.
 
 from __future__ import annotations
 
+import json
+import struct
+from pathlib import Path
+
 import pytest
 
 from newlife.adapters.reference_kernel.kernel import ReferenceKernel
@@ -17,15 +21,18 @@ from newlife.mechanisms.resource_foraging.injection import (
     RecordedStream,
     load_stream_log,
 )
+from newlife.mechanisms.resource_foraging.assay import run_assay
 from newlife.mechanisms.resource_foraging.model import (
     ForagingConfig,
     controller_hash,
     validate_config,
 )
-from newlife.mechanisms.resource_foraging.world import ForagingWorld, run_world
-
-import json
-from pathlib import Path
+from newlife.mechanisms.resource_foraging.world import (
+    ForagingWorld,
+    _JuliaIntDictOrder,
+    julia_array_sum,
+    run_world,
+)
 
 
 def small_config(**overrides) -> ForagingConfig:
@@ -116,6 +123,14 @@ def test_both_conditions_run_under_the_same_seed():
     assert neutral.config.condition == "cue_neutral"
 
 
+def test_assay_runs_and_reports_sampled_genomes():
+    world = ForagingWorld(small_config(ticks=5, assay_ticks=3), seed=101)
+    world.run()
+    assay = run_assay(world)
+    assert assay.sampled_genomes == 4
+    assert assay.paired_episodes == 8
+
+
 # ── runtime authority (pain point P2, demonstrated on the world) ────────────
 
 
@@ -188,6 +203,39 @@ def test_recorded_stream_roundtrip():
     assert stream.draw_u64() == 0xDEADBEEFCAFEBABE
     assert stream.permutation([(1, 1), (2, 1)]) == [(2, 1), (1, 1)]
     assert stream.remaining() == 0
+
+
+def test_recorded_stream_accepts_scalar_id_permutations():
+    stream = RecordedStream([{"k": "perm", "v": [3, 1, 2]}])
+    assert stream.permutation([1, 2, 3]) == [3, 1, 2]
+
+
+def test_recorded_jsonl_stream_is_consumed_incrementally(tmp_path: Path):
+    log = tmp_path / "environment.jsonl"
+    log.write_text(
+        "\n".join(
+            [
+                json.dumps({"t": 0, "d": [{"k": "f", "v": "3ff0000000000000"}]}),
+                json.dumps({"t": 1, "d": [{"k": "f", "v": "3ff0000000000000"}]}),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    stream = RecordedStream.from_jsonl(log)
+    assert stream.draw_float() == 1.0
+    assert stream.remaining() == 1
+    assert stream.draw_float() == 1.0
+    assert stream.remaining() == 0
+
+
+def test_observer_uses_julia_array_reduction_and_dict_order():
+    # Julia 1.12's 1024-element Float64 reduction on the gate host.
+    assert struct.pack(">d", julia_array_sum([0.1] * 1024)).hex() == "4059999999999987"
+    order = _JuliaIntDictOrder()
+    for organism_id in range(1, 129):
+        order.insert(organism_id)
+    assert list(order)[:8] == [5, 56, 35, 55, 110, 114, 123, 60]
 
 
 def test_recorded_stream_rejects_wrong_kind_and_exhaustion():

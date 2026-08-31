@@ -157,7 +157,7 @@ def run_assay(
     mean_true = true_harvest / paired_episodes
     mean_ablated = ablated_harvest / paired_episodes
     return ForagingAssayResult(
-        sample_count=sample_count,
+        sampled_genomes=sample_count,
         paired_episodes=paired_episodes,
         mean_true_harvest=mean_true,
         mean_ablated_harvest=mean_ablated,
@@ -165,6 +165,5 @@ def run_assay(
         true_alignment_rate=0.0 if true_decisions == 0 else true_aligned / true_decisions,
         ablated_alignment_rate=0.0 if ablated_decisions == 0 else ablated_aligned / ablated_decisions,
     )
-
 
 

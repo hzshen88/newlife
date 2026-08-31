@@ -107,8 +107,14 @@ log_pick!(rec::Recorder, stream::AbstractString, tick::Int, value) =
     (open_stream!(rec, stream, tick); push!(rec.entry, Dict("k" => "p", "v" => value)))
 log_u64!(rec::Recorder, stream::AbstractString, tick::Int, value::UInt64) =
     (open_stream!(rec, stream, tick); push!(rec.entry, Dict("k" => "u64", "v" => hex16(value))))
-log_perm!(rec::Recorder, stream::AbstractString, tick::Int, perm) =
-    (open_stream!(rec, stream, tick); push!(rec.entry, Dict("k" => "perm", "v" => [[p[1], p[2]] for p in perm])))
+function log_perm!(rec::Recorder, stream::AbstractString, tick::Int, perm)
+    # Initialization shuffles Cartesian positions; assay shuffles organism
+    # IDs. Keep both as one typed permutation record, preserving the element
+    # shape expected by the Python injector.
+    value = [p isa Tuple ? [p[1], p[2]] : p for p in perm]
+    open_stream!(rec, stream, tick)
+    push!(rec.entry, Dict("k" => "perm", "v" => value))
+end
 
 # ── verbatim instrumented copies (Dynamics.jl / Assays.jl call sites) ───────
 
@@ -338,6 +344,11 @@ function run_assay_recorded!(rec::Recorder, world::ForagingWorld, episode_logs::
     assay_rng = EvidenceKernel.rng_stream(world.rng_bank, "assay")
     organism_ids = sort!(collect(keys(world.organisms)))
     shuffle!(assay_rng, organism_ids)
+    # shuffle! consumes Julia's internal bounded draws, which are deliberately
+    # not wrapped by this recorder. Record its completed permutation as the
+    # typed draw consumed by the injection interface, before the first episode
+    # seed u64 draw.
+    log_perm!(rec, "assay", world.tick, organism_ids)
     sample_count = min(world.config.assay_sample_size, length(organism_ids))
     sampled_ids = organism_ids[1:sample_count]
     true_harvest = 0.0; ablated_harvest = 0.0
@@ -349,6 +360,10 @@ function run_assay_recorded!(rec::Recorder, world::ForagingWorld, episode_logs::
         controller = world.organisms[id].controller
         for _ in 1:world.config.assay_episodes
             episode_index += 1
+            # Episode execution changes the recorder scope. Return to the
+            # training world's main scope before recording the next assay seed
+            # so all sampling draws stay in main/assay.jsonl.
+            set_scope!(rec, "main")
             seed_draw = rand(assay_rng, UInt64)
             log_u64!(rec, "assay", world.tick, seed_draw)
             for (branch, condition) in (("true", :informative), ("ablated", :cue_neutral))

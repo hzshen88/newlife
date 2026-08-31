@@ -1,6 +1,6 @@
 # World 1：Resource Foraging（Parworlds Experiment 001）在 newlife 上的重表达
 
-- **状态**：gate 已填空（2026-08-31）；重表达实现与比对进行中
+- **状态**：v0.2 gate 已通过（2026-08-31）——双 treatment（informative / cue-neutral）全量 32×32、5000-tick、含 128-episode assay 的 L2 注入比对逐位精确复现（`verdict: reproduced`，全部命名流 draw 耗尽为 0）；验收产物见 [`results/v0.2/gate.json`](../../results/v0.2/gate.json)
 - **来源协议**：`resource-foraging-v1`（冻结）——[`paralife/packages/Parworlds/experiments/001-resource-foraging/EXPERIMENT.md`](../../../../paralife/packages/Parworlds/experiments/001-resource-foraging/EXPERIMENT.md)，冻结决定 [`0004-experiment-001-freeze.md`](../../../../paralife/docs/decisions/0004-experiment-001-freeze.md)
 - **Julia 实现**：`Parworlds/src/worlds/ResourceForaging/`（Model 284 + Dynamics 443 + EvidenceAdapter 235 + Assays 92 行）
 - **冻结结果**：`experiments/001-resource-foraging/results/formal-seeds-101-120/aggregate.toml`
@@ -77,12 +77,15 @@ replenish（environment 流：外源补给 + 容量溢出）
 | 机制 | 平面 | 权属（claims） | Effect 种类 | 流 |
 |---|---|---|---|---|
 | `resource-environment` | biological | 各格资源路径 own | StateDelta(add/set)、Event(溢出) | environment |
-| `forager-perception` | biological | 各生命 controller 槽 own | Event(决策) | sensing |
-| `forager-movement` | biological | 占用格 own；能量 contribute | StateDelta、Transfer(移动成本→耗散)、StructuralRewrite(位置) | selection |
-| `forager-harvest` | biological | 格资源 contribute；生命能量 own | Transfer(资源→能量) | —（确定性） |
-| `forager-metabolism` | biological | 生命能量 own；死亡回格 | StateDelta、Transfer、StructuralRewrite(死亡) | —（确定性） |
+| `forager-movement` | biological | 各生命 controller 槽 read；占用格 own；决策计数 own | StateDelta、Event(决策)、StructuralRewrite(位置) | sensing、selection |
+| `forager-harvest-metabolism` | biological | 格资源 own；生命能量 own；死亡回格 | StateDelta、Transfer、StructuralRewrite(死亡) | —（确定性） |
 | `forager-reproduction` | biological | 出生格 own；亲本能量 own | StructuralRewrite(出生)、StateDelta、Event(变异) | selection、mutation |
-| `assay-runner` | protocol | 只读 + own 的 assay 产物路径 | Event(assay 结果) | assay |
+| `forager-aging` | biological | 生命年龄 own；死亡回格 | StateDelta、StructuralRewrite(死亡) | —（确定性） |
+| `world-observer` | evidence | 只读世界 + 账本；观察产物 own | StateDelta、Event(快照) | —（确定性） |
+
+`assay-runner` 是 `assay.py` 中的协议级成对运行器，不改变训练世界状态；它通过
+同一套 `ForagingWorld` 注册表运行 fresh episode，并由 L2 harness 比对 assay 产物，
+因此不伪装成 tick 内生物机制。
 
 实现要点（与 Julia 逐行对齐的硬约束）：
 
@@ -97,7 +100,23 @@ replenish（environment 流：外源补给 + 容量溢出）
 |---|---|---|---|
 | P1 机制可组合 | 世界实现 package-local（`src/worlds/ResourceForaging/`），不可跨世界复用 | 六机制入注册表，assay 与环境机制理论上可被 World 2 复用 | 机制清单 + 后续世界复用数 |
 | P2 证据纪律运行时化 | `check_architecture.jl` 脚本 + 章程注释；RNG 隔离靠测试枚举 | authority 越界/旁路在 profile 校验期拒绝；流身份进 trace；import-lint | 运行时拒绝负例数 vs 脚本检查数 |
-| P3 harness 手工度 | `scripts/common_grid.jl`/`common_orchestration.jl`/`run_foraging_*.jl` + `test/resource_foraging_tests.jl`（483 行）手搭账本、Observer、流绑定 | 世界组装 = examples 配置 + 机制声明（staging 声明因果阶段）；harness 代码只剩注入器与比对器 | 双侧行数/文件数对照（v0.2 关闭时填写） |
+| P3 世界重表达 | Julia 语义核心 `Model.jl`/`Dynamics.jl`/`EvidenceAdapter.jl`/`Assays.jl`（4 文件、1054 行） | newlife 机制声明 `mechanisms/resource_foraging/*.py`（7 文件、2071 行，含为逐位重现 Julia Dict 迭代序与 SIMD 归约而写的兼容层） | 双侧行数/文件数对照——见下 |
+| P3 harness 手工度 | `test/resource_foraging_tests.jl` + `scripts/run_foraging_suite.jl`/`run_foraging_world.jl`/`common_orchestration.jl`（4 文件、819 行）手搭账本、Observer、流绑定（原文档误记为 `common_grid.jl`，该文件不存在，已订正） | `scripts/compare_world1.py` + `tools/julia/record_foraging_draws.jl` + `run_world1_l2.py`/`accept_world1_gate.py`（4 文件、987 行）；世界组装本身已降为 examples 配置 + 机制声明，但跨语言逐位比对新增了 Julia 侧原本不需要的录制/注入基础设施 | 双侧行数/文件数对照——见下 |
+
+行数对照（2026-08-31 实测，`scripts/accept_world1_gate.py` 与 `wc -l` 复核一致）：
+
+| 侧 | 语义核心 | harness/比对 |
+|---|---|---|
+| Julia（Parworlds） | 4 文件 / 1054 行 | 4 文件 / 819 行 |
+| newlife | 7 文件 / 2071 行 | 4 文件 / 987 行 |
+
+诚实记录：newlife 两侧行数均**高于**Julia，不是"更省代码"的故事。语义核心变多是因为
+把 Julia 运行时免费提供的行为（`Dict{Int}` 探测/rehash 顺序、arm64 `@simd` 归约树）
+显式建模到了 Python 里才能逐位对齐；harness 变多是因为新增了 Julia 侧原本没有的
+"录制每个 tick 的全部 RNG draw + 跨语言逐位重放注入"基础设施——这是证明重表达忠实
+的代价，不是重表达本身的复杂度。P3 真正的收益在**结构**而非**行数**：世界组装从
+四个手写 Julia 脚本坍缩成配置文件 + 声明式机制注册表（§5），harness 代码的角色也
+从"手搭运行时"变成"比对器"。
 
 ## 7. 范围与明确不做
 

@@ -1,0 +1,2191 @@
+{
+  "checks": {
+    "examples_zero_runtime_code": true,
+    "frozen_scale": true,
+    "import_lint_passed": true,
+    "l2_all_draws_consumed": true,
+    "l2_cue_neutral_reproduced": true,
+    "l2_informative_reproduced": true,
+    "l2_uses_ieee754_canonical": true,
+    "mechanism_registry_complete": true
+  },
+  "examples_python_files": [],
+  "gate": "v0.2-world1-resource-foraging",
+  "import_lint_stdout": "import-lint OK: zero-dependency zones clean, vendor imports confined to adapter",
+  "l2_reports": {
+    "cue_neutral": "/private/tmp/claude-501/-Users-hzshen-Projects-newlife/d50e9c33-38a4-4614-946f-193940c94d2f/scratchpad/newlife-world1-l2-gate-101/reports/cue_neutral.json",
+    "informative": "/private/tmp/claude-501/-Users-hzshen-Projects-newlife/d50e9c33-38a4-4614-946f-193940c94d2f/scratchpad/newlife-world1-l2-gate-101/reports/informative.json"
+  },
+  "l2_results": {
+    "cue_neutral": {
+      "assay_exact": true,
+      "assay_failures": [],
+      "comparison": "proofroot-ieee754-bitwise",
+      "condition": "cue_neutral",
+      "config": "/Users/hzshen/Projects/parworlds/experiments/001-resource-foraging/configs/cue_neutral.toml",
+      "episode_remaining": {
+        "episodes/episode-1-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-1-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-10-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-10-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-11-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-11-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-12-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-12-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-13-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-13-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-14-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-14-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-15-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-15-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-16-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-16-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-17-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-17-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-18-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-18-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-19-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-19-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-2-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-2-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-20-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-20-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-21-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-21-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-22-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-22-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-23-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-23-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-24-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-24-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-25-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-25-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-26-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-26-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-27-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-27-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-28-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-28-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-29-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-29-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-3-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-3-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-30-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-30-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-31-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-31-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-32-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-32-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-33-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-33-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-34-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-34-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-35-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-35-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-36-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-36-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-37-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-37-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-38-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-38-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-39-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-39-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-4-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-4-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-40-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-40-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-41-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-41-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-42-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-42-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-43-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-43-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-44-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-44-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-45-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-45-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-46-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-46-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-47-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-47-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-48-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-48-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-49-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-49-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-5-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-5-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-50-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-50-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-51-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-51-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-52-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-52-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-53-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-53-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-54-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-54-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-55-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-55-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-56-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-56-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-57-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-57-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-58-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-58-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-59-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-59-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-6-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-6-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-60-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-60-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-61-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-61-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-62-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-62-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-63-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-63-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-64-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-64-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-7-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-7-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-8-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-8-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-9-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-9-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        }
+      },
+      "final_exact": true,
+      "final_failures": [],
+      "history_exact": true,
+      "history_failures": [],
+      "history_rows": 501,
+      "main_remaining": {
+        "assay": 0,
+        "environment": 0,
+        "initialization": 0,
+        "mutation": 0,
+        "selection": 0,
+        "sensing": 0
+      },
+      "observed_assay": {
+        "ablated_alignment_rate": 0.20640625,
+        "harvest_contribution": -20.828125,
+        "mean_ablated_harvest": 190.3125,
+        "mean_true_harvest": 169.484375,
+        "paired_episodes": 64,
+        "sampled_genomes": 16,
+        "true_alignment_rate": 0.36794402925743364
+      },
+      "recorded_assay": {
+        "ablated_alignment_rate": 0.20640625,
+        "harvest_contribution": -20.828125,
+        "mean_ablated_harvest": 190.3125,
+        "mean_true_harvest": 169.484375,
+        "paired_episodes": 64,
+        "sampled_genomes": 16,
+        "true_alignment_rate": 0.36794402925743364
+      },
+      "schema": "newlife.world1.l2-comparison.v1",
+      "seed": 101,
+      "verdict": "reproduced"
+    },
+    "informative": {
+      "assay_exact": true,
+      "assay_failures": [],
+      "comparison": "proofroot-ieee754-bitwise",
+      "condition": "informative",
+      "config": "/Users/hzshen/Projects/parworlds/experiments/001-resource-foraging/configs/informative.toml",
+      "episode_remaining": {
+        "episodes/episode-1-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-1-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-10-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-10-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-11-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-11-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-12-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-12-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-13-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-13-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-14-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-14-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-15-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-15-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-16-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-16-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-17-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-17-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-18-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-18-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-19-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-19-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-2-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-2-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-20-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-20-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-21-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-21-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-22-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-22-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-23-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-23-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-24-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-24-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-25-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-25-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-26-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-26-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-27-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-27-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-28-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-28-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-29-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-29-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-3-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-3-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-30-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-30-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-31-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-31-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-32-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-32-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-33-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-33-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-34-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-34-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-35-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-35-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-36-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-36-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-37-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-37-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-38-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-38-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-39-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-39-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-4-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-4-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-40-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-40-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-41-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-41-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-42-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-42-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-43-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-43-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-44-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-44-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-45-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-45-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-46-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-46-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-47-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-47-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-48-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-48-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-49-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-49-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-5-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-5-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-50-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-50-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-51-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-51-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-52-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-52-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-53-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-53-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-54-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-54-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-55-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-55-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-56-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-56-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-57-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-57-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-58-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-58-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-59-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-59-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-6-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-6-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-60-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-60-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-61-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-61-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-62-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-62-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-63-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-63-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-64-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-64-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-7-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-7-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-8-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-8-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-9-ablated": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        },
+        "episodes/episode-9-true": {
+          "assay": 0,
+          "environment": 0,
+          "initialization": 0,
+          "mutation": 0,
+          "selection": 0,
+          "sensing": 0
+        }
+      },
+      "final_exact": true,
+      "final_failures": [],
+      "history_exact": true,
+      "history_failures": [],
+      "history_rows": 501,
+      "main_remaining": {
+        "assay": 0,
+        "environment": 0,
+        "initialization": 0,
+        "mutation": 0,
+        "selection": 0,
+        "sensing": 0
+      },
+      "observed_assay": {
+        "ablated_alignment_rate": 0.2115625,
+        "harvest_contribution": 9.9375,
+        "mean_ablated_harvest": 190.046875,
+        "mean_true_harvest": 199.984375,
+        "paired_episodes": 64,
+        "sampled_genomes": 16,
+        "true_alignment_rate": 0.974375
+      },
+      "recorded_assay": {
+        "ablated_alignment_rate": 0.2115625,
+        "harvest_contribution": 9.9375,
+        "mean_ablated_harvest": 190.046875,
+        "mean_true_harvest": 199.984375,
+        "paired_episodes": 64,
+        "sampled_genomes": 16,
+        "true_alignment_rate": 0.974375
+      },
+      "schema": "newlife.world1.l2-comparison.v1",
+      "seed": 101,
+      "verdict": "reproduced"
+    }
+  },
+  "line_counts": {
+    "newlife_mechanisms": {
+      "__init__.py": 1,
+      "__main__.py": 34,
+      "assay.py": 169,
+      "injection.py": 201,
+      "mechanisms.py": 721,
+      "model.py": 256,
+      "world.py": 689
+    },
+    "parworlds_reference": {
+      "Assays.jl": 92,
+      "Dynamics.jl": 443,
+      "EvidenceAdapter.jl": 235,
+      "Model.jl": 284
+    }
+  },
+  "mechanism_registry": [
+    "resource-environment",
+    "forager-movement",
+    "forager-harvest-metabolism",
+    "forager-reproduction",
+    "forager-aging",
+    "world-observer"
+  ],
+  "pain_point_measurements": {
+    "P1_mechanisms_registered": 6,
+    "P2_l2_reports_bitwise": true,
+    "P2_runtime_import_lint": true,
+    "P3_newlife_mechanism_files": 7,
+    "P3_newlife_mechanism_lines": 2071,
+    "P3_parworlds_reference_files": 4,
+    "P3_parworlds_reference_lines": 1054
+  },
+  "passed": true,
+  "schema": "newlife.world1.v0.2-gate.v1"
+}

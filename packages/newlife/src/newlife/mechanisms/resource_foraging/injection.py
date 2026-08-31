@@ -22,6 +22,7 @@ from __future__ import annotations
 import json
 import random
 import struct
+from collections import deque
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
@@ -54,20 +55,53 @@ class DevStream:
 class RecordedStream:
     """Replays a recorded Julia draw log in strict consumption order."""
 
-    def __init__(self, records: Iterable[Mapping[str, Any]]) -> None:
-        self._records = list(records)
-        self._cursor = 0
+    def __init__(
+        self,
+        records: Iterable[Mapping[str, Any]] = (),
+        *,
+        source: Iterable[Mapping[str, Any]] | None = None,
+    ) -> None:
+        if source is not None and records:
+            raise ValueError("RecordedStream accepts records or source, not both")
+        self._records = deque(records)
+        self._source = iter(source) if source is not None else None
+        self._consumed = 0
+
+    @classmethod
+    def from_jsonl(cls, path: Path | str) -> "RecordedStream":
+        """Create a bounded-memory stream over the recorder's JSONL file."""
+
+        def records():
+            with Path(path).open(encoding="utf-8") as handle:
+                for line in handle:
+                    if line.strip():
+                        yield from json.loads(line)["d"]
+
+        return cls(source=records())
+
+    def _fill(self) -> bool:
+        if self._records:
+            return True
+        if self._source is None:
+            return False
+        try:
+            self._records.append(next(self._source))
+        except StopIteration:
+            self._source = None
+            return False
+        return True
 
     def _next(self, kind: str) -> Mapping[str, Any]:
-        if self._cursor >= len(self._records):
+        if not self._fill():
             raise DrawLogMismatch(
-                f"recorded draw log exhausted at entry {self._cursor}"
+                f"recorded draw log exhausted at entry {self._consumed}"
             )
-        record = self._records[self._cursor]
-        self._cursor += 1
+        record = self._records.popleft()
+        cursor = self._consumed
+        self._consumed += 1
         if record["k"] != kind:
             raise DrawLogMismatch(
-                f"draw #{self._cursor - 1}: expected {kind!r}, log has {record['k']!r}"
+                f"draw #{cursor}: expected {kind!r}, log has {record['k']!r}"
             )
         return record
 
@@ -93,12 +127,21 @@ class RecordedStream:
         # JSON round-trips tuples as lists — compare element-wise and return
         # the same element type as the input items.
         normalized = [tuple(position) if isinstance(position, list) else position for position in permuted]
-        if sorted(map(list, normalized)) != sorted(map(list, items)):
+        # The initialization permutation contains (x, y) tuples while the
+        # assay permutation contains scalar organism IDs. Both are ordinary
+        # permutations; compare their elements without assuming coordinates.
+        if sorted(normalized) != sorted(items):
             raise DrawLogMismatch("recorded permutation is not a permutation of the items")
         return normalized
 
     def remaining(self) -> int:
-        return len(self._records) - self._cursor
+        # Normally this only advances the file iterator to EOF (one record at
+        # a time after the last consumption). If a caller asks early, the
+        # unread tail is materialized solely to report the exact count.
+        if self._source is not None:
+            self._records.extend(self._source)
+            self._source = None
+        return len(self._records)
 
 
 class RecordedBank:
@@ -106,12 +149,24 @@ class RecordedBank:
 
     def __init__(self, root_seed: int, logs: Mapping[str, Iterable[Mapping[str, Any]]]) -> None:
         self.root_seed = root_seed
-        self._streams = {name: RecordedStream(records) for name, records in logs.items()}
+        self._streams = {
+            name: records if isinstance(records, RecordedStream) else RecordedStream(records)
+            for name, records in logs.items()
+        }
 
     def rng_stream(self, name: str) -> RecordedStream:
         if name not in self._streams:
             raise KeyError(f"no recorded log for stream {name!r}")
         return self._streams[name]
+
+    def remaining(self) -> dict[str, int]:
+        """Return unread entries by stream for an end-to-end L2 audit."""
+        return {name: stream.remaining() for name, stream in self._streams.items()}
+
+    def assert_exhausted(self) -> None:
+        unread = {name: count for name, count in self.remaining().items() if count}
+        if unread:
+            raise DrawLogMismatch(f"recorded draw log has unread entries: {unread}")
 
 
 def load_stream_log(path: Path | str) -> list[dict[str, Any]]:
@@ -137,9 +192,9 @@ def load_recorded_bank(
     directory = Path(log_dir)
     logs = {
         name: (
-            load_stream_log(directory / f"{name}.jsonl")
+            RecordedStream.from_jsonl(directory / f"{name}.jsonl")
             if (directory / f"{name}.jsonl").exists()
-            else []
+            else RecordedStream()
         )
         for name in RNG_STREAM_NAMES
     }

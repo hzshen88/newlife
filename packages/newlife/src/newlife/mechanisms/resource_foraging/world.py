@@ -12,7 +12,7 @@ authorized Effect, every tick closes with the observer's ledger verification
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Iterable, Mapping
 
 from newlife.adapters.reference_kernel.kernel import ReferenceKernel
 from newlife.mechanisms.resource_foraging import mechanisms as mech
@@ -34,23 +34,228 @@ class WorldLedgerError(RuntimeError):
     """The resource-energy ledger failed — the run is `Failed`, not biology."""
 
 
-def julia_matrix_sum(values: Mapping[tuple[int, int], float], width: int, height: int) -> float:
-    """Julia `sum(::Matrix)` reduces in column-major order (x fastest); the
-    ledger and snapshot totals replicate that order bit-for-bit."""
-    total = 0.0
-    for y in range(1, height + 1):
-        for x in range(1, width + 1):
-            total += values[(x, y)]
+_U64_MASK = (1 << 64) - 1
+_JULIA_DICT_TOMBSTONE = object()
+
+
+def _julia_hash_int(value: int) -> int:
+    """Julia 1.12's stable UInt64 integer hash (hash(value, UInt(0)))."""
+    value &= _U64_MASK
+    value = (~value + (value << 21)) & _U64_MASK
+    value = (value ^ (value >> 24)) & _U64_MASK
+    value = (value + (value << 3) + (value << 8)) & _U64_MASK
+    value = (value ^ (value >> 14)) & _U64_MASK
+    value = (value + (value << 2) + (value << 4)) & _U64_MASK
+    value = (value ^ (value >> 28)) & _U64_MASK
+    return (value + (value << 31)) & _U64_MASK
+
+
+def _julia_table_size(requested: int) -> int:
+    if requested < 16:
+        return 16
+    return 1 << (requested - 1).bit_length()
+
+
+class _JuliaIntDictOrder:
+    """The iteration order of Julia's ``Dict{Int,...}`` for this world.
+
+    Dynamics.jl explicitly sorts IDs for biological decisions, but its
+    aggregate observer uses ``values(world.organisms)``.  Julia's Dict walks
+    hash-table slots, so sorted Python IDs reproduce the trajectory while
+    still producing different last-bit aggregates.  This tiny slot model
+    mirrors the relevant Julia Dict insertion, deletion, tombstone, and
+    rehash rules; it is only used for observer summation, never for biology.
+    """
+
+    def __init__(self) -> None:
+        self._slots: list[object] = []
+        self._count = 0
+        self._deleted = 0
+        self._maxprobe = 0
+
+    def _rehash(self, requested: int) -> None:
+        old_slots = self._slots
+        size = _julia_table_size(requested)
+        self._slots = [None] * size
+        self._deleted = 0
+        self._maxprobe = 0
+        for item in old_slots:
+            if item is None or item is _JULIA_DICT_TOMBSTONE:
+                continue
+            self._insert_slot(item)
+
+    def _insert_slot(self, key: int) -> None:
+        size = len(self._slots)
+        index = _julia_hash_int(key) & (size - 1)
+        while self._slots[index] is not None:
+            index = (index + 1) & (size - 1)
+        probe = (index - (_julia_hash_int(key) & (size - 1))) & (size - 1)
+        self._maxprobe = max(self._maxprobe, probe)
+        self._slots[index] = key
+
+    def insert(self, key: int) -> None:
+        if not self._slots:
+            self._rehash(4)
+        size = len(self._slots)
+        index = _julia_hash_int(key) & (size - 1)
+        available = -1
+        probe = 0
+        while True:
+            item = self._slots[index]
+            if item is None:
+                return self._insert_at(index, key, available, size)
+            if item is _JULIA_DICT_TOMBSTONE:
+                if available < 0:
+                    available = index
+            elif item == key:
+                return
+            index = (index + 1) & (size - 1)
+            probe += 1
+            if probe > self._maxprobe:
+                break
+
+        maxallowed = max(16, size >> 6)
+        while probe < maxallowed:
+            item = self._slots[index]
+            if item is None or item is _JULIA_DICT_TOMBSTONE:
+                # Julia's extended probe path returns the first available
+                # slot it sees here (even when an earlier tombstone was
+                # encountered in the short path).
+                return self._insert_at(index, key, -1, size, update_probe=probe)
+            index = (index + 1) & (size - 1)
+            probe += 1
+        self._rehash(size * 2 if self._count > 64000 else size * 4)
+        self.insert(key)
+
+    def _insert_at(
+        self,
+        index: int,
+        key: int,
+        available: int,
+        size: int,
+        *,
+        update_probe: int | None = None,
+    ) -> None:
+        if available >= 0:
+            index = available
+            self._deleted -= 1
+        self._slots[index] = key
+        self._count += 1
+        if update_probe is not None:
+            self._maxprobe = update_probe
+        if (self._count + self._deleted) * 3 > size * 2:
+            self._rehash(max(self._count * 4, 4))
+
+    def discard(self, key: int) -> None:
+        if not self._slots:
+            return
+        size = len(self._slots)
+        index = _julia_hash_int(key) & (size - 1)
+        while True:
+            item = self._slots[index]
+            if item is None:
+                return
+            if item is not _JULIA_DICT_TOMBSTONE and item == key:
+                next_index = (index + 1) & (size - 1)
+                if self._slots[next_index] is None:
+                    deleted = 1
+                    while True:
+                        deleted -= 1
+                        self._slots[index] = None
+                        index = (index - 1) & (size - 1)
+                        if self._slots[index] is not _JULIA_DICT_TOMBSTONE:
+                            break
+                else:
+                    self._slots[index] = _JULIA_DICT_TOMBSTONE
+                    deleted = 1
+                self._deleted += deleted
+                self._count -= 1
+                return
+            index = (index + 1) & (size - 1)
+
+    def __iter__(self):
+        return (
+            item
+            for item in self._slots
+            if item is not None and item is not _JULIA_DICT_TOMBSTONE
+        )
+
+    def sync(self, current_ids: Iterable[int], *, insert_before_delete: bool = False) -> None:
+        current = set(current_ids)
+        previous = set(self)
+        added = sorted(current - previous)
+        removed = sorted(previous - current)
+        if insert_before_delete:
+            for organism_id in added:
+                self.insert(organism_id)
+            for organism_id in removed:
+                self.discard(organism_id)
+        else:
+            for organism_id in removed:
+                self.discard(organism_id)
+            for organism_id in added:
+                self.insert(organism_id)
+
+
+def _julia_simd_sum(values: list[float]) -> float:
+    """Reproduce Julia 1.12's arm64 ``@simd`` reduction for one block."""
+    total = values[0] + values[1]
+    remaining = len(values) - 2
+    vector_length = remaining & ~7
+    acc0, acc1 = total, -0.0
+    acc2, acc3 = -0.0, -0.0
+    acc4, acc5 = -0.0, -0.0
+    acc6, acc7 = -0.0, -0.0
+    for index in range(2, 2 + vector_length, 8):
+        acc0 += values[index]
+        acc1 += values[index + 1]
+        acc2 += values[index + 2]
+        acc3 += values[index + 3]
+        acc4 += values[index + 4]
+        acc5 += values[index + 5]
+        acc6 += values[index + 6]
+        acc7 += values[index + 7]
+    acc2 += acc0
+    acc3 += acc1
+    acc4 += acc2
+    acc5 += acc3
+    acc4 += acc6
+    acc5 += acc7
+    total = acc4 + acc5
+    for index in range(2 + vector_length, len(values)):
+        total += values[index]
     return total
 
 
-def _cell_organism_energy_sum(organisms: Mapping[int, dict[str, Any]]) -> float:
-    """Julia sums organism energies over Dict iteration order, which is not
-    reproducible in Python; this port sums in sorted-id order. The divergence
-    is confined to last-bit rounding of reported aggregates — the comparison
-    protocol (world doc §4) allows 1e-9 on float observables."""
+def julia_array_sum(values: Iterable[float]) -> float:
+    """Replicate Julia's ``sum(::AbstractArray{Float64})`` reduction tree."""
+    values = list(values)
+    if not values:
+        return 0.0
+    if len(values) == 1:
+        return values[0]
+    if len(values) < 1025:
+        return _julia_simd_sum(values)
+    middle = 1 + (len(values) - 1) // 2
+    return julia_array_sum(values[:middle]) + julia_array_sum(values[middle:])
+
+
+def julia_matrix_sum(values: Mapping[tuple[int, int], float], width: int, height: int) -> float:
+    """Julia ``sum(::Matrix)`` in column-major order (x fastest)."""
+    ordered_values: list[float] = []
+    for y in range(1, height + 1):
+        for x in range(1, width + 1):
+            ordered_values.append(values[(x, y)])
+    return julia_array_sum(ordered_values)
+
+
+def _cell_organism_energy_sum(
+    organisms: Mapping[int, dict[str, Any]], order: Iterable[int] | None = None
+) -> float:
+    """Julia's generator sum over ``values(world.organisms)``."""
     total = 0.0
-    for organism_id in sorted(organisms):
+    organism_ids = sorted(organisms) if order is None else order
+    for organism_id in organism_ids:
         total += organisms[organism_id]["energy"]
     return total
 
@@ -175,6 +380,10 @@ class ForagingWorld:
         environment = bank.rng_stream("environment")
         state, lineage = build_initial_state(config, initialization, environment)
         self.kernel = ReferenceKernel(state)
+        self._organism_order = _JuliaIntDictOrder()
+        self._organism_order.sync(
+            record["id"] for record in state["organisms"].values() if record is not None
+        )
         self.kernel.trace.extend(lineage)  # the initialization lineage (Julia pushes these in initialize_world)
         for spec in mech.build_mechanism_specs(config):
             self.kernel.register_mechanism(spec)
@@ -186,8 +395,20 @@ class ForagingWorld:
         def produce(view: Mapping[tuple[str, ...], Any]) -> mech.MechanismStep:
             return step(view)
 
-        result = self.kernel.guarded_read(identity, produce)
-        self.kernel.apply_batch(identity, list(result.effects), list(result.records))
+        result = self.kernel.guarded_read_fast(identity, produce)
+        # The reference kernel's public apply_batch remains the deliberately
+        # simple deep-copy oracle used by contract fixtures. World-scale runs
+        # use its equivalent atomic copy-on-write transaction so the frozen
+        # 32x32/5000-tick L2 gate is practically repeatable.
+        self.kernel.apply_batch_fast(identity, list(result.effects), list(result.records))
+        current_ids = (
+            record["id"]
+            for record in self.kernel.state["organisms"].values()
+            if record is not None
+        )
+        self._organism_order.sync(
+            current_ids, insert_before_delete=identity == "forager-reproduction"
+        )
 
     def tick(self) -> None:
         config = self.config
@@ -258,7 +479,7 @@ class ForagingWorld:
         _validate_world_invariants(organisms, resources, occupancy, config, tick)
         before_total = view[("ledger", "before_total")]
         after_total = julia_matrix_sum(resources, config.width, config.height) + _cell_organism_energy_sum(
-            {record["id"]: record for record in organisms.values()}
+            {record["id"]: record for record in organisms.values()}, self._organism_order
         )
         death_loss = (
             view[("ledger", "death_loss_metabolize")]
@@ -303,7 +524,7 @@ class ForagingWorld:
             "population": len(organisms),
             "total_resource": julia_matrix_sum(resources, config.width, config.height),
             "total_organism_energy": _cell_organism_energy_sum(
-                {record["id"]: record for record in organisms.values()}
+                {record["id"]: record for record in organisms.values()}, self._organism_order
             ),
             "births": view[("counters", "births")],
             "deaths": view[("counters", "deaths")],
@@ -326,10 +547,60 @@ class ForagingWorld:
             "time": str(tick),
         }
 
+    def _initial_snapshot(self) -> dict[str, Any]:
+        """The initial Observer row emitted by Julia before the first tick."""
+        config = self.config
+        state = self.kernel.state
+        organisms = {
+            record["id"]: record
+            for record in state["organisms"].values()
+            if record is not None
+        }
+        resources = {
+            (x, y): state["resources"][cell_key(x, y)]
+            for y in range(1, config.height + 1)
+            for x in range(1, config.width + 1)
+        }
+        counters = state["counters"]
+        flows = counters["flows"]
+        return {
+            "kind": "ForagingSnapshot",
+            "tick": 0,
+            "population": len(organisms),
+            "total_resource": julia_matrix_sum(resources, config.width, config.height),
+            "total_organism_energy": _cell_organism_energy_sum(
+                organisms, self._organism_order
+            ),
+            "births": counters["births"],
+            "deaths": counters["deaths"],
+            "movement_attempts": counters["movement_attempts"],
+            "successful_moves": counters["successful_moves"],
+            "decisions": counters["decisions"],
+            "aligned_actions": counters["aligned_actions"],
+            "true_cue_counts": list(counters["true_cue_counts"]),
+            "perceived_cue_counts": list(counters["perceived_cue_counts"]),
+            "external_input": flows["external_input"],
+            "overflow_loss": flows["overflow_loss"],
+            "harvested_resource": flows["harvested_resource"],
+            "conversion_loss": flows["conversion_loss"],
+            "maintenance_loss": flows["maintenance_loss"],
+            "movement_loss": flows["movement_loss"],
+            "reproduction_loss": flows["reproduction_loss"],
+            "death_loss": flows["death_loss"],
+            "balance_error": 0.0,
+            "source": "world-observer",
+            "time": "0",
+        }
+
     # ── run loop ─────────────────────────────────────────────────────────
 
     def run(self) -> WorldRunResult:
         config = self.config
+        # Julia's run_with_observation! emits a tick-0 snapshot before the
+        # loop. Keep it in the evidence trace and result history so L2 compares
+        # the same row set, including the initial condition.
+        if not any(record.get("kind") == "ForagingSnapshot" for record in self.kernel.trace):
+            self.kernel.trace.append(self._initial_snapshot())
         while self.kernel.state["counters"]["tick"] < config.ticks and self.population() > 0:
             self.tick()
         tick = self.kernel.state["counters"]["tick"]
