@@ -2,7 +2,7 @@
 
 # BiologicalProfile 库建设方案
 
-- **日期**：2026-08-31　**状态**：v0.10（v0.1a/v0.1b 均已判定：H1 支持，`compatible_for_frozen_slices_v1_lowered` 与 `staging_declarable_for_frozen_slices`；**v0.2 gate 已关闭**：World 1 = Resource Foraging 双条件 L2 逐位精确复现，`results/v0.2/gate.json` `passed: true`；**v0.3 compare 主线已判定**：H1 支持，`causal_attribution_declarable_for_world1_pairs`，预注册冻结于 exloop `322a8dc8`，实现见 `packages/newlife/src/newlife/core/compare.py`；第二世界候选未启动）
+- **日期**：2026-09-01　**状态**：v0.10（v0.1a/v0.1b 均已判定：H1 支持，`compatible_for_frozen_slices_v1_lowered` 与 `staging_declarable_for_frozen_slices`；**v0.2 gate 已关闭**：World 1 = Resource Foraging 双条件 L2 逐位精确复现，`results/v0.2/gate.json` `passed: true`；**v0.3 compare 主线已判定**：H1 支持，`causal_attribution_declarable_for_world1_pairs`，预注册冻结于 exloop `322a8dc8`，实现见 `packages/newlife/src/newlife/core/compare.py`；**第二世界（`ms` 最小溯祖模型）已判定**：H1 支持，`ms_minimal_coalescent_reproducible`，预注册冻结于 exloop `c450072`，实现见 `packages/newlife/src/newlife/mechanisms/second_world/`）
 - **性质**：完整建设方案——从背景、证据、架构到里程碑。自含背景，不依赖对话上下文。
 - **决策记录**：[`architecture-discussion-record.md`](architecture-discussion-record.md)（另一场对话的架构讨论）
 - **正式证据**：[`../process/03-formal-pressure-test.md`](../process/03-formal-pressure-test.md)
