@@ -1,0 +1,59 @@
+{
+  "schema": "newlife.third-world.gate.v1",
+  "prereg_freeze_commit": "aa052dd",
+  "world_seed": 20260902,
+  "cells": [
+    {
+      "r": "1_2",
+      "replicates": 1350,
+      "fixations": 23,
+      "acceptance_region": [
+        11,
+        33
+      ],
+      "target": 0.015873,
+      "censored": 0,
+      "total_steps": 12469,
+      "claim_i_failures": [],
+      "claim_i_failure_count": 0,
+      "claim_i_passed": true,
+      "claim_ii_passed": true
+    },
+    {
+      "r": "1",
+      "replicates": 1350,
+      "fixations": 232,
+      "acceptance_region": [
+        193,
+        258
+      ],
+      "target": 0.166667,
+      "censored": 0,
+      "total_steps": 18250,
+      "claim_i_failures": [],
+      "claim_i_failure_count": 0,
+      "claim_i_passed": true,
+      "claim_ii_passed": true
+    },
+    {
+      "r": "3_2",
+      "replicates": 1350,
+      "fixations": 494,
+      "acceptance_region": [
+        451,
+        536
+      ],
+      "target": 0.365414,
+      "censored": 0,
+      "total_steps": 20461,
+      "claim_i_failures": [],
+      "claim_i_failure_count": 0,
+      "claim_i_passed": true,
+      "claim_ii_passed": true
+    }
+  ],
+  "claim_i_passed": true,
+  "claim_ii_passed": true,
+  "zero_censoring": true,
+  "passed": true
+}

@@ -91,7 +91,7 @@ not exist yet.
 
 ## Status
 
-Six milestones are decided, each against criteria frozen before the
+Seven milestones are decided, each against criteria frozen before the
 implementation existed. Every verdict below is computed by a runner from the
 frozen conjunction, not asserted by hand:
 
@@ -103,6 +103,7 @@ frozen conjunction, not asserted by hand:
 | v0.3 compare (causal attribution) | H1 supported — `causal_attribution_declarable_for_world1_pairs` | `results/v0.3/summary.json` |
 | World 2 (`ms` minimal coalescent) | H1 supported — `ms_minimal_coalescent_reproducible` | `results/second-world/summary.json` |
 | World 4 (Moran genealogy vs Kingman) | H1 supported — exact topology for `n ∈ {3..7}`, `S̄` in the frozen region | `results/fourth-world/summary.json` |
+| World 3 (Moran under selection) | H1 supported — per-step oracle replay over 4050 replicates, all three cells in region | `results/third-world/summary.json` |
 
 World 4 is the first world with **no external program as a comparison target
 anywhere** — it checks against mathematics the project derives and verifies

@@ -122,22 +122,37 @@ def test_IC3_thresholds_match_the_oracle_bit_for_bit():
     assert checked == 15
 
 
-def test_IC3_reduce_then_divide_would_differ_somewhere():
-    """负控：若机制改用「先化简成 Fraction 再除一次」，至少在一处会不同。
+def test_IC3_the_two_threshold_algorithms_are_INDISTINGUISHABLE_on_the_frozen_grid():
+    """诚实记录 IC-3 在**冻结网格上**的实际覆盖范围。
 
-    这条保证上面的逐位对账不是空转——两种算法确实可区分。
+    question 的第三轮红队区分了两种阈值算法（字面浮点序列 vs 先化简成 Fraction 再除
+    一次），差异出现在 `r=5/3`。但冻结网格是 `r ∈ {1/2, 1, 3/2}`——**在这个网格上
+    两者给出逐位相同的 float**，实测确认。
+
+    因此：IC-3 的逐位对账在冻结网格上**无法区分这两种算法**，实现用哪个都不改变任何
+    可观测量。这不是缺陷，是网格选择的性质；写成断言是为了不让读者以为 IC-3 覆盖了
+    这一类。verdict runner 的负控也确认了这一点：把机制换成先化简再除，H1 仍然通过。
     """
     ora = _oracle()
     from fractions import Fraction as F  # noqa: PLC0415
 
-    diffs = 0
-    for r_exact in (F(1, 2), F(1), F(3, 2), F(5, 3)):
+    frozen_diffs = 0
+    for r_exact in (F(1, 2), F(1), F(3, 2)):
         for i in range(1, N_POP):
             literal = float(ora.repro_A_threshold_literal_float_ops(N_POP, r_exact, i))
             reduced = float(ora.repro_A_threshold_reduce_then_divide(N_POP, r_exact, i))
             if literal != reduced:
-                diffs += 1
-    assert diffs > 0, "两种阈值算法在本网格上无法区分——逐位对账将是空转"
+                frozen_diffs += 1
+    assert frozen_diffs == 0, "冻结网格上竟出现差异——本测试记录的事实已过时"
+
+    # 网格外确实可区分，所以「两种算法等价」是网格的局部性质，不是普遍事实
+    off_grid_diffs = sum(
+        1
+        for i in range(1, N_POP)
+        if float(ora.repro_A_threshold_literal_float_ops(N_POP, F(5, 3), i))
+        != float(ora.repro_A_threshold_reduce_then_divide(N_POP, F(5, 3), i))
+    )
+    assert off_grid_diffs > 0, "连 r=5/3 都无差异——两种算法根本不可区分，规格是空的"
 
 
 # --- M2：记录语义是消耗顺序，不是角色 -----------------------------------------
