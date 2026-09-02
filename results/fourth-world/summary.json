@@ -1,0 +1,69 @@
+{
+  "schema": "newlife.fourth-world.gate.v1",
+  "prereg_freeze_commit": "24bb02e",
+  "world_seed": 20260902,
+  "claim_i": {
+    "cells": [
+      {
+        "n": 3,
+        "histories": 3,
+        "expected_probability": "1/3",
+        "mismatches": 0,
+        "within_budget": true,
+        "passed": true
+      },
+      {
+        "n": 4,
+        "histories": 18,
+        "expected_probability": "1/18",
+        "mismatches": 0,
+        "within_budget": true,
+        "passed": true
+      },
+      {
+        "n": 5,
+        "histories": 180,
+        "expected_probability": "1/180",
+        "mismatches": 0,
+        "within_budget": true,
+        "passed": true
+      },
+      {
+        "n": 6,
+        "histories": 2700,
+        "expected_probability": "1/2700",
+        "mismatches": 0,
+        "within_budget": true,
+        "passed": true
+      },
+      {
+        "n": 7,
+        "histories": 56700,
+        "expected_probability": "1/56700",
+        "mismatches": 0,
+        "within_budget": true,
+        "passed": true
+      }
+    ],
+    "passed": true
+  },
+  "claim_ii": {
+    "replicates": 2101,
+    "mean_segsites": 4.530699666825321,
+    "target": "137/30",
+    "acceptance_region": [
+      4.4286,
+      4.7047
+    ],
+    "passed": true
+  },
+  "observer_reuse": {
+    "schema": "newlife.fourth-world.reuse-trace.v1",
+    "observer_identity": "second-world-observer",
+    "observer_is_world2_object": true,
+    "observer_module": "newlife.mechanisms.second_world.mechanisms",
+    "observer_spec_unedited": true,
+    "execution_input_paths": []
+  },
+  "passed": true
+}

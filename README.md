@@ -91,7 +91,7 @@ not exist yet.
 
 ## Status
 
-Five milestones are decided, each against criteria frozen before the
+Six milestones are decided, each against criteria frozen before the
 implementation existed. Every verdict below is computed by a runner from the
 frozen conjunction, not asserted by hand:
 
@@ -102,11 +102,23 @@ frozen conjunction, not asserted by hand:
 | v0.2 World 1 (Resource Foraging) | gate closed — bit-exact L2 reproduction, both conditions | `results/v0.2/gate.json` |
 | v0.3 compare (causal attribution) | H1 supported — `causal_attribution_declarable_for_world1_pairs` | `results/v0.3/summary.json` |
 | World 2 (`ms` minimal coalescent) | H1 supported — `ms_minimal_coalescent_reproducible` | `results/second-world/summary.json` |
+| World 4 (Moran genealogy vs Kingman) | H1 supported — exact topology for `n ∈ {3..7}`, `S̄` in the frozen region | `results/fourth-world/summary.json` |
 
-Recorded as honestly as the successes: World 2 is the **second consecutive
-world that bypasses `staging.py`**, and pain point P1 (mechanism
-composability) did not advance there — it went slightly backwards. See
-`docs/design/proposal.md` §7. That is what the goal step exists to surface.
+World 4 is the first world with **no external program as a comparison target
+anywhere** — it checks against mathematics the project derives and verifies
+itself. It is also the first time pain point P1 (cross-world mechanism
+composability) advanced: World 2's observer is reused **unmodified through the
+registry**, judged by object identity rather than an import list. The goal
+records that as `achieved` in its narrow, pre-frozen sense — **P1 moved off
+zero**, not "P1 solved".
+
+Recorded as honestly as the successes: World 2 was the second consecutive world
+to bypass `staging.py` and P1 went slightly backwards there; World 4 bypasses it
+a **fourth** consecutive time, and its reuse works only because the consumer
+accommodates World 2's namespace (`TREE_PATH` stays `second_world/tree`) — that
+composition is not clean. Both costs were pre-declared before execution. See
+`docs/design/proposal.md` §7 and `docs/worlds/004-moran-genealogy.md`. That is
+what the goal step exists to surface.
 
 **The discipline is that criteria freeze first and code follows.** See
 `docs/design/proposal.md` (§7 schedule) and

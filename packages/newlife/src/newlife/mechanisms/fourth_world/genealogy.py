@@ -31,6 +31,25 @@ class DrawStream(Protocol):
     def next(self) -> float: ...
 
 
+def moran_step_outcome(
+    slots: list[int | None], reproducer: int, dier: int
+) -> tuple[str, int | None, int | None]:
+    """一步 Moran 的**回溯结果**，作为纯函数暴露。
+
+    返回 `(kind, a, b)`：`kind` ∈ {"null", "transfer", "merge"}；merge 时 `a`/`b`
+    是被合并的两个树节点（`a` 来自死者槽位，`b` 来自繁殖者槽位），transfer 时
+    `a` 是被移动的节点，null 时二者为 None。
+
+    建树与「claim (i) 的精确枚举」共用这一个函数——预注册 R5 要求枚举跑在
+    shipped builder 自己的步规则上，共享而非各写一份是唯一能保证这点的做法。
+    """
+    if reproducer == dier or slots[dier] is None:
+        return ("null", None, None)
+    if slots[reproducer] is None:
+        return ("transfer", slots[dier], None)
+    return ("merge", slots[dier], slots[reproducer])
+
+
 def build_moran_genealogy(
     n_sample: int, n_pop: int, draws: DrawStream
 ) -> tuple[list[float], list[int], int]:
@@ -64,17 +83,15 @@ def build_moran_genealogy(
         reproducer = int(n_pop * draws.next())
         dier = int(n_pop * draws.next())
 
-        if reproducer == dier or slots[dier] is None:
+        kind, child_a, child_b = moran_step_outcome(slots, reproducer, dier)
+        if kind == "null":
             continue
 
-        if slots[reproducer] is None:
-            # 转移：谱系上移到繁殖者槽位，谱系数不变
+        if kind == "transfer":
             slots[reproducer] = slots[dier]
             slots[dier] = None
             continue
 
-        # 合并：两条谱系在上一步是同一条
-        child_a, child_b = slots[dier], slots[reproducer]
         time[next_node] = t
         abv[child_a] = next_node
         abv[child_b] = next_node
