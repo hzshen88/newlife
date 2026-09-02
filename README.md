@@ -103,6 +103,7 @@ frozen conjunction, not asserted by hand:
 | v0.3 compare (causal attribution) | H1 supported — `causal_attribution_declarable_for_world1_pairs` | `results/v0.3/summary.json` |
 | World 2 (`ms` minimal coalescent) | H1 supported — `ms_minimal_coalescent_reproducible` | `results/second-world/summary.json` |
 | World 4 (Moran genealogy vs Kingman) | H1 supported — exact topology for `n ∈ {3..7}`, `S̄` in the frozen region | `results/fourth-world/summary.json` |
+| World 5 (the gate's own check coverage) | **H0 supported** — 3 of 47 checks are `hollow`; first non-H1 verdict in eight milestones | `results/fifth-world/summary.json` |
 | World 3 (Moran under selection) | H1 supported — per-step oracle replay over 4050 replicates, all three cells in region | `results/third-world/summary.json` |
 
 World 4 is the first world with **no external program as a comparison target
