@@ -1,0 +1,34 @@
+{
+  "schema": "newlife.fifth-world.gate.v1",
+  "total_checks": 47,
+  "expected_total": 47,
+  "counts": {
+    "anchored": 5,
+    "auto": 24,
+    "hand": 15,
+    "hollow": 3
+  },
+  "unknown_classes": [],
+  "completeness": true,
+  "every_row_has_evidence": true,
+  "no_unresolved_ic1": true,
+  "hollow": [
+    {
+      "script": "moran_fixation_check.py",
+      "check": "check-2",
+      "evidence": "追溯 1 层得 covers；其内变异均不使其红，facts 为计数不变"
+    },
+    {
+      "script": "moran_fixation_check.py",
+      "check": "check-5",
+      "evidence": "追溯 1 层得 covers；判据为内联字面量算术，covers 内变异不影响"
+    },
+    {
+      "script": "moran_plan_grid.py",
+      "check": "IC-1-tractable-at-frozen-N",
+      "evidence": "判定条件是字面量 True，任何变异都不可能使其红"
+    }
+  ],
+  "verdict": "H0",
+  "passed": false
+}
