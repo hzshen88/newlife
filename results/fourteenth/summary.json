@@ -1,0 +1,36 @@
+{
+  "schema": "newlife.fourteenth.cross-runtime.v1",
+  "preregistration": "1b9257a",
+  "units": {
+    "U0_safety_line": {
+      "passed": true,
+      "baseline": "results/fourth-world/summary.json",
+      "baseline_commit": "6d89736a845686bac9ebab8d8d49620e43c60f7e",
+      "git_status": ""
+    },
+    "U1_pb_completes": {
+      "passed": true,
+      "completed": 2101
+    },
+    "U2_byte_identical": {
+      "passed": true,
+      "identical": 2101
+    }
+  },
+  "negative_control": {
+    "mutation": "mapping-direct-structural 写树时反转 time",
+    "went_red": true
+  },
+  "comparison": {
+    "replicates": 2101,
+    "pb_completed": 2101,
+    "byte_identical": 2101,
+    "first_difference": null,
+    "seconds": 6.8
+  },
+  "runtimes": [
+    "reference_kernel",
+    "process_bigraph"
+  ],
+  "verdict": "H1"
+}

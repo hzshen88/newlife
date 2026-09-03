@@ -105,6 +105,13 @@ def _resolved_position_envelope(op: LoweredOp, port: str, _view, interval) -> di
     }
 
 
+def _mapping_direct_structural(op: LoweredOp, port: str, _view, _interval) -> dict[str, Any]:
+    # 结构重写落在一个整体覆写的映射 store 上：after 就是新值。
+    # 与 `string-leaf-structural` 同一语义，区别只在 store 的注册类型不是叶子字符串。
+    # **这是接线，不是改语义**——预注册 1b9257a §3 F1 允许的唯一一类改动。
+    return {port: op.payload["after"]}
+
+
 def _noop(_op: LoweredOp, _port: str, _view, _interval) -> dict[str, Any]:
     # event ops carry no state semantics: the effect is validated and traced,
     # the update contributes nothing.
@@ -117,6 +124,7 @@ STORE_HANDLERS: dict[str, StoreHandler] = {
     "list-direct": _list_direct,
     "sum-float-set": _sum_float_set,
     "string-leaf-structural": _string_leaf_structural,
+    "mapping-direct-structural": _mapping_direct_structural,
     "map-divide-structural": _map_divide_structural,
     "budget-proposal-projection": _budget_proposal_projection,
     "resolved-position-envelope": _resolved_position_envelope,
