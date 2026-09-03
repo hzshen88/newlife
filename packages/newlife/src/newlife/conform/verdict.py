@@ -267,6 +267,7 @@ def compute_verdict(
 
 
 def pytest_output_passed(text: str) -> bool:
+    # silent-degradation: ok —— 这是谓词函数，「最后一行不是 N passed」正是它要报告的否定结果
     success = re.compile(r"^\d+ passed in \d+(?:\.\d+)?s$")
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     return bool(lines) and success.fullmatch(lines[-1]) is not None
