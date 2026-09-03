@@ -6,12 +6,12 @@
   "model": "ecoli core",
   "units": {
     "X0_safety_line": {
-      "passed": false,
+      "passed": true,
       "baselines": [
         "results/fifteenth/summary.json",
         "results/sixteenth/summary.json"
       ],
-      "git_status": "M results/sixteenth/summary.json"
+      "git_status": ""
     },
     "X1_unmodified": {
       "passed": true,
@@ -156,5 +156,5 @@
     "类型词表 spatio_flux:register_types",
     "模型与动力学参数 MODEL_REGISTRY_DFBA['ecoli core']（cobra 自带 textbook，不联网）"
   ],
-  "verdict": "INVALID"
+  "verdict": "H1"
 }

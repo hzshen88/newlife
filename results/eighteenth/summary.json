@@ -4,7 +4,7 @@
   "units": {
     "Y0_safety_line": {
       "passed": false,
-      "reason": "newlife.conform.solver_backed_verdict 非零退出：1"
+      "git_status": "M results/seventeenth/summary.json"
     },
     "Y1_wiring_is_third_party": {
       "passed": true,
