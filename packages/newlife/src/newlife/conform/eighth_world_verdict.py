@@ -54,19 +54,28 @@ def baseline_summary_sha() -> tuple[str | None, str]:
     改从本仓最后一次触及该文件的 commit 取；改写尚未提交时，那正是改写前的版本。
     提交之后由 `--baseline-sha` 传入本次判定已记录的值。
     """
+    # `except Exception: pass` 曾把「git 不在」和「那个 commit 里确实没这个文件」
+    # 混成同一个 "unavailable"——第十三个里程碑实测出的 silent_output：进程照常产出一份
+    # 格式完好的 verdict: INVALID，理由写成「基线不可得」，而真实原因是 git 不在。
+    # **不是没报警，是报错了案由。** 现在两者分开：环境缺失硬失败并指名，
+    # 「历史里确实没有」才返回 None。
     try:
         rev = subprocess.run(
             ["git", "log", "-1", "--format=%H", "--", SUMMARY],
             cwd=REPO, capture_output=True, text=True, timeout=60)
-        if rev.returncode == 0 and rev.stdout.strip():
-            blob = subprocess.run(
-                ["git", "show", f"{rev.stdout.strip()}:{SUMMARY}"],
-                cwd=REPO, capture_output=True, timeout=60)
-            if blob.returncode == 0 and blob.stdout:
-                return hashlib.sha256(blob.stdout).hexdigest(), f"git:{rev.stdout.strip()[:8]}"
-    except Exception:
-        pass
-    return None, "unavailable"
+    except FileNotFoundError as exc:
+        raise SystemExit(
+            "git 不可用——归档基线取不到。这是环境缺失，不是「基线不存在」；"
+            f"非 Python 依赖见 conform/dep_declaration.py。原始错误：{exc}"
+        ) from exc
+    if rev.returncode != 0 or not rev.stdout.strip():
+        return None, "no-history"
+    blob = subprocess.run(
+        ["git", "show", f"{rev.stdout.strip()}:{SUMMARY}"],
+        cwd=REPO, capture_output=True, timeout=60)
+    if blob.returncode != 0 or not blob.stdout:
+        return None, "no-history"
+    return hashlib.sha256(blob.stdout).hexdigest(), f"git:{rev.stdout.strip()[:8]}"
 
 
 def main() -> int:
