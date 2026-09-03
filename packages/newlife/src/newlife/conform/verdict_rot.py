@@ -93,6 +93,18 @@ DEPENDS_ON: dict[str, tuple[str, ...]] = {
                 "core/harness.py", "core/runtime.py",
                   "adapters/reference_kernel/world_runtime.py"),
     "ninth":   ("conform/ninth_world_verdict.py", "mechanisms/resource_foraging/"),
+    # 第十 / 十一 / 十二 / 十三个当时**漏登记**了（2026-09-03 由 scripts/check_record.py
+    # 对账查出：4 个产物没有依赖面，改它们的代码不会被提示要重跑——**腐烂检测器
+    # 自己有覆盖洞，而当时没有任何东西检查它的覆盖率**）。依赖面按各自 runner 的
+    # 真实读取范围补，不是补一个占位。
+    "tenth":   ("conform/tenth_verdict.py", "core/verdict_seam.py", "conform/"),
+    "eleventh": ("conform/verdict_rot.py",),
+    # 第十二个在**只装 pyproject.toml 声明依赖**的全新 venv 里重放了五个判定，
+    # 所以它的依赖面是**打包声明**，不是某个 src 文件。
+    "twelfth": ("packages/newlife/pyproject.toml", "uv.lock"),
+    "thirteenth": ("conform/dep_declaration.py", "mechanisms/second_world/ms_binary.py",
+                   "conform/second_world_verdict.py", "conform/third_world_verdict.py",
+                   "conform/eighth_world_verdict.py"),
     # 第十四个横跨两个运行时：改任一侧都要重跑
     "fourteenth": ("conform/cross_runtime_verdict.py", "core/harness.py", "core/runtime.py",
                    "adapters/process_bigraph/world_runtime.py",
