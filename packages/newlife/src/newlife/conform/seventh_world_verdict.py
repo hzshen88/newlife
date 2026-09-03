@@ -16,6 +16,8 @@ import json
 import pathlib
 from typing import Any
 
+from newlife.core.verdict_seam import RenderSpec, decide, emit, exit_code
+
 # --- 预注册 §3.1 的冻结词表，不得扩充 ---
 VOCABULARY = ("model", "simulator", "frame", "rng")
 
@@ -112,13 +114,13 @@ def main() -> int:
         "invalid": invalid,
         "h1_vocabulary_closed": h1,
         "h0_at_least_one_unclassified": h0,
-        "verdict": "INVALID" if invalid else ("H1" if h1 else "H0"),
+        # 位置占位：三值由 Definition 判出并填入，键序不变（预注册 `a517d29`）
+        "verdict": None,
         "world3": adjudicate_world3(),
     }
-    text = json.dumps(summary, indent=2, ensure_ascii=False) + "\n"
+    verdict = decide(h1=h1, h0=h0, invalid=invalid)
+    summary, _text = emit(verdict, summary, RenderSpec(verdict_key="verdict"), args.out)
     if args.out:
-        args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(text)
         print(f"summary written: {args.out}")
 
     print(f"  枚举 {len(enumerated)} · 声明 {len(decl)} · 覆盖 {'OK' if covered else '不完整'}")
@@ -128,7 +130,7 @@ def main() -> int:
         print(f"      {u['reason'][:96]}")
     print(f"\n  World 3: {summary['world3']['ruling']}")
     print(f"\nverdict: {summary['verdict']}")
-    return 0 if h1 else 1
+    return exit_code(verdict)
 
 
 if __name__ == "__main__":

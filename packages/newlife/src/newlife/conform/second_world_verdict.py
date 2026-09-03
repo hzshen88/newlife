@@ -52,6 +52,10 @@ SEED_TRIPLES = {
     "seedC": (101, 202, 303),
 }
 
+from newlife.core.verdict_seam import (  # noqa: E402
+    H0, H1, RenderSpec, decide, emit, exit_code,
+)
+
 VERDICT_PASS = "ms_minimal_coalescent_reproducible"
 VERDICT_WITHHELD = "verdict_withheld"
 
@@ -214,10 +218,13 @@ def execute(output_dir: Path, workdir: Path) -> dict[str, Any]:
     )
     watterson_expected = THETA * sum(1.0 / i for i in range(1, NSAM))
 
+    # 第一代表示：`verdict` 键装的是**假设名**（标签），三值判定落在 `passed`。
+    # Definition 判三值，声明式映射给标签——runner 里不留 if/else（预注册 `a517d29`）。
+    decision = decide(h1=verdict == VERDICT_PASS, h0=verdict != VERDICT_PASS)
     summary = {
         "schema": "newlife.second-world.gate.v1",
-        "verdict": verdict,
-        "passed": verdict == VERDICT_PASS,
+        "verdict": None,
+        "passed": None,
         "replicate_count": HOWMANY * len(SEED_TRIPLES),
         "structural_checks": {
             "r2_mapping_correctness": r2_check,
@@ -273,8 +280,15 @@ def execute(output_dir: Path, workdir: Path) -> dict[str, Any]:
             path = replicates_dir / f"{seed_name}-{tier_a['index'] + 1:02d}.json"
             path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
 
-    (output_dir / "summary.json").write_text(
-        json.dumps(summary, indent=2, sort_keys=True) + "\n"
+    summary, _text = emit(
+        decision, summary,
+        RenderSpec(
+            verdict_key=None, passed_key="passed", label_key="verdict",
+            labels={H1: VERDICT_PASS, H0: VERDICT_WITHHELD,
+                    "INVALID": VERDICT_WITHHELD},
+            sort_keys=True, ensure_ascii=True,
+        ),
+        output_dir / "summary.json",
     )
     return summary
 

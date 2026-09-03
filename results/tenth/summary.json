@@ -1,0 +1,88 @@
+{
+  "schema": "newlife.tenth.verdict.v1",
+  "prereg_freeze_commit": "a517d29",
+  "c1_runners_use_definition": {
+    "runners": {
+      "second": {
+        "imports": [
+          "H0",
+          "H1",
+          "RenderSpec",
+          "decide",
+          "emit",
+          "exit_code"
+        ],
+        "calls_decide": true,
+        "calls_emit": true,
+        "ok": true,
+        "generation": "第一代：verdict 装假设名 + passed"
+      },
+      "third": {
+        "imports": [
+          "RenderSpec",
+          "decide",
+          "emit",
+          "exit_code"
+        ],
+        "calls_decide": true,
+        "calls_emit": true,
+        "ok": true,
+        "generation": "第二代：只有 passed"
+      },
+      "seventh": {
+        "imports": [
+          "RenderSpec",
+          "decide",
+          "emit",
+          "exit_code"
+        ],
+        "calls_decide": true,
+        "calls_emit": true,
+        "ok": true,
+        "generation": "第四代：三值 + invalid"
+      }
+    },
+    "passed": true
+  },
+  "c2_domain_not_widened": {
+    "domain": [
+      "H1",
+      "H0",
+      "INVALID"
+    ],
+    "size": 3,
+    "ok": true
+  },
+  "c3_byte_identical": {
+    "per_runner": {
+      "second": {
+        "frozen_baseline": "95f537c135fa2b21a95a9df5294c9b2d51ef60becd353750c79cd3dc1004defc",
+        "rerun": "95f537c135fa2b21a95a9df5294c9b2d51ef60becd353750c79cd3dc1004defc",
+        "byte_identical": true
+      },
+      "third": {
+        "frozen_baseline": "52a2e9d1d30309ddd9b98486b92faa64800cfe6497b25d34a51a8cbbd4998354",
+        "rerun": "52a2e9d1d30309ddd9b98486b92faa64800cfe6497b25d34a51a8cbbd4998354",
+        "byte_identical": true
+      },
+      "seventh": {
+        "frozen_baseline": "55eab91c9354950a9b6672e9b5bab6b5686ffa57a867d076c4d806c9a722bef7",
+        "rerun": "a71aa21d4f18f04afd3cbfcb082d0d10b6c27b71848abb590731840e759b67c8",
+        "byte_identical": false
+      }
+    },
+    "passed": false
+  },
+  "invalid_conditions": [
+    {
+      "id": "IC-4",
+      "runner": "seventh",
+      "what": "冻结产物已不可复现，且原因不在本里程碑",
+      "why": "第八世界从 mechanisms/fourth_world/world.py 删去 4 个部件，第七世界的分类表仍声明它们 → phantom=4 → 覆盖失败 → verdict 由 H0 变 INVALID",
+      "seam_is_clean": "把改动收起来跑原版，原版给出同样的 INVALID",
+      "ruling": "按字面「逐字节不变」不成立即 H0，但 H0 的含义是「Definition 装不下」，而这里装得下。照字面判会把「第七世界产物过期」误记成「接缝装不下第四代表示」。故记 IC-4 判 INVALID —— 预注册没覆盖的情形不许硬塞进 H0/H1"
+    }
+  ],
+  "invalid": true,
+  "verdict": "INVALID"
+}

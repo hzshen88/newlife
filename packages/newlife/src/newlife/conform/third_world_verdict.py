@@ -17,6 +17,7 @@ import json
 import pathlib
 from typing import Any
 
+from newlife.core.verdict_seam import RenderSpec, decide, emit, exit_code
 from proofroot.rng import derive_stream_seed
 
 from newlife.mechanisms.resource_foraging.injection import DevStream
@@ -157,12 +158,14 @@ def main() -> int:
         "claim_i_passed": claim_i,
         "claim_ii_passed": claim_ii,
         "zero_censoring": zero_censoring,
-        "passed": passed,
+        # 位置占位：布尔由 Definition 从三值导出并填入，键序不变
+        "passed": None,
     }
-    text = json.dumps(summary, indent=2, ensure_ascii=False) + "\n"
+    verdict = decide(h1=passed, h0=not passed)
+    summary, _text = emit(
+        verdict, summary, RenderSpec(verdict_key=None, passed_key="passed"), args.out
+    )
     if args.out:
-        args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(text)
         print(f"summary written: {args.out}")
 
     for cell in cells:
@@ -173,7 +176,7 @@ def main() -> int:
             f"  claim(ii)={'PASS' if cell['claim_ii_passed'] else 'FAIL'}"
         )
     print(f"verdict: {'H1 accepted' if passed else 'H0'}")
-    return 0 if passed else 1
+    return exit_code(verdict)
 
 
 if __name__ == "__main__":
