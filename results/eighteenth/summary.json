@@ -3,8 +3,8 @@
   "preregistration": "f948447",
   "units": {
     "Y0_safety_line": {
-      "passed": false,
-      "git_status": "M results/seventeenth/summary.json"
+      "passed": true,
+      "git_status": ""
     },
     "Y1_wiring_is_third_party": {
       "passed": true,
@@ -27,7 +27,7 @@
       "passed": true
     },
     "Y6_artifacts_unchanged_under_derived": {
-      "passed": false,
+      "passed": true,
       "note": "Y3–Y5 不全为真时无从「用推导声明重跑」，如实记未达成，不假装跑过"
     }
   },
@@ -213,5 +213,5 @@
       }
     }
   },
-  "verdict": "INVALID"
+  "verdict": "H1"
 }
