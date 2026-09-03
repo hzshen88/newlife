@@ -84,6 +84,12 @@ DEPENDS_ON: dict[str, tuple[str, ...]] = {
                    "adapters/process_bigraph/lowering.py",
                    "adapters/reference_kernel/world_runtime.py",
                    "mechanisms/fourth_world/"),
+    # 第十五个接的是 vendor 代码：改降级表或代写声明都要重跑
+    "fifteenth": ("conform/foreign_process_verdict.py",
+                  "adapters/process_bigraph/foreign.py",
+                  "adapters/process_bigraph/bare_control.py",
+                  "adapters/process_bigraph/lowering.py",
+                  "mechanisms/foreign_growth/"),
 }
 SRC_PREFIX = "packages/newlife/src/newlife/"
 
