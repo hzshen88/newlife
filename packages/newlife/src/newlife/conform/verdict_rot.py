@@ -44,6 +44,21 @@ TARGETS: dict[str, tuple[str, str, list[str]]] = {
     "ninth":   ("ninth_world_verdict.py",   "results/ninth-world/summary.json",   []),
 }
 KNOWN_BROKEN = "seventh"           # 预注册 §2.3：已知坏的不计入 H0
+"""**处置已作出（2026-09-03），不是待办。**
+
+`seventh` 的状态是 `unevaluable`——**不是「H0 判错了」**。它的判定写于 `7e3b7a5`；
+`6bbc05c`（第八个里程碑）删掉了它声明表里的 4 个部件（`MoranGenealogyWorld.*`），
+于是重跑触发「声明幽灵部件 → INVALID」——那正是原判定 §5 自己测过的负控。
+
+**H0 保留。** 4 个 `unclassified` 全在 `mechanisms/resource_foraging/world.py`，
+第八个里程碑没碰；被删的 4 个当初归类是 `simulator`×3 + `frame`×1。稳健性探测
+（去掉已不存在的部件后重跑）仍是 H0，同样那 4 个。用 `7e3b7a5` 当时的 runner 跑
+今天的代码，结果与新 runner 逐项一致——第十个里程碑的接缝改动被排除。
+
+完整理由见 `docs/worlds/007-harness-generability.md` §6。**不要为了让它变绿而编辑
+`results/seventh-world/classification.json`**：预注册 §3.3 明写归类不预先冻结，
+它是那一次判定的声明快照，改它就是另做一次实验。
+"""
 TIMEOUT = 2400
 
 
@@ -114,6 +129,20 @@ def impacted_by(paths: list[str]) -> dict[str, list[str]]:
     return hit
 
 
+def summary_path(world: str) -> str:
+    """该 verdict 的产物路径。**目录命名不统一**：前九个里程碑是 `<name>-world/`，
+    第十个起是 `<name>/`。两个都试，**都不存在就硬失败**——不许猜一个继续。
+
+    这个 bug 由第七世界的腐烂处置顺带查出：`fourteenth` / `fifteenth` 在陈旧扫描里
+    硬失败，说明它们的产物一直不在 `verdict_commit` 的视野里。**硬失败救了它**——
+    若当初写成「找不到就当没变动」，这两个世界会永远显示「无变动」。
+    """
+    for candidate in (f"results/{world}-world/summary.json", f"results/{world}/summary.json"):
+        if (REPO / candidate).exists():
+            return candidate
+    raise SystemExit(f"{world}: 两种命名下都找不到 summary 产物，不许猜")
+
+
 def verdict_commit(world: str) -> str:
     """产出该 verdict 的**本仓** commit——即最后一次写它 summary 的那次提交。
 
@@ -124,7 +153,7 @@ def verdict_commit(world: str) -> str:
     import subprocess  # noqa: PLC0415
 
     out = subprocess.run(
-        ["git", "log", "-1", "--format=%H", "--", f"results/{world}-world/summary.json"],
+        ["git", "log", "-1", "--format=%H", "--", summary_path(world)],
         cwd=REPO, capture_output=True, text=True,
     )
     rev = out.stdout.strip()
