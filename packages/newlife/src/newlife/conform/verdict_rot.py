@@ -139,6 +139,10 @@ DEPENDS_ON: dict[str, tuple[str, ...]] = {
                    "adapters/process_bigraph/derive.py",
                    "mechanisms/foreign_growth/", "mechanisms/foreign_monod/",
                    "mechanisms/foreign_dfba/"),
+    # 第十九个只用现成积木，声明写在 runner 里；依赖面是接入层 + 两个第三方声明
+    "nineteenth": ("conform/yield_verdict.py", "conform/judgment.py",
+                   "adapters/process_bigraph/foreign.py",
+                   "adapters/process_bigraph/lowering.py"),
 }
 SRC_PREFIX = "packages/newlife/src/newlife/"
 

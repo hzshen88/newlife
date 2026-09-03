@@ -1,0 +1,138 @@
+{
+  "schema": "newlife.nineteenth.yield-input-or-outcome.v1",
+  "preregistration": "0e04160",
+  "o2_sweep": [
+    -1.0,
+    -2.0,
+    -4.0,
+    -8.0,
+    -20.0
+  ],
+  "units": {
+    "Z0_safety_line": {
+      "passed": true,
+      "failed_runner": null,
+      "git_status": ""
+    },
+    "Z1_unmodified": {
+      "MonodKinetics": true,
+      "DynamicFBA": true
+    },
+    "Z2_uptake_law_aligned": {
+      "passed": true,
+      "from_third_party": [
+        0.5,
+        1.0
+      ],
+      "used_by_monod": [
+        0.5,
+        1.0
+      ]
+    },
+    "Z3_acetate_opposes_yield": {
+      "passed": true
+    },
+    "Z4_monod_yield_is_its_declared_constant": {
+      "passed": true
+    },
+    "Z5_pinning_one_point_does_not_help": {
+      "passed": true,
+      "pinned_to": 0.05524429487563129
+    },
+    "Z6_sweep_reaches_zero_acetate": {
+      "passed": true
+    }
+  },
+  "dfba": [
+    {
+      "yield": 0.05524429487563129,
+      "acetate": 1.2156396368639262,
+      "uptake_per_biomass": 0.9523809523809523
+    },
+    {
+      "yield": 0.08340419714405672,
+      "acetate": 0.17493211510833717,
+      "uptake_per_biomass": 0.9523809523809524
+    },
+    {
+      "yield": 0.08631763616989044,
+      "acetate": 0.0,
+      "uptake_per_biomass": 0.9523809523809523
+    },
+    {
+      "yield": 0.08631763616989044,
+      "acetate": 0.0,
+      "uptake_per_biomass": 0.9523809523809523
+    },
+    {
+      "yield": 0.08631763616989044,
+      "acetate": 0.0,
+      "uptake_per_biomass": 0.9523809523809523
+    }
+  ],
+  "monod": [
+    {
+      "yield": 0.9999286994899365,
+      "acetate": 0.0,
+      "uptake_per_biomass": 0.9619047619047618
+    },
+    {
+      "yield": 0.9999286994899365,
+      "acetate": 0.0,
+      "uptake_per_biomass": 0.9619047619047618
+    },
+    {
+      "yield": 0.9999286994899365,
+      "acetate": 0.0,
+      "uptake_per_biomass": 0.9619047619047618
+    },
+    {
+      "yield": 0.9999286994899365,
+      "acetate": 0.0,
+      "uptake_per_biomass": 0.9619047619047618
+    },
+    {
+      "yield": 0.9999286994899365,
+      "acetate": 0.0,
+      "uptake_per_biomass": 0.9619047619047618
+    }
+  ],
+  "monod_yield_pinned": [
+    {
+      "yield": 0.06368314453895686,
+      "acetate": 0.0,
+      "uptake_per_biomass": 0.9619047619047618
+    },
+    {
+      "yield": 0.06368314453895686,
+      "acetate": 0.0,
+      "uptake_per_biomass": 0.9619047619047618
+    },
+    {
+      "yield": 0.06368314453895686,
+      "acetate": 0.0,
+      "uptake_per_biomass": 0.9619047619047618
+    },
+    {
+      "yield": 0.06368314453895686,
+      "acetate": 0.0,
+      "uptake_per_biomass": 0.9619047619047618
+    },
+    {
+      "yield": 0.06368314453895686,
+      "acetate": 0.0,
+      "uptake_per_biomass": 0.9619047619047618
+    }
+  ],
+  "normalisation_applied": "np.float64 → float，两侧同样施加（预注册 §3 F4）",
+  "scope_caveat": "只证「固定形式的 Monod（单反应、常数产率）覆盖不了这个依赖」，不证「任何唯象模型都覆盖不了」——给 Monod 加一条 glucose→acetate 反应就能表示乙酸，但那是换一个模型，不是同一个模型的参数化。本轮明确不加。",
+  "hash_seed_pinned": "0",
+  "why_hash_seed_matters": "实测：PYTHONHASHSEED 变了，Monod 的表观产率末位就变（…365 ↔ …363）——第三方代码路径上有 set 迭代，浮点求和顺序随之变。逐字节复现在这里买到的是「同一个种子的同一个求和顺序」，不是「同一个数学答案」。判据本身对此不敏感（容差 1e-3），但产物要逐字节稳定就必须钉住并记录它。",
+  "implementation_lines": 221,
+  "reused_without_new_code": [
+    "adapters/process_bigraph/foreign.py（接入）",
+    "conform/judgment.py（安全绳与出身断言）",
+    "spatio_flux 的两个 Process 与它自己的 kinetic_params"
+  ],
+  "verdict": "H1"
+}
