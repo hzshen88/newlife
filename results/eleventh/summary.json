@@ -1,0 +1,61 @@
+{
+  "schema": "newlife.eleventh.verdict.v1",
+  "prereg_freeze_commit": "3a2ca54",
+  "known_broken_excluded": "seventh",
+  "per_runner": {
+    "second": {
+      "state": "reproduced",
+      "sha256": "95f537c135fa2b21a95a9df5294c9b2d51ef60becd353750c79cd3dc1004defc",
+      "exit": 0
+    },
+    "third": {
+      "state": "reproduced",
+      "sha256": "52a2e9d1d30309ddd9b98486b92faa64800cfe6497b25d34a51a8cbbd4998354",
+      "exit": 0
+    },
+    "fourth": {
+      "state": "reproduced",
+      "sha256": "7e5bbc4732fdc8f782e17333ea1df0bc307ee3cf831e22f3756695bc3a8b625e",
+      "exit": 0
+    },
+    "fifth": {
+      "state": "reproduced",
+      "sha256": "5284919fda5801c3b290c076454230650cce469d488706255318b720e04ada4c",
+      "exit": 1
+    },
+    "sixth": {
+      "state": "reproduced",
+      "sha256": "285aa867ef4a5277a477a1bf2efbe79aeab4ed5ead329df13de4ca6c11547e41",
+      "exit": 0
+    },
+    "seventh": {
+      "state": "unevaluable",
+      "why": "重跑后判定为 INVALID——判据引用的对象已不存在",
+      "frozen_sha256": "55eab91c9354950a9b6672e9b5bab6b5686ffa57a867d076c4d806c9a722bef7",
+      "rerun_sha256": "a71aa21d4f18f04afd3cbfcb082d0d10b6c27b71848abb590731840e759b67c8",
+      "exit": 1
+    },
+    "eighth": {
+      "state": "reproduced",
+      "sha256": "56517fc86ee89712641e43415a6f59c09db2a48f543cbc66c7a03d8314e808ca",
+      "exit": 0
+    },
+    "ninth": {
+      "state": "reproduced",
+      "sha256": "41fcda34c678d2e87f0f5c4816694c66886674c4df25f17a75e2b2585d8a505b",
+      "exit": 1
+    }
+  },
+  "reproduced": [
+    "eighth",
+    "fifth",
+    "fourth",
+    "ninth",
+    "second",
+    "sixth",
+    "third"
+  ],
+  "broken": [],
+  "unrunnable": [],
+  "verdict": "H1"
+}
