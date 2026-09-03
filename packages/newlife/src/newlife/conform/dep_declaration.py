@@ -46,6 +46,29 @@ DECLARED: dict[str, dict] = {
         "affects": ["eighth", "fourteenth"],
     },
 }
+# --- 第十三个里程碑之后新增的非 Python 依赖 ---
+#
+# **上面那份穷举没有被改**。它是「预注册 §2.1 对**当时那份代码**的穷举」，
+# 不是「本仓库永远只有这两条」。第十六个里程碑装进 `spatio-flux` 时，
+# 顺带带进了第三条——而没有任何东西提醒。
+#
+# > **穷举有有效期。** 依赖面会被后来的改动扩大，而扩大它的人不一定知道
+# > 有这样一份穷举存在。
+DISCOVERED_SINCE: dict[str, dict] = {
+    "glpk": {
+        "why": "cobra 的默认 LP 求解器（optlang.glpk_interface）；dFBA 每 tick 解一个 LP",
+        "arrived_with": "spatio-flux==1.4.0 → cobra → optlang → swiglpk（第十六个里程碑装入）",
+        "sites": ["mechanisms/foreign_dfba/", f"{CONFORM}/solver_backed_verdict.py"],
+        "affects": ["seventeenth"],
+        # **诚实的边界**：`classify()` 用 PATH 屏蔽（`shutil.which`）来确认依赖不可用，
+        # 那只对**可执行文件**有效。GLPK 是被 `swiglpk` 链进 Python 扩展的**共享库**，
+        # PATH 屏蔽够不着它。要真测，得动 dyld/ld.so 的搜索路径或改 sysroot——
+        # 那是另一个数量级的实验，本轮**没有做**。
+        "maskable_by_path": False,
+        "why_not_maskable": "共享库，不经 PATH 解析；第十三个里程碑的屏蔽实验够不着这一类",
+    },
+}
+
 # 对照组：用不到这两条的 runner，用来确认 `unaffected` 分类真的会出现
 CONTROL = {"third": ["cc", "git"]}
 

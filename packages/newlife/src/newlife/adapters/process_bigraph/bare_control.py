@@ -88,3 +88,81 @@ def monod_trajectory(
         composite.run(1.0)
         out.append((float(composite.state["mass"]), dict(composite.state["exchange"])))
     return out
+
+
+# --- 第十七个里程碑：一个求解器背后的第三方 process（spatio-flux 的 dFBA）---
+
+FIELDS = ("glucose", "acetate", "biomass")
+
+
+def dfba_trajectory(
+    *, glucose: float, acetate: float, biomass: float, steps: int
+) -> list[dict[str, float]]:
+    """裸 pb 上跑 `spatio_flux` 的 `DynamicFBA`（COBRApy + LP 求解器）。
+
+    模型是 `ecoli core` → cobra 自带的 `textbook`，**不联网**。
+    接线用第三方自己的写法（`configs.get_single_dfba_process`）：
+    `substrates` 端口**按 key 逐个**接到不同的 store。
+
+    **值归一成 Python float**：裸跑时状态里是 `np.float64`，两侧同样施加
+    （预注册 `642361c` §3 F5——归一必须两侧一致，且写明施加了什么）。
+    """
+    try:
+        import spatio_flux
+        from spatio_flux.processes.dfba import MODEL_REGISTRY_DFBA, DynamicFBA
+    except ImportError as exc:
+        raise SystemExit(
+            "spatio-flux / cobra 未安装——这是环境缺失，不是判定结果。"
+            "装：uv sync --package newlife --extra process-bigraph --extra spatio-flux。"
+            f"原始错误：{exc}"
+        ) from exc
+
+    core = allocate_core()
+    spatio_flux.register_types(core)
+    core.register_link("DynamicFBA", DynamicFBA)
+
+    state: dict[str, Any] = {
+        "fields": {"glucose": glucose, "acetate": acetate, "biomass": biomass},
+        "fba": {
+            "_type": "process",
+            "address": "local:DynamicFBA",
+            "config": dict(MODEL_REGISTRY_DFBA["ecoli core"]),
+            "inputs": {
+                "substrates": {"glucose": ["fields", "glucose"],
+                               "acetate": ["fields", "acetate"]},
+                "biomass": ["fields", "biomass"],
+            },
+            "outputs": {
+                "substrates": {"glucose": ["fields", "glucose"],
+                               "acetate": ["fields", "acetate"]},
+                "biomass": ["fields", "biomass"],
+            },
+            "interval": 1.0,
+        },
+    }
+    composite = Composite({"state": state}, core=core)
+    out = [normalise_fields(composite.state["fields"])]
+    for _ in range(steps):
+        composite.run(1.0)
+        out.append(normalise_fields(composite.state["fields"]))
+    return out
+
+
+def normalise_fields(fields: Any) -> dict[str, float]:
+    """`np.float64` → `float`。**两侧同样施加**，见 `dfba_trajectory` 的说明。"""
+    return {k: float(fields[k]) for k in FIELDS}
+
+
+def solver_identity() -> dict[str, str]:
+    """求解器身份——判定单元 X7 要的东西。
+
+    **逐字节复现在这里买到的是「同一个求解器的同一个选择」，不是「同一个科学答案」**：
+    FBA 的最优解通常不唯一（问题退化）。不记录它，就是把前者冒充成后者。
+    """
+    from cobra.io import load_model
+    import swiglpk
+
+    return {
+        "optlang_interface": load_model("textbook").solver.interface.__name__,
+        "glpk_version": str(swiglpk.glp_version()),
+    }

@@ -111,6 +111,12 @@ DEPENDS_ON: dict[str, tuple[str, ...]] = {
                   "adapters/process_bigraph/bare_control.py",
                   "adapters/process_bigraph/lowering.py",
                   "mechanisms/foreign_monod/"),
+    # 第十七个背后是 LP 求解器：接线表、降级表、代写声明都在依赖面上
+    "seventeenth": ("conform/solver_backed_verdict.py",
+                    "adapters/process_bigraph/foreign.py",
+                    "adapters/process_bigraph/bare_control.py",
+                    "adapters/process_bigraph/lowering.py",
+                    "mechanisms/foreign_dfba/"),
 }
 SRC_PREFIX = "packages/newlife/src/newlife/"
 

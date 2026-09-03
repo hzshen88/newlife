@@ -116,6 +116,19 @@ def admit(
     return _Admitted
 
 
+def _wire(value: Any) -> Any:
+    """一条接线：整体接一条路径，或**按 key 逐个**接到不同的 store。
+
+    第十七个里程碑加：第三方的 `DynamicFBA` 把 `substrates` 端口接成
+    `{mol_id: 路径}`，每个底物一条。**这是同一个坑的第三层**——
+    第十五个里程碑以为「一张接线表够了」，第十六个拆成读写两张，
+    这次发现表里的**值**也不只有一种形状。
+    """
+    if isinstance(value, Mapping):
+        return {k: list(v) for k, v in value.items()}
+    return list(value)
+
+
 def resolve_foreign(dotted: str) -> type[Process]:
     """按点分路径取第三方类。**字符串是数据**——声明侧因此不必 import vendor。"""
     module_path, attr = dotted.split(":")
@@ -161,8 +174,8 @@ def build_composite(
             "_type": "process",
             "address": f"local:{identity}",
             "config": node_config,
-            "inputs": {k: list(v) for k, v in in_wiring.items()},
-            "outputs": {k: list(v) for k, v in out_wiring.items()},
+            "inputs": {k: _wire(v) for k, v in in_wiring.items()},
+            "outputs": {k: _wire(v) for k, v in out_wiring.items()},
             "interval": 1.0,
         },
     }

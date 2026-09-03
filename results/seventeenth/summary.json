@@ -1,0 +1,160 @@
+{
+  "schema": "newlife.seventeenth.solver-backed.v1",
+  "preregistration": "642361c",
+  "foreign_package": "spatio-flux==1.4.0",
+  "foreign": "spatio_flux.processes.dfba.DynamicFBA",
+  "model": "ecoli core",
+  "units": {
+    "X0_safety_line": {
+      "passed": true,
+      "baselines": [
+        "results/fifteenth/summary.json",
+        "results/sixteenth/summary.json"
+      ],
+      "git_status": ""
+    },
+    "X1_unmodified": {
+      "passed": true,
+      "class_module": "spatio_flux.processes.dfba",
+      "update_defined_in": "spatio_flux.processes.dfba",
+      "source_sha256": "e1acd87a78d7828061139fae89aa3df673c3871adbcb4bb33a55e7a52d35d4e3"
+    },
+    "X2_faithful_to_bare_pb": {
+      "passed": true,
+      "bare": [
+        {
+          "glucose": 10.0,
+          "acetate": 0.0,
+          "biomass": 0.1
+        },
+        {
+          "glucose": 9.904761904761905,
+          "acetate": 0.012108052196088395,
+          "biomass": 0.10794325687086254
+        },
+        {
+          "glucose": 9.80200585245463,
+          "acetate": 0.025083939672229244,
+          "biomass": 0.11651530697082772
+        },
+        {
+          "glucose": 9.691145527078628,
+          "acetate": 0.03897877042171649,
+          "biomass": 0.1257655214863198
+        },
+        {
+          "glucose": 9.571550338512791,
+          "acetate": 0.05384414758491261,
+          "biomass": 0.1357470672109328
+        }
+      ],
+      "admitted": [
+        {
+          "glucose": 10.0,
+          "acetate": 0.0,
+          "biomass": 0.1
+        },
+        {
+          "glucose": 9.904761904761905,
+          "acetate": 0.012108052196088395,
+          "biomass": 0.10794325687086254
+        },
+        {
+          "glucose": 9.80200585245463,
+          "acetate": 0.025083939672229244,
+          "biomass": 0.11651530697082772
+        },
+        {
+          "glucose": 9.691145527078628,
+          "acetate": 0.03897877042171649,
+          "biomass": 0.1257655214863198
+        },
+        {
+          "glucose": 9.571550338512791,
+          "acetate": 0.05384414758491261,
+          "biomass": 0.1357470672109328
+        }
+      ]
+    },
+    "X3_positive_control": {
+      "passed": true,
+      "grew": true,
+      "glucose_consumed": true
+    },
+    "X4_wrong_path_rejected": {
+      "passed": true,
+      "rejected": true,
+      "error": "CommitAuthorityError",
+      "detail": "foreign-dfba cannot commit ('fields',)",
+      "from_newlife_contract": true,
+      "state_unchanged": true
+    },
+    "X5_undeclared_effect_rejected": {
+      "passed": true,
+      "rejected": true,
+      "error": "CommitAuthorityError",
+      "detail": "foreign-dfba did not declare Effect StateDelta",
+      "from_newlife_contract": true,
+      "state_unchanged": true
+    },
+    "X6_meta_control_bypass_not_rejected": {
+      "passed": true,
+      "rejected": false,
+      "state_unchanged": false
+    },
+    "X7_solver_identity_recorded": {
+      "passed": true,
+      "optlang_interface": "optlang.glpk_interface",
+      "glpk_version": "5.0"
+    }
+  },
+  "f3_control_is_newlife_free": {
+    "passed": true,
+    "offending_imports": []
+  },
+  "what_byte_identity_buys_here": "同一个求解器的同一个选择，不是同一个科学答案——FBA 的最优解通常不唯一。换求解器或换 GLPK 版本，这条轨迹没有理由仍然逐字节相同，本轮未测。",
+  "normalisation_applied": "np.float64 → float，两侧同样施加（预注册 §3 F5）",
+  "granularity_loss": "substrates 端口按 key 逐个接线，而一条 StateDelta 只有一个路径，所以只能声明在父路径 ('fields',) 上——比第三方实际写的位置粗。",
+  "what_we_wrote_on_its_behalf": {
+    "claims": [
+      [
+        [
+          "fields"
+        ],
+        "own"
+      ],
+      [
+        [
+          "fields",
+          "biomass"
+        ],
+        "own"
+      ]
+    ],
+    "allowed_effects": [
+      "StateDelta"
+    ],
+    "bindings": [
+      [
+        "substrates",
+        [
+          "fields"
+        ],
+        "add"
+      ],
+      [
+        "biomass",
+        [
+          "fields",
+          "biomass"
+        ],
+        "add"
+      ]
+    ]
+  },
+  "what_the_third_party_supplied": [
+    "类型词表 spatio_flux:register_types",
+    "模型与动力学参数 MODEL_REGISTRY_DFBA['ecoli core']（cobra 自带 textbook，不联网）"
+  ],
+  "verdict": "H1"
+}
