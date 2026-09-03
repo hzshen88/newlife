@@ -1,0 +1,62 @@
+{
+  "schema": "newlife.sixth-world.verdict.v1",
+  "prereg_freeze_commit": "671d6f4",
+  "loops": [
+    {
+      "world": "world1",
+      "file": "mechanisms/resource_foraging/assay.py",
+      "line": 140,
+      "source": "for _ in range(config.assay_episodes):",
+      "bound": "static",
+      "unrolling_expressible": true
+    },
+    {
+      "world": "world2",
+      "file": "mechanisms/second_world/ms_coalescent.py",
+      "line": 111,
+      "source": "while len(active) > 1:",
+      "bound": "config",
+      "unrolling_expressible": true
+    },
+    {
+      "world": "world3",
+      "file": "mechanisms/third_world/moran.py",
+      "line": 95,
+      "source": "while 0 < i < n_pop and steps < step_cap:",
+      "bound": "capped",
+      "unrolling_expressible": true
+    },
+    {
+      "world": "world4",
+      "file": "mechanisms/fourth_world/genealogy.py",
+      "line": 80,
+      "source": "while alive > 1:",
+      "bound": "config",
+      "unrolling_expressible": true
+    }
+  ],
+  "invalid_conditions": [],
+  "invalid": false,
+  "h1_all_unrolling_expressible": true,
+  "h0_at_least_one_unbounded": false,
+  "verdict": "H1",
+  "S1_count": {
+    "recorded": 5,
+    "adjudicated": 4,
+    "note": "第五世界是方法学度量，没有世界循环"
+  },
+  "S2_world1": {
+    "resource_foraging_imports_staging": false,
+    "files_mentioning_staging": [],
+    "ruling": "World 1 的世界循环是手写 Python 循环，未经 staging 编排"
+  },
+  "S3_same_cause": {
+    "distinct_bound_types": [
+      "capped",
+      "config",
+      "static"
+    ],
+    "holds": false,
+    "note": "四个循环出现两种以上 bound 类型即「同因」不成立"
+  }
+}
