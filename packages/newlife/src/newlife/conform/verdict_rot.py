@@ -105,6 +105,12 @@ DEPENDS_ON: dict[str, tuple[str, ...]] = {
                   "adapters/process_bigraph/bare_control.py",
                   "adapters/process_bigraph/lowering.py",
                   "mechanisms/foreign_growth/"),
+    # 第十六个接的是独立发行的第三方包：降级表与代写声明都在依赖面上
+    "sixteenth": ("conform/external_package_verdict.py",
+                  "adapters/process_bigraph/foreign.py",
+                  "adapters/process_bigraph/bare_control.py",
+                  "adapters/process_bigraph/lowering.py",
+                  "mechanisms/foreign_monod/"),
 }
 SRC_PREFIX = "packages/newlife/src/newlife/"
 
