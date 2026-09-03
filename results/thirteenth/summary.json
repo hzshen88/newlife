@@ -1,0 +1,67 @@
+{
+  "schema": "newlife.thirteenth.verdict.v1",
+  "prereg_freeze_commit": "6c94455",
+  "declared_non_python_dependencies": {
+    "cc": {
+      "why": "编译 ms 的 C 源码",
+      "sites": [
+        "mechanisms/second_world/ms_binary.py:19"
+      ],
+      "affects": [
+        "second"
+      ]
+    },
+    "git": {
+      "why": "记录分析代码的 commit / 取基线与依赖变动",
+      "sites": [
+        "packages/newlife/src/newlife/conform/verdict.py:315",
+        "packages/newlife/src/newlife/conform/eighth_world_verdict.py",
+        "packages/newlife/src/newlife/conform/verdict_rot.py"
+      ],
+      "affects": [
+        "eighth"
+      ]
+    }
+  },
+  "enumeration_boundary": "已知会被执行的路径上的依赖。声明的是「已知需要什么」，不是「只需要这些」",
+  "results": {
+    "cc/second": {
+      "state": "hard_fail_named",
+      "exit": 1,
+      "produced_summary": false,
+      "names_dependency": true,
+      "evidence": "FileNotFoundError: [Errno 2] No such file or directory: 'cc'",
+      "kind": "affected"
+    },
+    "git/eighth": {
+      "state": "silent_output",
+      "exit": 1,
+      "produced_summary": true,
+      "names_dependency": false,
+      "evidence": "verdict: INVALID",
+      "kind": "affected"
+    },
+    "cc/third": {
+      "state": "unaffected",
+      "exit": 0,
+      "produced_summary": true,
+      "names_dependency": true,
+      "evidence": "verdict: H1 accepted",
+      "kind": "control"
+    },
+    "git/third": {
+      "state": "unaffected",
+      "exit": 0,
+      "produced_summary": true,
+      "names_dependency": false,
+      "evidence": "verdict: H1 accepted",
+      "kind": "control"
+    }
+  },
+  "failures": {
+    "git/eighth": "silent_output"
+  },
+  "invalid_conditions": [],
+  "invalid": false,
+  "verdict": "H0"
+}
