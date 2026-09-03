@@ -222,6 +222,21 @@ def main() -> int:
                 "note": "Y3–Y5 不全为真时无从「用推导声明重跑」，如实记未达成，不假装跑过",
             },
         },
+        # **判定之记录与本次运行分开写。** 本 runner 现在出 H1，但那是两条修法
+        # 做完之后的结果；冻结预注册下做出的判定是 H0，那一条不因后来的修复而改写。
+        # 静态声明，不参与合取（预注册 §3 F4 管的是「期望值」，历史不是期望值）。
+        "judgment_of_record": {
+            "verdict": "H0",
+            "judged_on": "2026-09-03",
+            "preregistration": "f948447",
+            "artifact_sha256_at_judgment": "bae0508a5e19d3b4a574d925",
+            "why_this_run_differs": (
+                "H0 指向的两条修法已做完：① 第十五个改用第三方自己给的状态布局"
+                "（原来的 cell/ 前缀是我们凭空加的）；② 推导塌到接入路径的粒度上限"
+                "（admit() 对每个端口只发一条 StateDelta）。两条都不是「改手写声明去"
+                "迁就推导」——前者去掉我们自己加的东西，后者的理由取自 admit() 的代码。"
+            ),
+        },
         "per_provider": per_provider,
         "underivable_items": sorted(
             f"{n}.claims" for n, p in per_provider.items()
