@@ -1,0 +1,48 @@
+{
+  "schema": "newlife.ninth-world.verdict.v1",
+  "prereg_freeze_commit": "10e26c7",
+  "c1_parts_absorbed": {
+    "absorbed": [
+      "ForagingWorld.run",
+      "ForagingWorld.tick"
+    ],
+    "still_present": [
+      "ForagingWorld.run",
+      "ForagingWorld.tick"
+    ],
+    "passed": false,
+    "why": "`run` 是混合部件：21 行里只有中间的 while 是 simulator，前后是 frame（tick-0 快照 + WorldRunResult 聚合）。只吃循环则 run 不消失；连带搬走前后两段则超出 goal §4 的范围。两条路都是 H0-a。此外通用 harness 假设自己拥有引擎装配，而 World 1 已经拥有——只能并排贴上去借一个循环，不是吃掉。"
+  },
+  "c2_termination_is_pure_data": {
+    "config": "packages/newlife/src/newlife/mechanisms/resource_foraging/spec.py",
+    "pure_data": true,
+    "offenders": [],
+    "operators_used": [
+      "gt",
+      "lt"
+    ],
+    "operators_frozen": [
+      "eq",
+      "ge",
+      "gt",
+      "le",
+      "lt",
+      "ne"
+    ],
+    "operators_within_frozen_set": true,
+    "clauses": 2,
+    "composition": "conjunction-only",
+    "observables_declared": [
+      "population",
+      "tick"
+    ],
+    "all_observables_declared": true,
+    "passed": true
+  },
+  "c3_gate_bit_identical": {
+    "evaluated": false,
+    "reason": "重跑 v0.2 gate 需要外部 L2 录制根目录（--l2-root/--parworlds），本次不可得；合取在 C1 已失败，C3 不改变 verdict"
+  },
+  "verdict": "H0",
+  "h0_shape": "H0-a：表达不了 / 必须超范围搬运"
+}
