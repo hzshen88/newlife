@@ -35,6 +35,14 @@ def _integer_count(op: LoweredOp, port: str, _view, _interval) -> dict[str, Any]
     return {port: op.payload}
 
 
+def _sum_float_add(op: LoweredOp, port: str, _view, _interval) -> dict[str, Any]:
+    # add on a sum-reconciling float store: the engine adds the update to the
+    # current value, so a delta passes through unchanged.
+    # `_integer_count` 的语义相同但名字说的是整数 store；接第三方 process 时
+    # 声明表**就是**这次里程碑要检验的东西，名字不许将就。
+    return {port: op.payload}
+
+
 def _map_direct(op: LoweredOp, port: str, _view, _interval) -> dict[str, Any]:
     # set on a map store whose fields are committed wholesale (budget store).
     return {port: op.payload}
@@ -120,6 +128,7 @@ def _noop(_op: LoweredOp, _port: str, _view, _interval) -> dict[str, Any]:
 
 STORE_HANDLERS: dict[str, StoreHandler] = {
     "integer-count": _integer_count,
+    "sum-float-add": _sum_float_add,
     "map-direct": _map_direct,
     "list-direct": _list_direct,
     "sum-float-set": _sum_float_set,

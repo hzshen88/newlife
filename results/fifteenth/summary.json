@@ -1,0 +1,105 @@
+{
+  "schema": "newlife.fifteenth.foreign-process.v1",
+  "preregistration": "8d65582",
+  "foreign": "process_bigraph.processes.growth_division.Grow",
+  "units": {
+    "V1_unmodified": {
+      "passed": true,
+      "class_module": "process_bigraph.processes.growth_division",
+      "update_defined_in": "process_bigraph.processes.growth_division",
+      "source_sha256": "5c3f0a8ba59a86467c6ae5ac88d78870604bf702b6aa7dbbb0165002b5261c19",
+      "installed_under_site_packages": true
+    },
+    "V2_faithful_to_bare_pb": {
+      "passed": true,
+      "bare": [
+        1.0,
+        1.1,
+        1.2100000000000002,
+        1.3310000000000002,
+        1.4641000000000002,
+        1.61051
+      ],
+      "admitted": [
+        1.0,
+        1.1,
+        1.2100000000000002,
+        1.3310000000000002,
+        1.4641000000000002,
+        1.61051
+      ]
+    },
+    "V3_positive_control": {
+      "passed": true,
+      "expected": [
+        1.0,
+        1.1,
+        1.2100000000000002,
+        1.3310000000000002,
+        1.4641000000000002,
+        1.61051
+      ]
+    },
+    "V4_wrong_path_rejected": {
+      "passed": true,
+      "rejected": true,
+      "error": "CommitAuthorityError",
+      "detail": "foreign-grow cannot commit ('cell', 'mass')",
+      "state_before": 1.0,
+      "state_after": 1.0,
+      "state_unchanged": true
+    },
+    "V5_undeclared_effect_rejected": {
+      "passed": true,
+      "rejected": true,
+      "error": "CommitAuthorityError",
+      "detail": "foreign-grow did not declare Effect StateDelta",
+      "state_before": 1.0,
+      "state_after": 1.0,
+      "state_unchanged": true
+    }
+  },
+  "f3_control_is_newlife_free": {
+    "passed": true,
+    "offending_imports": []
+  },
+  "meta_negative_control": {
+    "question": "同一份错误声明，绕开契约跑，是否就不被拒了",
+    "not_rejected_without_contract": true,
+    "rejected": false,
+    "state_before": 1.0,
+    "state_after": 1.61051,
+    "state_unchanged": false
+  },
+  "what_we_wrote_on_its_behalf": {
+    "claims": [
+      [
+        [
+          "cell",
+          "mass"
+        ],
+        "own"
+      ]
+    ],
+    "allowed_effects": [
+      "StateDelta"
+    ],
+    "bindings": [
+      [
+        "mass",
+        [
+          "cell",
+          "mass"
+        ],
+        "add"
+      ]
+    ],
+    "lowering": {
+      "StateDelta": [
+        "mass",
+        "sum-float-add"
+      ]
+    }
+  },
+  "verdict": "H1"
+}
