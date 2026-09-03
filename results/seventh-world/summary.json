@@ -1,0 +1,49 @@
+{
+  "schema": "newlife.seventh-world.verdict.v1",
+  "prereg_freeze_commit": "c10dcb3",
+  "enumerated_parts": 42,
+  "declared_parts": 42,
+  "distribution": {
+    "simulator": 21,
+    "unclassified": 4,
+    "frame": 12,
+    "rng": 3,
+    "model": 2
+  },
+  "coverage": {
+    "missing": [],
+    "phantom": [],
+    "out_of_vocabulary": [],
+    "ok": true
+  },
+  "unclassified": [
+    {
+      "part": "mechanisms/resource_foraging/world.py::_julia_simd_sum",
+      "reason": "复现 Julia 的 SIMD 浮点求和顺序。不是生物学（model）、不决定执行顺序（simulator）、不是观测（frame）、不是抽样（rng）。它是**与参考实现的数值一致性**，DEVS 三分里没有这一类"
+    },
+    {
+      "part": "mechanisms/resource_foraging/world.py::_validate_world_invariants",
+      "reason": "运行时协议不变量强制（越界即抛 WorldProtocolError）。不是 model/simulator/frame/rng 任何一类——它是**运行时契约强制**，正是本项目痛点 P2 的内容，而 DEVS 三分不含这一类"
+    },
+    {
+      "part": "mechanisms/resource_foraging/world.py::julia_array_sum",
+      "reason": "同上，浮点求和顺序的复现"
+    },
+    {
+      "part": "mechanisms/resource_foraging/world.py::julia_matrix_sum",
+      "reason": "同上"
+    }
+  ],
+  "invalid": false,
+  "h1_vocabulary_closed": false,
+  "h0_at_least_one_unclassified": true,
+  "verdict": "H0",
+  "world3": {
+    "third_world_files": [
+      "__init__.py",
+      "moran.py"
+    ],
+    "verdict_runner_engine_calls": [],
+    "ruling": "S2：World 3 没有 harness——它既不装配引擎也不跑阶段，verdict runner 直接调机制函数。它是 P3 唯一成立的实例，代价是完全不接入 registry/引擎"
+  }
+}
