@@ -20,7 +20,7 @@ import dataclasses
 import importlib
 from typing import Any, Callable, Mapping, Sequence
 
-from newlife.adapters.reference_kernel.kernel import ReferenceKernel
+from newlife.core.runtime import RuntimeFactory, WorldRuntime
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -126,11 +126,13 @@ class GenericWorld:
         spec: WorldSpec,
         streams: Mapping[str, Any],
         runtime: Mapping[str, Any] | None = None,
+        *,
+        backend: RuntimeFactory,
     ) -> None:
         self.spec = spec
         self._streams = dict(streams)
         self._runtime = dict(runtime or {})
-        self.kernel = ReferenceKernel(dict(spec.state_roots))
+        self.kernel: WorldRuntime = backend(spec.state_roots)
         for mechanism in _resolve(spec.specs_from)():
             self.kernel.register_mechanism(mechanism)
         # 解析出来的 step **对象**，复用 provenance 与 R14 一样靠对象同一性
@@ -164,8 +166,8 @@ class GenericWorld:
         def bound(view: Any) -> Any:
             return step(view, **kwargs)
 
-        result = self.kernel.guarded_read_fast(stage.identity, bound)
-        self.kernel.apply_batch_fast(
+        result = self.kernel.guarded_read(stage.identity, bound)
+        self.kernel.apply_batch(
             stage.identity, list(result.effects), list(result.records)
         )
         return result

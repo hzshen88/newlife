@@ -23,6 +23,7 @@ from itertools import combinations
 from typing import Any
 
 from newlife.mechanisms.fourth_world.genealogy import moran_step_outcome
+from newlife.adapters.reference_kernel.world_runtime import ReferenceKernelRuntime
 from newlife.core.harness import GenericWorld
 from newlife.mechanisms.fourth_world.spec import WORLD
 from newlife.mechanisms.second_world.ms_coalescent import RecordedDrawStream
@@ -152,6 +153,7 @@ def run_claim_ii(world_seed: int) -> dict[str, Any]:
                 "theta": CLAIM_II_THETA,
                 "replicate_index": k,
             },
+            backend=ReferenceKernelRuntime,
         )
         values.append(world.run()["segsites"])
         if k == 0:
