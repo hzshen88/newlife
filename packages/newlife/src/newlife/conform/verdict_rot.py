@@ -47,6 +47,102 @@ KNOWN_BROKEN = "seventh"           # 预注册 §2.3：已知坏的不计入 H0
 TIMEOUT = 2400
 
 
+# ── 产物的代码依赖：谁的 summary 由哪些路径决定 ───────────────────────────────
+#
+# **这是第十一个里程碑之后补的**，起因是一个被误诊的现象：`seventh` 的 verdict 坏了，
+# 我最初记成「判据过期」。真实原因是——
+#
+#   一次改动只被要求保住**它自己那个世界**的产物。第八个里程碑大改了
+#   `mechanisms/fourth_world/world.py`，它自己的判据 C3 要求 `fourth-world/summary.json`
+#   逐字节不变，也确实做到了；但 `seventh-world/summary.json` **也**依赖那个文件，
+#   而没有任何东西要求第八个里程碑保住它。
+#
+# **依赖是隐式的，所以没人知道还该检查谁。** 声明出来之后，「改了 X 就要重跑依赖 X 的
+# 全部 verdict」才成为一条可执行的规则。
+#
+# 「代码变了旧 verdict 就不再描述它」**不是故障**（用户 2026-09-03 指出，此前我把它
+# 当成了需求）。真需求只有一条：**依赖未变时必须逐字节复现**——那是确定性回归检测。
+DEPENDS_ON: dict[str, tuple[str, ...]] = {
+    "second":  ("mechanisms/second_world/",),
+    "third":   ("mechanisms/third_world/",),
+    "fourth":  ("mechanisms/fourth_world/", "mechanisms/second_world/mechanisms.py"),
+    "fifth":   ("conform/fifth_world_verdict.py",),
+    "sixth":   ("conform/sixth_world_verdict.py",),
+    # 第七世界枚举四个世界的 harness 文件——依赖面最宽，也正是它被撞坏的原因
+    "seventh": ("conform/seventh_world_verdict.py", "mechanisms/resource_foraging/world.py",
+                "mechanisms/resource_foraging/assay.py", "mechanisms/second_world/world.py",
+                "mechanisms/fourth_world/world.py"),
+    "eighth":  ("conform/eighth_world_verdict.py", "mechanisms/fourth_world/"),
+    "ninth":   ("conform/ninth_world_verdict.py", "mechanisms/resource_foraging/"),
+}
+SRC_PREFIX = "packages/newlife/src/newlife/"
+
+
+def impacted_by(paths: list[str]) -> dict[str, list[str]]:
+    """改了这些路径，哪些 verdict 的产物必须被保住（或重跑）。
+
+    **这是第八个里程碑漏掉的那一步。** 它改了 `mechanisms/fourth_world/world.py`，
+    自己的判据 C3 要求 `fourth-world/summary.json` 逐字节不变——做到了；
+    但 `seventh-world/summary.json` **也**依赖那个文件，而**没人算过这个集合**，
+    于是它被撞坏而无人知晓。
+
+    用法：改动前跑一次，把返回的世界全部列进本次里程碑的「逐字节不变」判据。
+    """
+    hit: dict[str, list[str]] = {}
+    for world, deps in DEPENDS_ON.items():
+        for dep in deps:
+            for path in paths:
+                rel = path.split(SRC_PREFIX, 1)[-1]
+                if rel.startswith(dep) or dep.startswith(rel):
+                    hit.setdefault(world, []).append(dep)
+    return hit
+
+
+def verdict_commit(world: str) -> str:
+    """产出该 verdict 的**本仓** commit——即最后一次写它 summary 的那次提交。
+
+    **不能用预注册的冻结 commit**：那个 commit 在 exloop，在 newlife 里解析不了。
+    这个坑第八个里程碑踩过（IC-1）、写进了 skill，**然后我又踩了一次**——所以这里
+    不只是修，还要硬失败：解析不出就抛，不许退回「没有变动」。
+    """
+    import subprocess  # noqa: PLC0415
+
+    out = subprocess.run(
+        ["git", "log", "-1", "--format=%H", "--", f"results/{world}-world/summary.json"],
+        cwd=REPO, capture_output=True, text=True,
+    )
+    rev = out.stdout.strip()
+    if out.returncode != 0 or not rev:
+        raise SystemExit(
+            f"{world}: 找不到产出它 summary 的本仓 commit——不许当成「没有变动」继续"
+        )
+    return rev
+
+
+def dependencies_changed(world: str) -> list[str]:
+    """自该 verdict 产出以来，它声明的依赖里哪些动过。空 = 必须逐字节复现。
+
+    **解析失败一律硬失败**，不退回「没变」——那正是让我误诊 `seventh` 的那个形状。
+    """
+    import subprocess  # noqa: PLC0415
+
+    since = verdict_commit(world)
+    changed = []
+    for rel in DEPENDS_ON.get(world, ()):
+        out = subprocess.run(
+            ["git", "log", "--oneline", f"{since}..HEAD", "--", SRC_PREFIX + rel],
+            cwd=REPO, capture_output=True, text=True,
+        )
+        if out.returncode != 0:
+            raise SystemExit(
+                f"{world}: 解析 {since[:8]}..HEAD 失败（{out.stderr.strip()[:60]}）"
+                "——硬失败，不猜"
+            )
+        if out.stdout.strip():
+            changed.append(rel)
+    return changed
+
+
 def sha(p: pathlib.Path) -> str | None:
     return hashlib.sha256(p.read_bytes()).hexdigest() if p.exists() else None
 
