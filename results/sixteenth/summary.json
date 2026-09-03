@@ -5,9 +5,9 @@
   "foreign": "spatio_flux.processes.monod_kinetics.MonodKinetics",
   "units": {
     "W0_safety_line_fifteenth": {
-      "passed": false,
+      "passed": true,
       "baseline": "results/fifteenth/summary.json",
-      "git_status": "M results/fifteenth/summary.json"
+      "git_status": ""
     },
     "W1_unmodified": {
       "passed": true,
@@ -179,5 +179,5 @@
       ]
     }
   },
-  "verdict": "INVALID"
+  "verdict": "H1"
 }

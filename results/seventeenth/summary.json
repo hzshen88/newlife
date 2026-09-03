@@ -7,7 +7,11 @@
   "units": {
     "X0_safety_line": {
       "passed": false,
-      "reason": "newlife.conform.external_package_verdict 非零退出：1"
+      "baselines": [
+        "results/fifteenth/summary.json",
+        "results/sixteenth/summary.json"
+      ],
+      "git_status": "M results/sixteenth/summary.json"
     },
     "X1_unmodified": {
       "passed": true,

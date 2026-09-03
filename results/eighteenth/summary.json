@@ -4,7 +4,7 @@
   "units": {
     "Y0_safety_line": {
       "passed": false,
-      "reason": "newlife.conform.external_package_verdict 非零退出：1"
+      "reason": "newlife.conform.solver_backed_verdict 非零退出：1"
     },
     "Y1_wiring_is_third_party": {
       "passed": true,
