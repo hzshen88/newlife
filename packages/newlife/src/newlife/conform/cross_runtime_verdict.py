@@ -13,7 +13,6 @@ import argparse
 import json
 import random
 import subprocess
-import sys
 import time
 from pathlib import Path
 
@@ -29,6 +28,7 @@ from newlife.conform.fourth_world_verdict import (
     _Dev,
 )
 from newlife.core.harness import GenericWorld
+from newlife.conform import judgment
 from newlife.core.verdict_seam import RenderSpec, decide, emit, exit_code
 from newlife.mechanisms.fourth_world.spec import WORLD
 from newlife.mechanisms.second_world.mechanisms import RecordedDrawStream
@@ -62,25 +62,14 @@ def _unit_0() -> dict:
     基线不是硬编码常量，是 git 里已提交的那份产物——重跑之后 `git status` 干净
     即通过（预注册 §3 F4：runner 不读本文件以外的期望值）。
     """
-    run = subprocess.run(
-        [sys.executable, "-m", "newlife.conform.fourth_world_verdict"],
-        cwd=REPO, capture_output=True, text=True,
+    checked = judgment.check_baselines(
+        REPO, ["newlife.conform.fourth_world_verdict"], [BASELINE]
     )
-    if run.returncode != 0:
-        return {"passed": False, "reason": f"World 4 runner 非零退出：{run.returncode}"}
-    try:
-        status = subprocess.run(
-            ["git", "status", "--porcelain", "--", BASELINE],
-            cwd=REPO, capture_output=True, text=True, check=True,
-        )
-    except FileNotFoundError as exc:  # git 缺失是环境问题，不是「基线不同」
-        raise SystemExit(
-            "git 不可用——U0 的基线取不到。这是环境缺失，不是判定结果；"
-            f"非 Python 依赖见 conform/dep_declaration.py。原始错误：{exc}"
-        ) from exc
-    dirty = status.stdout.strip()
+    if checked.failed_runner is not None:
+        return {"passed": False, "reason": f"World 4 runner 非零退出：{checked.returncode}"}
+    dirty = checked.git_status
     return {
-        "passed": dirty == "",
+        "passed": checked.ok,
         "baseline": BASELINE,
         "baseline_commit": subprocess.run(
             ["git", "log", "-1", "--format=%H", "--", BASELINE],

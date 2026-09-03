@@ -11,11 +11,7 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
-import hashlib
-import inspect
 import json
-import subprocess
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +23,7 @@ from newlife.adapters.process_bigraph.foreign import (
     third_party_types,
 )
 from newlife.adapters.process_bigraph.wrapper import BiologicalProfile, run_composite
+from newlife.conform import judgment
 from newlife.core.verdict_seam import RenderSpec, decide, emit, exit_code
 from newlife.mechanisms.foreign_monod import declaration as D
 
@@ -89,45 +86,28 @@ def _w0_safety_line() -> dict[str, Any]:
 
     基线不是硬编码常量，是 git 里已提交的那份产物（预注册 §3 F5）。
     """
-    run = subprocess.run(
-        [sys.executable, "-m", "newlife.conform.foreign_process_verdict"],
-        cwd=REPO, capture_output=True, text=True,
+    checked = judgment.check_baselines(
+        REPO, ["newlife.conform.foreign_process_verdict"], [FIFTEENTH]
     )
-    if run.returncode != 0:
-        return {"passed": False, "reason": f"第十五个里程碑 runner 非零退出：{run.returncode}"}
-    try:
-        status = subprocess.run(["git", "status", "--porcelain", "--", FIFTEENTH],
-                                cwd=REPO, capture_output=True, text=True, check=True)
-    except FileNotFoundError as exc:
-        raise SystemExit(
-            "git 不可用——W0 的基线取不到。这是环境缺失，不是判定结果；"
-            f"非 Python 依赖见 conform/dep_declaration.py。原始错误：{exc}"
-        ) from exc
-    dirty = status.stdout.strip()
-    return {"passed": dirty == "", "baseline": FIFTEENTH, "git_status": dirty}
+    if checked.failed_runner is not None:
+        return {"passed": False,
+                "reason": f"第十五个里程碑 runner 非零退出：{checked.returncode}"}
+    return {"passed": checked.ok, "baseline": FIFTEENTH, "git_status": checked.git_status}
 
 
 def _w1_unmodified() -> dict[str, Any]:
-    module = inspect.getmodule(MONOD.update)
-    file = Path(inspect.getfile(MONOD))
+    prov = judgment.foreign_provenance(MONOD)
     return {
-        "passed": (
-            MONOD.__module__.startswith("spatio_flux")
-            and module is not None
-            and module.__name__.startswith("spatio_flux")
-            and "site-packages" in str(file)
-        ),
-        "class_module": MONOD.__module__,
-        "update_defined_in": None if module is None else module.__name__,
-        "source_sha256": hashlib.sha256(inspect.getsource(MONOD).encode()).hexdigest(),
-        "installed_under_site_packages": "site-packages" in str(file),
+        "passed": prov.unmodified_within("spatio_flux"),
+        "class_module": prov.class_module,
+        "update_defined_in": prov.update_module,
+        "source_sha256": prov.source_sha256,
+        "installed_under_site_packages": prov.under_site_packages,
     }
 
 
 def _f3_control_is_newlife_free() -> dict[str, Any]:
-    src = Path(inspect.getfile(bare_control)).read_text()
-    offending = [line.strip() for line in src.splitlines()
-                 if line.strip().startswith(("import ", "from ")) and "newlife" in line]
+    offending = judgment.newlife_imports_in(bare_control)
     return {"passed": not offending, "offending_imports": offending}
 
 

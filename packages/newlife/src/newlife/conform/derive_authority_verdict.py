@@ -7,12 +7,11 @@ from __future__ import annotations
 
 import argparse
 import inspect
-import subprocess
-import sys
 from pathlib import Path
 from typing import Any
 
 from newlife.adapters.process_bigraph import derive
+from newlife.conform import judgment
 from newlife.core.verdict_seam import RenderSpec, decide, emit, exit_code
 from newlife.mechanisms.foreign_dfba import declaration as DFBA
 from newlife.mechanisms.foreign_growth import declaration as GROW
@@ -60,20 +59,11 @@ def _core() -> Any:
 
 
 def _y0_safety_line() -> dict[str, Any]:
-    for module in RUNNERS:
-        run = subprocess.run([sys.executable, "-m", module], cwd=REPO,
-                             capture_output=True, text=True)
-        if run.returncode != 0:
-            return {"passed": False, "reason": f"{module} 非零退出：{run.returncode}"}
-    try:
-        status = subprocess.run(["git", "status", "--porcelain", "--", *BASELINES],
-                                cwd=REPO, capture_output=True, text=True, check=True)
-    except FileNotFoundError as exc:
-        raise SystemExit(
-            "git 不可用——Y0 的基线取不到。这是环境缺失，不是判定结果；"
-            f"非 Python 依赖见 conform/dep_declaration.py。原始错误：{exc}"
-        ) from exc
-    return {"passed": status.stdout.strip() == "", "git_status": status.stdout.strip()}
+    checked = judgment.check_baselines(REPO, RUNNERS, BASELINES)
+    if checked.failed_runner is not None:
+        return {"passed": False,
+                "reason": f"{checked.failed_runner} 非零退出：{checked.returncode}"}
+    return {"passed": checked.ok, "git_status": checked.git_status}
 
 
 def _y1_wiring_is_third_party() -> dict[str, Any]:

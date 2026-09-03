@@ -7,8 +7,6 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
-import hashlib
-import inspect
 import json
 from pathlib import Path
 from typing import Any
@@ -20,6 +18,7 @@ from newlife.adapters.process_bigraph.foreign import (
     resolve_foreign,
 )
 from newlife.adapters.process_bigraph.wrapper import BiologicalProfile, run_composite
+from newlife.conform import judgment
 from newlife.core.verdict_seam import RenderSpec, decide, emit, exit_code
 from newlife.mechanisms.foreign_growth import declaration as D
 
@@ -82,31 +81,19 @@ def _rejected(spec, bindings, *, contract: bool = True) -> dict[str, Any]:
 
 def _v1_unmodified() -> dict[str, Any]:
     """V1：`Grow` 源码与 `update` 均未被改动——两者都必须仍属 `process_bigraph`。"""
-    source = inspect.getsource(GROW)
-    module = inspect.getmodule(GROW.update)
-    file = Path(inspect.getfile(GROW))
+    prov = judgment.foreign_provenance(GROW)
     return {
-        "passed": (
-            GROW.__module__.startswith("process_bigraph")
-            and module is not None
-            and module.__name__.startswith("process_bigraph")
-            and "site-packages" in str(file)
-        ),
-        "class_module": GROW.__module__,
-        "update_defined_in": None if module is None else module.__name__,
-        "source_sha256": hashlib.sha256(source.encode()).hexdigest(),
-        "installed_under_site_packages": "site-packages" in str(file),
+        "passed": prov.unmodified_within("process_bigraph"),
+        "class_module": prov.class_module,
+        "update_defined_in": prov.update_module,
+        "source_sha256": prov.source_sha256,
+        "installed_under_site_packages": prov.under_site_packages,
     }
 
 
 def _f3_control_is_newlife_free() -> dict[str, Any]:
     """F3 由机械检查兑现：对照组源码里不许出现 newlife 的 import。"""
-    src = Path(inspect.getfile(bare_control)).read_text()
-    offending = [
-        line.strip()
-        for line in src.splitlines()
-        if line.startswith(("import ", "from ")) and "newlife" in line
-    ]
+    offending = judgment.newlife_imports_in(bare_control)
     return {"passed": not offending, "offending_imports": offending}
 
 

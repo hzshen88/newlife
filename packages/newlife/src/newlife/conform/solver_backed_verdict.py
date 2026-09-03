@@ -12,11 +12,7 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
-import hashlib
-import inspect
 import json
-import subprocess
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +23,7 @@ from newlife.adapters.process_bigraph.foreign import (
     third_party_types,
 )
 from newlife.adapters.process_bigraph.wrapper import BiologicalProfile, run_composite
+from newlife.conform import judgment
 from newlife.core.verdict_seam import RenderSpec, decide, emit, exit_code
 from newlife.mechanisms.foreign_dfba import declaration as D
 
@@ -86,43 +83,26 @@ def _rejected(spec, bindings, *, contract: bool = True) -> dict[str, Any]:
 
 def _x0_safety_line() -> dict[str, Any]:
     """安全绳：动接线表之后，第十五与第十六个里程碑的产物均逐字节不变。"""
-    for module in SAFETY_RUNNERS:
-        run = subprocess.run([sys.executable, "-m", module],
-                             cwd=REPO, capture_output=True, text=True)
-        if run.returncode != 0:
-            return {"passed": False, "reason": f"{module} 非零退出：{run.returncode}"}
-    try:
-        status = subprocess.run(["git", "status", "--porcelain", "--", *SAFETY_BASELINES],
-                                cwd=REPO, capture_output=True, text=True, check=True)
-    except FileNotFoundError as exc:
-        raise SystemExit(
-            "git 不可用——X0 的基线取不到。这是环境缺失，不是判定结果；"
-            f"非 Python 依赖见 conform/dep_declaration.py。原始错误：{exc}"
-        ) from exc
-    dirty = status.stdout.strip()
-    return {"passed": dirty == "", "baselines": list(SAFETY_BASELINES), "git_status": dirty}
+    checked = judgment.check_baselines(REPO, SAFETY_RUNNERS, SAFETY_BASELINES)
+    if checked.failed_runner is not None:
+        return {"passed": False,
+                "reason": f"{checked.failed_runner} 非零退出：{checked.returncode}"}
+    return {"passed": checked.ok, "baselines": list(SAFETY_BASELINES),
+            "git_status": checked.git_status}
 
 
 def _x1_unmodified() -> dict[str, Any]:
-    module = inspect.getmodule(DFBA.update)
-    file = Path(inspect.getfile(DFBA))
+    prov = judgment.foreign_provenance(DFBA)
     return {
-        "passed": (
-            DFBA.__module__.startswith("spatio_flux")
-            and module is not None
-            and module.__name__.startswith("spatio_flux")
-            and "site-packages" in str(file)
-        ),
-        "class_module": DFBA.__module__,
-        "update_defined_in": None if module is None else module.__name__,
-        "source_sha256": hashlib.sha256(inspect.getsource(DFBA).encode()).hexdigest(),
+        "passed": prov.unmodified_within("spatio_flux"),
+        "class_module": prov.class_module,
+        "update_defined_in": prov.update_module,
+        "source_sha256": prov.source_sha256,
     }
 
 
 def _f3_control_is_newlife_free() -> dict[str, Any]:
-    src = Path(inspect.getfile(bare_control)).read_text()
-    offending = [ln.strip() for ln in src.splitlines()
-                 if ln.strip().startswith(("import ", "from ")) and "newlife" in ln]
+    offending = judgment.newlife_imports_in(bare_control)
     return {"passed": not offending, "offending_imports": offending}
 
 
