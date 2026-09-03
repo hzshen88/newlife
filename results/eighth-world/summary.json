@@ -1,0 +1,31 @@
+{
+  "schema": "newlife.eighth-world.verdict.v1",
+  "prereg_freeze_commit": "6f2bc25",
+  "c1_parts_absorbed": {
+    "absorbed": [
+      "MoranGenealogyWorld.__init__",
+      "MoranGenealogyWorld._run_stage",
+      "MoranGenealogyWorld.run",
+      "MoranGenealogyWorld.reuse_trace"
+    ],
+    "still_present": [],
+    "kept_model_parts": [
+      "build_mechanism_specs",
+      "genealogy_step"
+    ],
+    "passed": true
+  },
+  "c2_config_pure_data": {
+    "config": "packages/newlife/src/newlife/mechanisms/fourth_world/spec.py",
+    "offenders": [],
+    "passed": true
+  },
+  "c3_verdict_bit_identical": {
+    "baseline_sha256": "7e5bbc4732fdc8f782e17333ea1df0bc307ee3cf831e22f3756695bc3a8b625e",
+    "baseline_source": "git:6d89736a",
+    "current_sha256": "7e5bbc4732fdc8f782e17333ea1df0bc307ee3cf831e22f3756695bc3a8b625e",
+    "passed": true
+  },
+  "invalid": false,
+  "verdict": "H1"
+}

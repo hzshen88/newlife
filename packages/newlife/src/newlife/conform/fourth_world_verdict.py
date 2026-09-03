@@ -23,7 +23,8 @@ from itertools import combinations
 from typing import Any
 
 from newlife.mechanisms.fourth_world.genealogy import moran_step_outcome
-from newlife.mechanisms.fourth_world.world import MoranGenealogyWorld
+from newlife.core.harness import GenericWorld
+from newlife.mechanisms.fourth_world.spec import WORLD
 from newlife.mechanisms.second_world.ms_coalescent import RecordedDrawStream
 
 # --- 预注册 §3 的冻结参数，逐字抄入，不重新推导 ---
@@ -136,13 +137,21 @@ def run_claim_ii(world_seed: int) -> dict[str, Any]:
     traces = []
     for k in range(CLAIM_II_REPLICATES):
         orng = random.Random(world_seed + 10_000_000 + k)
-        world = MoranGenealogyWorld(
-            CLAIM_II_SAMPLE,
-            CLAIM_II_POP,
-            CLAIM_II_THETA,
-            _Dev(world_seed + k),
-            RecordedDrawStream([orng.random() for _ in range(400)]),
-            replicate_index=k,
+        world = GenericWorld(
+            WORLD,
+            streams={
+                "builder": _Dev(world_seed + k),
+                "observer": RecordedDrawStream(
+                    [orng.random() for _ in range(400)]
+                ),
+            },
+            runtime={
+                "n_sample": CLAIM_II_SAMPLE,
+                "n_pop": CLAIM_II_POP,
+                "nsam": CLAIM_II_SAMPLE,
+                "theta": CLAIM_II_THETA,
+                "replicate_index": k,
+            },
         )
         values.append(world.run()["segsites"])
         if k == 0:
