@@ -117,6 +117,11 @@ DEPENDS_ON: dict[str, tuple[str, ...]] = {
                     "adapters/process_bigraph/bare_control.py",
                     "adapters/process_bigraph/lowering.py",
                     "mechanisms/foreign_dfba/"),
+    # 第十八个推导权限声明：动推导器或三份手写声明都要重跑
+    "eighteenth": ("conform/derive_authority_verdict.py",
+                   "adapters/process_bigraph/derive.py",
+                   "mechanisms/foreign_growth/", "mechanisms/foreign_monod/",
+                   "mechanisms/foreign_dfba/"),
 }
 SRC_PREFIX = "packages/newlife/src/newlife/"
 

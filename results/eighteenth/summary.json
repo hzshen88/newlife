@@ -1,0 +1,228 @@
+{
+  "schema": "newlife.eighteenth.derive-authority.v1",
+  "preregistration": "f948447",
+  "units": {
+    "Y0_safety_line": {
+      "passed": true,
+      "git_status": ""
+    },
+    "Y1_wiring_is_third_party": {
+      "passed": true,
+      "banned_imports": [],
+      "banned_names": [],
+      "method": "AST（不按子串——第一版在自己的文档字符串上误报）"
+    },
+    "Y2_probe_discriminates": {
+      "passed": true,
+      "PositiveFloat": "add",
+      "SetFloat": "set"
+    },
+    "Y3_claims_match": {
+      "passed": false
+    },
+    "Y4_effects_match": {
+      "passed": true
+    },
+    "Y5_operations_match": {
+      "passed": true
+    },
+    "Y6_artifacts_unchanged_under_derived": {
+      "passed": false,
+      "note": "Y3–Y5 不全为真时无从「用推导声明重跑」，如实记未达成，不假装跑过"
+    }
+  },
+  "per_provider": {
+    "Grow": {
+      "claims_match": false,
+      "hand_claims": [
+        [
+          [
+            "cell",
+            "mass"
+          ],
+          "own"
+        ]
+      ],
+      "derived_claims": [
+        [
+          [
+            "mass"
+          ],
+          "own"
+        ]
+      ],
+      "effects_match": true,
+      "hand_effects": [
+        "StateDelta"
+      ],
+      "derived_effects": [
+        "StateDelta"
+      ],
+      "claims_mismatch": {
+        "kind": "layout",
+        "why": "去掉各自的共同前缀后相同；差的是**我们选的状态布局**，不是信息"
+      },
+      "operations_match": true,
+      "hand_operations": {
+        "mass": "add"
+      },
+      "derived_operations": {
+        "mass": "add"
+      },
+      "outputs_obtained_by": "instantiated"
+    },
+    "MonodKinetics": {
+      "claims_match": true,
+      "hand_claims": [
+        [
+          [
+            "exchange"
+          ],
+          "own"
+        ],
+        [
+          [
+            "local"
+          ],
+          "read"
+        ],
+        [
+          [
+            "mass"
+          ],
+          "own"
+        ]
+      ],
+      "derived_claims": [
+        [
+          [
+            "exchange"
+          ],
+          "own"
+        ],
+        [
+          [
+            "local"
+          ],
+          "read"
+        ],
+        [
+          [
+            "mass"
+          ],
+          "own"
+        ]
+      ],
+      "effects_match": true,
+      "hand_effects": [
+        "StateDelta"
+      ],
+      "derived_effects": [
+        "StateDelta"
+      ],
+      "claims_mismatch": {
+        "kind": "identical"
+      },
+      "operations_match": true,
+      "hand_operations": {
+        "biomass": "add",
+        "substrates": "add"
+      },
+      "derived_operations": {
+        "biomass": "add",
+        "substrates": "add"
+      },
+      "outputs_obtained_by": "declared_only"
+    },
+    "DynamicFBA": {
+      "claims_match": false,
+      "hand_claims": [
+        [
+          [
+            "fields"
+          ],
+          "own"
+        ],
+        [
+          [
+            "fields",
+            "biomass"
+          ],
+          "own"
+        ]
+      ],
+      "derived_claims": [
+        [
+          [
+            "fields",
+            "acetate"
+          ],
+          "own"
+        ],
+        [
+          [
+            "fields",
+            "biomass"
+          ],
+          "own"
+        ],
+        [
+          [
+            "fields",
+            "glucose"
+          ],
+          "own"
+        ]
+      ],
+      "effects_match": true,
+      "hand_effects": [
+        "StateDelta"
+      ],
+      "derived_effects": [
+        "StateDelta"
+      ],
+      "claims_mismatch": {
+        "kind": "finer",
+        "why": "推导给出更细的路径；手写当初被端口粒度限制（第十七个里程碑已记）"
+      },
+      "operations_match": true,
+      "hand_operations": {
+        "substrates": "add",
+        "biomass": "add"
+      },
+      "derived_operations": {
+        "substrates": "add",
+        "biomass": "add"
+      },
+      "outputs_obtained_by": "instantiated"
+    }
+  },
+  "underivable_items": [],
+  "what_this_h0_means": "Y4（allowed_effects）与 Y5（add/set 算符）三个 provider 全部推导正确——**算符正是类型-效应系统文献点名「从接口类型推不出来」的那一项**。差只差在 claims，且两处差异都不是「信息缺失」，见每个 provider 的 claims_mismatch。",
+  "derivation_sources": {
+    "Grow": {
+      "generator": "process_bigraph.processes.growth_division:grow_divide_agent",
+      "kwargs": {
+        "path": [
+          "a"
+        ]
+      }
+    },
+    "MonodKinetics": {
+      "generator": "spatio_flux.processes.configs:get_kinetic_particle_composition",
+      "kwargs": {
+        "core": "<core>"
+      }
+    },
+    "DynamicFBA": {
+      "generator": "spatio_flux.processes.configs:get_single_dfba_process",
+      "kwargs": {
+        "path": [
+          "fields"
+        ],
+        "biomass_id": "biomass"
+      }
+    }
+  },
+  "verdict": "H0"
+}
