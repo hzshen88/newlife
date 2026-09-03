@@ -26,7 +26,8 @@
     "pb_completed": 2101,
     "byte_identical": 2101,
     "first_difference": null,
-    "seconds": 6.8
+    "within_time_budget": true,
+    "time_budget_seconds": 300
   },
   "runtimes": [
     "reference_kernel",

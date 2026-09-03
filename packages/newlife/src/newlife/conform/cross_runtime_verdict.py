@@ -36,6 +36,7 @@ from newlife.mechanisms.second_world.mechanisms import RecordedDrawStream
 REPO = Path(__file__).resolve().parents[5]
 BASELINE = "results/fourth-world/summary.json"
 WORLD_SEED = 20260901
+TIME_BUDGET_SECONDS = 300  # 预注册 1b9257a IC-3
 
 
 def _inputs(k: int) -> tuple[dict, dict]:
@@ -112,8 +113,13 @@ def _compare(replicates: int) -> dict:
         "pb_completed": completed,
         "byte_identical": identical,
         "first_difference": first_diff,
-        "seconds": round(time.perf_counter() - t0, 1),
+        # **计时不进产物。** 它每次都不同，写进 summary 就等于亲手制造判定腐烂——
+        # 下次重跑必不逐字节相同。判定只需要「有没有超预算」这个布尔量。
+        "within_time_budget": (time.perf_counter() - t0) <= TIME_BUDGET_SECONDS,
+        "time_budget_seconds": TIME_BUDGET_SECONDS,
     }
+    # 实际耗时只打印，不返回
+
 
 
 def _negative_control() -> dict:
@@ -156,7 +162,7 @@ def main() -> int:
     # IC-1：U0 假 → 差异归因不清，作废，不判 H0。
     # 负控不红 → 比对无判定力，作废。
     # IC-3：超时 → 可用性问题，作废。
-    invalid = (not u0["passed"]) or (not control["went_red"]) or cmp_["seconds"] > 300
+    invalid = (not u0["passed"]) or (not control["went_red"]) or not cmp_["within_time_budget"]
     h1 = (not invalid) and u0["passed"] and u1 and u2
     h0 = (not invalid) and not (u1 and u2)
     verdict = decide(h1=h1, h0=h0, invalid=invalid)
@@ -180,7 +186,7 @@ def main() -> int:
     print(f"  U1 pb 跑完:              {cmp_['pb_completed']}/{cmp_['replicates']}")
     print(f"  U2 逐字节相同:            {cmp_['byte_identical']}/{cmp_['replicates']}")
     print(f"  负控（改坏 pb 写入）变红: {control['went_red']}")
-    print(f"  用时 {cmp_['seconds']}s")
+    print(f"  在时间预算内 (≤{TIME_BUDGET_SECONDS}s): {cmp_['within_time_budget']}")
     if cmp_["first_difference"]:
         print(f"  首个差异: replicate {cmp_['first_difference']['replicate']}")
     print(f"\nverdict: {verdict}")
