@@ -44,7 +44,7 @@
       "passed": true,
       "rejected": true,
       "error": "CommitAuthorityError",
-      "detail": "foreign-grow cannot commit ('cell', 'mass')",
+      "detail": "foreign-grow cannot commit ('mass',)",
       "state_before": 1.0,
       "state_after": 1.0,
       "state_unchanged": true
@@ -75,7 +75,6 @@
     "claims": [
       [
         [
-          "cell",
           "mass"
         ],
         "own"
@@ -88,7 +87,6 @@
       [
         "mass",
         [
-          "cell",
           "mass"
         ],
         "add"

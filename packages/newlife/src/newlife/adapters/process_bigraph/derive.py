@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterator, Mapping
+from typing import Any, Iterator, Mapping, Sequence
 
 from newlife.core.contracts import StateClaim
 from newlife.core.errors import SpecValidationError
@@ -83,13 +83,42 @@ def wiring_of(node: Mapping[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
     return dict(unwrap(node.get("inputs", {}))), dict(unwrap(node.get("outputs", {})))
 
 
+def common_prefix(paths: Sequence[tuple[str, ...]]) -> tuple[str, ...]:
+    """一组路径的最长公共前缀。"""
+    if not paths:
+        return ()
+    prefix = paths[0]
+    for path in paths[1:]:
+        cut = 0
+        while cut < min(len(prefix), len(path)) and prefix[cut] == path[cut]:
+            cut += 1
+        prefix = prefix[:cut]
+    return prefix
+
+
 def paths_in(wiring: Mapping[str, Any]) -> set[tuple[str, ...]]:
-    """一张接线表里出现的全部状态路径。值可以是路径，也可以是 `{key: 路径}`。"""
+    """一张接线表里，**每个端口能被声明到的那条路径**。
+
+    值可以是一条路径，也可以是 `{key: 路径}`（按 key 逐个接线）。后者会**塌到
+    这些路径的最长公共前缀**上——理由不在任何手写声明里，在 `admit()` 的代码里：
+
+    > **`admit()` 对每个端口只发一条 `StateDelta`，而一条 `StateDelta` 只有一个路径。**
+
+    所以一个按 key 接线的端口，其写入**无法**声明到每个 key 各自的路径上。
+    推导若给出更细的路径，产出的是一份 `admit()` 消费不了的声明——
+    **推导必须尊重接入路径自身的粒度上限**，否则它推的是另一个机制的声明。
+
+    第十八个里程碑判 H0 时，这一条正是它指向的两处修法之一（分类为 `finer`：
+    「信息在，是手写当初被端口粒度限制了」——**更准确的说法是：被接法限制了**）。
+    解除这个上限要让 `admit()` 按 key 逐条发 `StateDelta`，而按 key 接线目前
+    **只有一个 provider**（`DynamicFBA`）。**少于三个 provider 不许定型**——
+    第九、十六、十七个里程碑各栽过一次，这次不再栽。
+    """
     found: set[tuple[str, ...]] = set()
     for value in wiring.values():
         value = unwrap(value)
         if isinstance(value, Mapping):
-            found.update(tuple(p) for p in value.values())
+            found.add(common_prefix([tuple(p) for p in value.values()]))
         else:
             found.add(tuple(value))
     return found

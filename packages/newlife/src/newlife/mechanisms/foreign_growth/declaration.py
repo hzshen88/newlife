@@ -17,9 +17,16 @@ FOREIGN = "process_bigraph.processes.growth_division:Grow"
 """**点分路径是数据**：声明侧因此不 import vendor（import-lint 规则 2）。"""
 
 IDENTITY = "foreign-grow"
-STATE_ROOTS = {"cell": {"mass": None}}
-WIRING = {"mass": ["cell", "mass"]}   # Grow 读写同路径，两张表相同
-MASS_PATH = ("cell", "mass")
+STATE_ROOTS = {"mass": None}
+WIRING = {"mass": ["mass"]}   # Grow 读写同路径，两张表相同
+MASS_PATH = ("mass",)
+"""**用第三方自己给的状态布局。**
+
+原来是 `("cell", "mass")`——那个 `cell/` 前缀是我们在第十五个里程碑凭空加的。
+第十八个里程碑的对账查出来：第三方自己的 composite 生成器（`grow_divide_agent`）
+用的是 `["mass"]`，所以推导出的声明与手写声明**逐项不同**，分类为 `layout`——
+**差的是我们选的布局，不是第三方没交付信息**。改成用它给的，两者就对上了。
+"""
 
 SPEC = MechanismSpec(
     identity=IDENTITY,

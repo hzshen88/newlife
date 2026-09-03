@@ -40,7 +40,7 @@ def _build(spec, bindings, *, contract: bool = True):
         bindings=bindings,
         lowering=D.LOWERING,
         config={"rate": RATE},
-        state_roots={"cell": {"mass": INITIAL_MASS}},
+        state_roots={"mass": INITIAL_MASS},
         in_wiring=D.WIRING,
         out_wiring=D.WIRING,
         contract=contract,
@@ -51,22 +51,22 @@ def _build(spec, bindings, *, contract: bool = True):
 def _admitted_trajectory(spec, bindings, *, contract: bool = True) -> list[float]:
     """newlife 路径：第三方 `Grow` 经契约接入，跑 `STEPS` 个 tick。"""
     composite, profile = _build(spec, bindings, contract=contract)
-    trajectory = [float(composite.state["cell"]["mass"])]
+    trajectory = [float(composite.state["mass"])]
     for _ in range(STEPS):
         run_composite(composite, 1.0, profile)
-        trajectory.append(float(composite.state["cell"]["mass"]))
+        trajectory.append(float(composite.state["mass"]))
     return trajectory
 
 
 def _rejected(spec, bindings, *, contract: bool = True) -> dict[str, Any]:
     """负控。冻结判据是「抛异常**且状态不变**」——两件都查，不只查异常。"""
     composite, profile = _build(spec, bindings, contract=contract)
-    before = float(composite.state["cell"]["mass"])
+    before = float(composite.state["mass"])
     try:
         for _ in range(STEPS):
             run_composite(composite, 1.0, profile)
     except Exception as exc:  # noqa: BLE001 —— 判据是「有没有被拒」，类型另记
-        after = float(composite.state["cell"]["mass"])
+        after = float(composite.state["mass"])
         return {
             "rejected": True,
             "error": type(exc).__name__,
@@ -75,7 +75,7 @@ def _rejected(spec, bindings, *, contract: bool = True) -> dict[str, Any]:
             "state_after": after,
             "state_unchanged": after == before,
         }
-    after = float(composite.state["cell"]["mass"])
+    after = float(composite.state["mass"])
     return {"rejected": False, "state_before": before, "state_after": after,
             "state_unchanged": after == before}
 
@@ -136,7 +136,7 @@ def main() -> int:
 
     # 负控甲：声明 own 在另一条路径上
     wrong_path = dataclasses.replace(
-        D.SPEC, claims=(dataclasses.replace(D.SPEC.claims[0], path=("cell", "other")),)
+        D.SPEC, claims=(dataclasses.replace(D.SPEC.claims[0], path=("elsewhere",)),)
     )
     nc_a = _rejected(wrong_path, D.BINDINGS)
 

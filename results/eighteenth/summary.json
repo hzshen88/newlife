@@ -3,8 +3,8 @@
   "preregistration": "f948447",
   "units": {
     "Y0_safety_line": {
-      "passed": true,
-      "git_status": ""
+      "passed": false,
+      "reason": "newlife.conform.external_package_verdict 非零退出：1"
     },
     "Y1_wiring_is_third_party": {
       "passed": true,
@@ -18,7 +18,7 @@
       "SetFloat": "set"
     },
     "Y3_claims_match": {
-      "passed": false
+      "passed": true
     },
     "Y4_effects_match": {
       "passed": true
@@ -33,11 +33,10 @@
   },
   "per_provider": {
     "Grow": {
-      "claims_match": false,
+      "claims_match": true,
       "hand_claims": [
         [
           [
-            "cell",
             "mass"
           ],
           "own"
@@ -59,8 +58,7 @@
         "StateDelta"
       ],
       "claims_mismatch": {
-        "kind": "layout",
-        "why": "去掉各自的共同前缀后相同；差的是**我们选的状态布局**，不是信息"
+        "kind": "identical"
       },
       "operations_match": true,
       "hand_operations": {
@@ -135,7 +133,7 @@
       "outputs_obtained_by": "declared_only"
     },
     "DynamicFBA": {
-      "claims_match": false,
+      "claims_match": true,
       "hand_claims": [
         [
           [
@@ -154,8 +152,7 @@
       "derived_claims": [
         [
           [
-            "fields",
-            "acetate"
+            "fields"
           ],
           "own"
         ],
@@ -163,13 +160,6 @@
           [
             "fields",
             "biomass"
-          ],
-          "own"
-        ],
-        [
-          [
-            "fields",
-            "glucose"
           ],
           "own"
         ]
@@ -182,8 +172,7 @@
         "StateDelta"
       ],
       "claims_mismatch": {
-        "kind": "finer",
-        "why": "推导给出更细的路径；手写当初被端口粒度限制（第十七个里程碑已记）"
+        "kind": "identical"
       },
       "operations_match": true,
       "hand_operations": {
@@ -224,5 +213,5 @@
       }
     }
   },
-  "verdict": "H0"
+  "verdict": "INVALID"
 }

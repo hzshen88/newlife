@@ -18,21 +18,21 @@ def bare_trajectory(*, initial_mass: float, rate: float, steps: int) -> list[flo
     """裸 pb：一个 `mass` 状态 + `Grow`，跑 `steps` 个 tick，返回质量轨迹。"""
     core = _core()
     state: dict[str, Any] = {
-        "cell": {"mass": initial_mass},
+        "mass": initial_mass,
         "grow": {
             "_type": "process",
             "address": "local:Grow",
             "config": {"rate": rate},
-            "inputs": {"mass": ["cell", "mass"]},
-            "outputs": {"mass": ["cell", "mass"]},
+            "inputs": {"mass": ["mass"]},
+            "outputs": {"mass": ["mass"]},
             "interval": 1.0,
         },
     }
     composite = Composite({"state": state}, core=core)
-    trajectory = [float(composite.state["cell"]["mass"])]
+    trajectory = [float(composite.state["mass"])]
     for _ in range(steps):
         composite.run(1.0)
-        trajectory.append(float(composite.state["cell"]["mass"]))
+        trajectory.append(float(composite.state["mass"]))
     return trajectory
 
 
