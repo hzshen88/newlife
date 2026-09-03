@@ -15,7 +15,7 @@ embeds tick time (contribution envelopes).
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any, Callable, Mapping
 
 from newlife.core.errors import SpecValidationError
 from newlife.core.lowering_contract import (
@@ -62,6 +62,17 @@ def _sum_float_add(op: LoweredOp, port: str, _view, _interval) -> dict[str, Any]
     # `_integer_count` 的语义相同但名字说的是整数 store；接第三方 process 时
     # 声明表**就是**这次里程碑要检验的东西，名字不许将就。
     return {port: op.payload}
+
+
+def _sum_map_add(op: LoweredOp, port: str, _view, _interval) -> dict[str, Any]:
+    # add on a per-key sum-reconciling map store: the delta mapping passes through.
+    # 第十六个里程碑加：第三方的 substrates 端口一次写多个底物的增量。
+    _expect(op, OP_ADD, "sum-map-add")
+    if not isinstance(op.payload, Mapping):
+        raise SpecValidationError(
+            f"store 类型 'sum-map-add' 要求映射负载，收到 {type(op.payload).__name__}"
+        )
+    return {port: dict(op.payload)}
 
 
 def _map_direct(op: LoweredOp, port: str, _view, _interval) -> dict[str, Any]:
@@ -154,6 +165,7 @@ STORE_HANDLERS: dict[str, StoreHandler] = {
     "integer-count": _integer_count,
     "sum-float-add": _sum_float_add,
     "map-direct": _map_direct,
+    "sum-map-add": _sum_map_add,
     "list-direct": _list_direct,
     "sum-float-set": _sum_float_set,
     "string-leaf-structural": _string_leaf_structural,
@@ -179,14 +191,21 @@ def lower_update(
 
     update: dict[str, Any] = {}
     for effect in effects:
-        if effect.kind not in lowering_table:
+        op = lower_effect(effect, provenance=mechanism_id)
+        # 先按 (类别, 路径) 找，再退回只按类别。
+        # **第十六个里程碑撞出来的**：只按类别做键时，一个机制每类 Effect 只能写
+        # 一个端口——第三方的 MonodKinetics 写两个（biomass 与 substrates），
+        # 两条 StateDelta 全落到同一个端口上，`mass` 因此收到一个 dict。
+        # 单端口的 Grow 看不出这个限制。**一个 provider 时看着对，两个时就塌。**
+        binding = lowering_table.get((effect.kind, op.path)) or lowering_table.get(effect.kind)
+        if binding is None:
             raise SpecValidationError(
-                f"{mechanism_id} has no lowering binding for Effect {effect.kind}"
+                f"{mechanism_id} has no lowering binding for Effect {effect.kind} "
+                f"at {op.path!r}"
             )
-        port, store_type = lowering_table[effect.kind]
+        port, store_type = binding
         handler = STORE_HANDLERS.get(store_type)
         if handler is None:
             raise SpecValidationError(f"unknown store type: {store_type!r}")
-        op = lower_effect(effect, provenance=mechanism_id)
         update.update(handler(op, port, state_view, interval))
     return update

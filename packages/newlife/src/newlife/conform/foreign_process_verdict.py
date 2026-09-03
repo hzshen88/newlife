@@ -41,7 +41,8 @@ def _build(spec, bindings, *, contract: bool = True):
         lowering=D.LOWERING,
         config={"rate": RATE},
         state_roots={"cell": {"mass": INITIAL_MASS}},
-        wiring=D.WIRING,
+        in_wiring=D.WIRING,
+        out_wiring=D.WIRING,
         contract=contract,
     )
     return composite, profile

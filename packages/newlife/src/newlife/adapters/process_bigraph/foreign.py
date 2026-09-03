@@ -26,6 +26,7 @@ FMI 用「接口描述由模型作者随实现一起交付」解决这件事。�
 
 from __future__ import annotations
 
+import copy
 import dataclasses
 import importlib
 from typing import Any, Mapping, Sequence
@@ -129,29 +130,50 @@ def build_composite(
     lowering: Mapping[str, tuple[str, str]],
     config: Mapping[str, Any],
     state_roots: Mapping[str, Any],
-    wiring: Mapping[str, list[str]],
+    in_wiring: Mapping[str, list[str]],
+    out_wiring: Mapping[str, list[str]],
     contract: bool,
+    register_types: Any = None,
 ) -> Composite:
     """搭一个跑第三方 process 的 composite。
 
     `contract=False` 时**用裸的第三方类**、不经契约——元负控要的正是这条路径。
+
+    **读写分开两张接线表**：第十六个里程碑发现单表不够——`MonodKinetics` 的
+    `substrates` 端口**读 `local`、写 `exchange`**，而第十五个里程碑接的 `Grow`
+    读写同路径，单表看着够用。**一个 provider 时看着对，两个时就塌**（第九世界的教训）。
     """
     foreign_cls = resolve_foreign(foreign_dotted)
     cls = admit(foreign_cls, bindings, lowering) if contract else foreign_cls
     core = allocate_core()
+    if register_types is not None:
+        # 第三方交付的类型词表（对照本体文献：词表即独立组件间的接口契约）。
+        # **这一半不是我们代写的**——第十五个里程碑接的 Grow 连这个都没有。
+        register_types(core)
     core.register_link(identity, cls)
     node_config = dict(config)
     if contract:
         node_config["mechanism_id"] = identity
     state: dict[str, Any] = {
-        **{k: dict(v) for k, v in state_roots.items()},
+        # 顶层值不一定是映射——MonodKinetics 的 mass 是标量（第十六个里程碑撞到）
+        **copy.deepcopy(dict(state_roots)),
         "node": {
             "_type": "process",
             "address": f"local:{identity}",
             "config": node_config,
-            "inputs": {k: list(v) for k, v in wiring.items()},
-            "outputs": {k: list(v) for k, v in wiring.items()},
+            "inputs": {k: list(v) for k, v in in_wiring.items()},
+            "outputs": {k: list(v) for k, v in out_wiring.items()},
             "interval": 1.0,
         },
     }
     return Composite({"state": state}, core=core)
+
+
+def third_party_types(dotted: str):
+    """取第三方交付的类型注册入口。**点分路径是数据**——判定侧因此不 import vendor。
+
+    对照本体文献：**词表是独立组件之间的接口契约**，而这个入口由第三方提供
+    （`spatio_flux:register_types`）。第十五个里程碑接的 `Grow` 连这一半都没有。
+    """
+    module_path, attr = dotted.split(":")
+    return getattr(importlib.import_module(module_path), attr)

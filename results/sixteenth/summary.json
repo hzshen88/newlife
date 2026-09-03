@@ -1,0 +1,183 @@
+{
+  "schema": "newlife.sixteenth.external-package.v1",
+  "preregistration": "588137e",
+  "foreign_package": "spatio-flux==1.4.0",
+  "foreign": "spatio_flux.processes.monod_kinetics.MonodKinetics",
+  "units": {
+    "W0_safety_line_fifteenth": {
+      "passed": true,
+      "baseline": "results/fifteenth/summary.json",
+      "git_status": ""
+    },
+    "W1_unmodified": {
+      "passed": true,
+      "class_module": "spatio_flux.processes.monod_kinetics",
+      "update_defined_in": "spatio_flux.processes.monod_kinetics",
+      "source_sha256": "c6180f68e7d90d85974d05eb259b9086cffdd1be0856f2ccbda8d05a9da970e4",
+      "installed_under_site_packages": true
+    },
+    "W2_faithful_to_bare_pb": {
+      "passed": true,
+      "bare": [
+        [
+          1.0,
+          {
+            "glucose": 0.0
+          }
+        ],
+        [
+          1.0090238095238095,
+          {
+            "glucose": -0.009523809523809525
+          }
+        ],
+        [
+          1.0181313142712456,
+          {
+            "glucose": -0.01913356009070295
+          }
+        ],
+        [
+          1.027323310873904,
+          {
+            "glucose": -0.028830048798048145
+          }
+        ],
+        [
+          1.0366006036410038,
+          {
+            "glucose": -0.038614080330180565
+          }
+        ],
+        [
+          1.0459640046326362,
+          {
+            "glucose": -0.048486467031523456
+          }
+        ]
+      ],
+      "admitted": [
+        [
+          1.0,
+          {
+            "glucose": 0.0
+          }
+        ],
+        [
+          1.0090238095238095,
+          {
+            "glucose": -0.009523809523809525
+          }
+        ],
+        [
+          1.0181313142712456,
+          {
+            "glucose": -0.01913356009070295
+          }
+        ],
+        [
+          1.027323310873904,
+          {
+            "glucose": -0.028830048798048145
+          }
+        ],
+        [
+          1.0366006036410038,
+          {
+            "glucose": -0.038614080330180565
+          }
+        ],
+        [
+          1.0459640046326362,
+          {
+            "glucose": -0.048486467031523456
+          }
+        ]
+      ]
+    },
+    "W3_positive_control": {
+      "passed": true,
+      "grew": true,
+      "substrate_consumed": true
+    },
+    "W4_wrong_path_rejected": {
+      "passed": true,
+      "rejected": true,
+      "error": "CommitAuthorityError",
+      "detail": "foreign-monod cannot commit ('mass',)",
+      "state_unchanged": true
+    },
+    "W5_undeclared_effect_rejected": {
+      "passed": true,
+      "rejected": true,
+      "error": "CommitAuthorityError",
+      "detail": "foreign-monod did not declare Effect StateDelta",
+      "state_unchanged": true
+    },
+    "W6_meta_control_bypass_not_rejected": {
+      "passed": true,
+      "rejected": false,
+      "state_unchanged": false
+    }
+  },
+  "f3_control_is_newlife_free": {
+    "passed": true,
+    "offending_imports": []
+  },
+  "vocabulary_from_third_party": {
+    "entry_point": "spatio_flux:register_types",
+    "note": "类型词表由第三方交付；我们代写的只剩权限声明"
+  },
+  "what_we_wrote_on_its_behalf": {
+    "claims": [
+      [
+        [
+          "local"
+        ],
+        "read"
+      ],
+      [
+        [
+          "mass"
+        ],
+        "own"
+      ],
+      [
+        [
+          "exchange"
+        ],
+        "own"
+      ]
+    ],
+    "allowed_effects": [
+      "StateDelta"
+    ],
+    "bindings": [
+      [
+        "biomass",
+        [
+          "mass"
+        ],
+        "add"
+      ],
+      [
+        "substrates",
+        [
+          "exchange"
+        ],
+        "add"
+      ]
+    ],
+    "lowering": {
+      "StateDelta@mass": [
+        "biomass",
+        "sum-float-add"
+      ],
+      "StateDelta@exchange": [
+        "substrates",
+        "sum-map-add"
+      ]
+    }
+  },
+  "verdict": "H1"
+}

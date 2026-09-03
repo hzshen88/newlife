@@ -18,7 +18,7 @@ FOREIGN = "process_bigraph.processes.growth_division:Grow"
 
 IDENTITY = "foreign-grow"
 STATE_ROOTS = {"cell": {"mass": None}}
-WIRING = {"mass": ["cell", "mass"]}
+WIRING = {"mass": ["cell", "mass"]}   # Grow 读写同路径，两张表相同
 MASS_PATH = ("cell", "mass")
 
 SPEC = MechanismSpec(

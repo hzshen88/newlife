@@ -9,6 +9,8 @@ dependencies = ["proofroot"]
 
 [project.optional-dependencies]
 process-bigraph = ["process-bigraph==1.8.3"]
+# 第十六个里程碑：一个真正独立的第三方包。走 optional extra，不进主依赖面
+spatio-flux = ["spatio-flux==1.4.0"]
 
 [build-system]
 requires = ["hatchling"]

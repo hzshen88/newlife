@@ -26,7 +26,13 @@ PROOFROOT_SRC = ROOT / "packages" / "proofroot" / "src" / "proofroot"
 NEWLIFE_SRC = ROOT / "packages" / "newlife" / "src" / "newlife"
 ADAPTER_PB = NEWLIFE_SRC / "adapters" / "process_bigraph"
 
-VENDOR_MODULES = {"process_bigraph", "bigraph_schema"}
+VENDOR_MODULES = {"process_bigraph", "bigraph_schema", "spatio_flux"}
+"""被允许出现在 `adapters/process_bigraph/` 里的第三方模块。**白名单，不是通配。**
+
+`spatio_flux` 是第十六个里程碑接进来的独立第三方包（`spatio-flux==1.4.0`，
+optional extra）。它在这里是**显式声明**——加一个第三方包必须留在这一行的 diff 里
+被人看见，而不是给某个文件开一条豁免。规则 2 仍然生效：它只能出现在
+`adapters/process_bigraph/` 内。"""
 
 
 def imported_roots(path: Path) -> list[tuple[str, int]]:
