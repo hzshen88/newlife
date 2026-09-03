@@ -91,7 +91,7 @@ not exist yet.
 
 ## Status
 
-Seven milestones are decided, each against criteria frozen before the
+Thirteen milestones are decided, each against criteria frozen before the
 implementation existed. Every verdict below is computed by a runner from the
 frozen conjunction, not asserted by hand:
 
@@ -105,6 +105,12 @@ frozen conjunction, not asserted by hand:
 | World 4 (Moran genealogy vs Kingman) | H1 supported — exact topology for `n ∈ {3..7}`, `S̄` in the frozen region | `results/fourth-world/summary.json` |
 | World 5 (the gate's own check coverage) | **H0 supported** — 3 of 47 checks are `hollow`; first non-H1 verdict in eight milestones | `results/fifth-world/summary.json` |
 | World 3 (Moran under selection) | H1 supported — per-step oracle replay over 4050 replicates, all three cells in region | `results/third-world/summary.json` |
+| World 6 (staging bypasses — a retrospective audit) | H1 supported — all four scheduling loops are unrolling-expressible; the recorded "same cause five times" does **not** hold | `results/sixth-world/summary.json` |
+| World 7 (how much of the harness is generable) | **H0 supported** — 4 of 42 parts fall outside DEVS's model/simulator/experimental-frame plus `rng`; they cluster into two capabilities the canonical decomposition does not name | `results/seventh-world/summary.json` |
+| World 8 (generic harness absorbs World 4) | H1 supported — all four harness parts absorbed, config is pure data, verdict byte-identical; **P3 met for the first time**, though only for a world with no tick loop | `results/eighth-world/summary.json` |
+| World 9 (declarative termination for a real tick loop) | **H0-a supported** — the condition *is* expressible in the frozen operator set (no inner-platform effect), but `run` is a mixed part and the harness collides with World 1 over engine-assembly ownership | `results/ninth-world/summary.json` |
+| Verdict seam (extracted from eight runners) | **INVALID** — three generations of verdict representation do fit one three-valued Definition, but one frozen product is no longer reproducible for an unrelated reason (IC-4) | `results/tenth/summary.json` |
+| Verdict rot (re-running eight old verdicts) | H1 supported — seven of seven reproduce byte-for-byte, excluding the one already known broken; the literature's ~3.4% base rate comes from multi-year dependency drift, which this has never been tested against | `results/eleventh/summary.json` |
 
 World 4 is the first world with **no external program as a comparison target
 anywhere** — it checks against mathematics the project derives and verifies
