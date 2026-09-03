@@ -65,15 +65,25 @@ TIMEOUT = 2400
 DEPENDS_ON: dict[str, tuple[str, ...]] = {
     "second":  ("mechanisms/second_world/",),
     "third":   ("mechanisms/third_world/",),
-    "fourth":  ("mechanisms/fourth_world/", "mechanisms/second_world/mechanisms.py"),
+    "fourth":  ("mechanisms/fourth_world/", "mechanisms/second_world/mechanisms.py",
+                "core/harness.py", "core/runtime.py",
+                  "adapters/reference_kernel/world_runtime.py"),
     "fifth":   ("conform/fifth_world_verdict.py",),
     "sixth":   ("conform/sixth_world_verdict.py",),
     # 第七世界枚举四个世界的 harness 文件——依赖面最宽，也正是它被撞坏的原因
     "seventh": ("conform/seventh_world_verdict.py", "mechanisms/resource_foraging/world.py",
                 "mechanisms/resource_foraging/assay.py", "mechanisms/second_world/world.py",
                 "mechanisms/fourth_world/world.py"),
-    "eighth":  ("conform/eighth_world_verdict.py", "mechanisms/fourth_world/"),
+    "eighth":  ("conform/eighth_world_verdict.py", "mechanisms/fourth_world/",
+                "core/harness.py", "core/runtime.py",
+                  "adapters/reference_kernel/world_runtime.py"),
     "ninth":   ("conform/ninth_world_verdict.py", "mechanisms/resource_foraging/"),
+    # 第十四个横跨两个运行时：改任一侧都要重跑
+    "fourteenth": ("conform/cross_runtime_verdict.py", "core/harness.py", "core/runtime.py",
+                   "adapters/process_bigraph/world_runtime.py",
+                   "adapters/process_bigraph/lowering.py",
+                   "adapters/reference_kernel/world_runtime.py",
+                   "mechanisms/fourth_world/"),
 }
 SRC_PREFIX = "packages/newlife/src/newlife/"
 

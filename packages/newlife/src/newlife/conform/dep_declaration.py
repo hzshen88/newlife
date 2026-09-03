@@ -41,8 +41,9 @@ DECLARED: dict[str, dict] = {
     "git": {
         "why": "记录分析代码的 commit / 取基线与依赖变动",
         "sites": [f"{CONFORM}/verdict.py:315", f"{CONFORM}/eighth_world_verdict.py",
-                  f"{CONFORM}/verdict_rot.py"],
-        "affects": ["eighth"],
+                  f"{CONFORM}/verdict_rot.py",
+                  f"{CONFORM}/cross_runtime_verdict.py:70"],
+        "affects": ["eighth", "fourteenth"],
     },
 }
 # 对照组：用不到这两条的 runner，用来确认 `unaffected` 分类真的会出现

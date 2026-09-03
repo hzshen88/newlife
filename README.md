@@ -113,6 +113,7 @@ frozen conjunction, not asserted by hand:
 | Verdict rot (re-running eight old verdicts) | H1 supported — seven of seven reproduce byte-for-byte, excluding the one already known broken; the literature's ~3.4% base rate comes from multi-year dependency drift, which this has never been tested against | `results/eleventh/summary.json` |
 | Archival replay (declared deps only) | H1 — five of five replay byte-for-byte in a clean venv, but one undeclared dependency (a C toolchain) surfaced; **no separate preregistration was frozen**, so this one's audit is unavailable | `results/twelfth/summary.json` |
 | Undeclared dependencies | **H0 supported** — with `git` absent one runner still emits a well-formed verdict blaming the wrong cause; the fourth instance of the same silent-degradation shape, and the first the scanner cannot reach | `results/thirteenth/summary.json` |
+| Cross-runtime verification (one world, two engines) | **H1** — World 4's single declaration runs on both `ReferenceKernel` and `process-bigraph`, **2101/2101 byte-identical**, negative control goes red; process-bigraph goes from zero users to actually running a world. **But the seam is still single-provider**: its Definition, read off `ReferenceKernel`, is a per-stage *pull* interface, and process-bigraph is a *push* runtime — unforeseen going in | `results/fourteenth/summary.json` |
 
 World 4 is the first world with **no external program as a comparison target
 anywhere** — it checks against mathematics the project derives and verifies
