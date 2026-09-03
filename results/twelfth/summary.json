@@ -1,0 +1,43 @@
+{
+  "schema": "newlife.twelfth.verdict.v1",
+  "goal_freeze_commit": "42ada0e",
+  "preregistration": null,
+  "process_note": "判据事前冻结在 goal §3（commit 42ada0e，早于建环境与跑数），但**没有单独冻结预注册**——IC 条件与停止规则缺失。**不事后补**：补一份就是这套机制要防的那件事。故 prereg.sh audit 对本里程碑不可用，结论强度低于前十一个。",
+  "environment": {
+    "kind": "全新 venv，只装 pyproject.toml 声明的依赖",
+    "python": "3.12.8（与开发环境同一解释器）",
+    "installed": [
+      "newlife 0.1.0",
+      "proofroot 0.1.0"
+    ],
+    "same_machine_and_os": true
+  },
+  "replays": {
+    "second": {
+      "byte_identical": true
+    },
+    "third": {
+      "byte_identical": true
+    },
+    "fourth": {
+      "byte_identical": true
+    },
+    "sixth": {
+      "byte_identical": true
+    },
+    "ninth": {
+      "byte_identical": true
+    }
+  },
+  "replayed": 5,
+  "byte_identical": 5,
+  "required_minimum": 3,
+  "undeclared_dependency_found": {
+    "what": "second 编译并运行 ms 的 C 源码，依赖系统 C 工具链",
+    "declared_in_pyproject": false,
+    "why_it_passed": "同一台机器上编译器在位",
+    "consequence": "换一台没有编译器的机器，归档复现会失败——这条 pyproject.toml 里没有"
+  },
+  "verdict": "H1",
+  "scope_caveat": "「纯净」只到 Python 包这一层：同机、同 OS、同解释器。H1 只说明**声明的包依赖是完整的**，**不说明跨机器、跨年可复现**——那是文献里衰减的主因，本次完全未覆盖。"
+}
