@@ -147,6 +147,7 @@ def build_composite(
     out_wiring: Mapping[str, list[str]],
     contract: bool,
     register_types: Any = None,
+    interval: float = 1.0,
 ) -> Composite:
     """搭一个跑第三方 process 的 composite。
 
@@ -176,10 +177,16 @@ def build_composite(
             "config": node_config,
             "inputs": {k: _wire(v) for k, v in in_wiring.items()},
             "outputs": {k: _wire(v) for k, v in out_wiring.items()},
-            "interval": 1.0,
+            # **这是 process 自己的步长**，不是调用方传给 `run_composite` 的时长。
+            # 两者对不上时 pb 会把请求攒着、少跑很多步，**且不出任何声音**——
+            # 第一个真实用户问题正是栽在这里：按 0.02 推进而这里写死 1.0，
+            # 251 个采样点只有 5 个不同取值，而数字看起来完全合理（0.98 vs 0.99）。
+            "interval": interval,
         },
     }
-    return Composite({"state": state}, core=core)
+    composite = Composite({"state": state}, core=core)
+    composite.newlife_interval = float(interval)   # 供 run_composite 核对
+    return composite
 
 
 def third_party_types(dotted: str):
