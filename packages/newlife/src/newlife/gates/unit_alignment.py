@@ -39,7 +39,11 @@ import sys
 from typing import Iterable
 
 TABLE_ROW = re.compile(r"^\|\s*\*\*([A-Z]+\d+)\*\*\s*\|")
-CONJUNCTION = re.compile(r"verdict\s*=\s*([^。\n]*)")
+# Stops at a period of either script. **Written for Chinese text first**: with only `。`
+# in the class, an English line `verdict = S0 ∧ S1. Any one false -> H0` swallowed the
+# whole sentence and reported `H0` as an undefined unit. The selftest missed it because
+# its fixture also used `。` — **a check too narrow to reach the case it was guarding.**
+CONJUNCTION = re.compile(r"verdict\s*=\s*([^.。\n]*)")
 UNIT_TOKEN = re.compile(r"\b([A-Z]+\d+)\b")        # in prose: S0 ∧ S1 ∧ …
 # In JSON keys: `S1_env_unchanged`. **`\b` does not work here** — there is no word
 # boundary between `1` and `_`, so nothing matches at all, and "the artifact contains no
@@ -124,8 +128,11 @@ SELFTEST_PREREG = """
 | **S1** | environment unchanged | … |
 | **S2** | positive control | … |
 
-**verdict = S0 ∧ S1 ∧ S2。**
+**verdict = S0 ∧ S1 ∧ S2.** Any one false -> H0; **S0 false -> INVALID**.
 """
+"""**Deliberately written the way the shipped English template writes it** — including the
+sentence after the period. The first fixture ended at `。` and therefore never exercised
+the case that actually broke."""
 
 
 def _selftest() -> int:

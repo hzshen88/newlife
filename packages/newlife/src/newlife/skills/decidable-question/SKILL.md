@@ -1,243 +1,263 @@
 ---
 name: decidable-question
-description: 把任意一个问题变成「可以被后续步骤真正解决」的问题——先分诊它该不该用模拟回答、能不能被判定，再把不可判定的改造成可判定的。产出一份带锚的 goal 草稿，交给执行系统。触发词：这个问题该怎么问 / 值不值得模拟 / 怎么变成可判定的 / 帮我把问题变成能跑的 / 分诊这个问题 / 起一个 goal。不触发：判据已经明确、只差写预注册（那是 preregister-verdict）；或已可判定问题的实现与判定（那是 newlife init / freeze / run）。
+description: Turn any question into one that the later steps can actually settle — first triage whether simulation should answer it at all and whether it can be judged, then reshape an unjudgeable one until it can be. Produces an anchored goal draft for the execution system. Use when asked how to frame a question, whether something is worth simulating, how to make it decidable, or to start a goal. Not for a question whose criteria are already clear and only need writing up (that is preregister-verdict), nor for implementing and judging an already-decidable question (that is newlife init / freeze / run).
 ---
 
-# decidable-question —— 把一个问题变成可解的真问题
+# decidable-question — turning a question into a solvable, real one
 
-> **这份文件随 `newlife` 的 wheel 发布，`newlife skills install` 逐字拷贝到你的 AI 配置目录。**
-> **不做任何变换**——母本与部署副本是同一份，因为「两份会漂移」是这个项目反复付过学费的形状。
+> **This file ships with the `newlife` wheel; `newlife skills install` copies it verbatim
+> into your AI's config directory. No transformation** — the master and the deployed copy
+> are one file, because "two copies drift apart" is a shape this project has paid for
+> repeatedly.
 >
-> 它是**步骤一**：纯方法，零工具依赖，全部动作在对话里完成，产出是一份文本。
-> ChatGPT、Claude 或任何地方都能用。步骤二（写判据）见 `preregister-verdict`；
-> 步骤三（执行与判定）是 `newlife init / freeze / run / check / audit`。
+> This is **step one**: pure method, zero tool dependencies, entirely conducted in
+> conversation, producing a text. Works in ChatGPT, Claude or anywhere else. Step two
+> (writing the criteria) is `preregister-verdict`; step three (execution and judgement) is
+> `newlife init / freeze / run / check / audit`.
 
-# 把一个问题变成可解的真问题
-
-**这个 skill 不需要任何工具。** 全部动作都在对话里完成，产出是一份文本。
-它在 ChatGPT、Claude 或任何地方都能跑。
-
-**它的产出是下游的输入**：一份带锚的 goal 草稿。下游（执行系统）会用机器门
-检查那些锚——**说不出的东西，下游会拒绝**。
+**Its output is the next step's input**: an anchored goal draft. Downstream, machine gates
+check those anchors — **whatever you cannot state, downstream rejects.**
 
 ---
 
-## 零、先认清一件事
+## 0. One thing to see first
 
-> **模拟一定会给你一个数。** 你不会收到「这个问题不该模拟」的报错，
-> 你会收到一个看起来很像结论的数字，而它只反映你的假设。
+> **A simulation will always hand you a number.** You never receive the error "this
+> question should not be simulated". You receive something that looks a great deal like a
+> conclusion, and reflects only your assumptions.
 
-所以这一步的全部价值在于**拒绝**，不在于产出。
+So the entire value of this step is in **refusal**, not in production.
 
 ---
 
-## 一、生成：候选从哪来
+## 1. Generation: where candidates come from
 
-**默认否决「把 A 和 B 合起来」。** 那是开新交叉，在近十年的地标论文里只占
-3.2%（对比：方法/角度革新不开新交叉占 71.3%，比值 22:1）。它最容易想到，
-也最没有产出。
+**Reject "combine A and B" by default.** That opens a new intersection, which accounts for
+3.2% of landmark papers over the last decade — against 71.3% for method or angle
+innovations that open no new intersection, a ratio of 22:1. It is the easiest move to think
+of and the least productive.
 
-**八类框定动作**（在 258 篇上完备，无第 9 类）：
+**Eight framing moves** (complete over 258 papers; there is no ninth):
 
-| | 动作 | | 动作 |
+| | Move | | Move |
 |---|---|---|---|
-| A | 形式化 | E | **异常提升** |
-| B | 换单元或层级 | F | **静态→动态** |
-| C | **操作化**（近十年 55.3%，最主流）| G | 换基质 |
-| D | 换解标准 | H | 调整约束集 |
+| A | formalise | E | **promote an anomaly** |
+| B | change the unit or level | F | **static → dynamic** |
+| C | **operationalise** (55.3% of the last decade, the mainstream) | G | change the substrate |
+| D | change the solution criterion | H | adjust the constraint set |
 
-**最有用的一条二分：E 与 F 从不充当跨域引入的载体——它们只从本域自己的
-异常里长出来。** 可跨域携带的是 A/B/C/D/G/H。
+**The one useful dichotomy: E and F never act as carriers for cross-domain import — they
+grow only out of a domain's own anomalies.** What can be carried across domains is
+A/B/C/D/G/H.
 
-> **第一来源是「已经记录在案的异常」，动作是 E。**
+> **The first source is an anomaly already on the record, and the move is E.**
 
-**但要盯住 E 的原料指向哪里。** 一个实测教训：某个项目十九个里程碑，
-E 用过好几次，升格的**全是工程异常**（「这次改动撞坏了上次的产物」），
-于是产出的全是工具问题——**十九次里关于世界的问题是零**。
+**But watch where E's raw material points.** A measured lesson: across nineteen milestones
+of one project, E was used several times and **everything promoted was an engineering
+anomaly** ("this change broke last time's artifact") — so everything produced was a tool
+question. **Nineteen rounds, zero questions about the world.**
 
-> **E 指向工程异常 → 工具问题。E 指向领域异常 → 世界问题。**
-> 规则不用改，改的是 E 往哪儿看。
+> **E pointed at engineering anomalies → tool questions. E pointed at domain anomalies →
+> world questions.** The rule does not change; where E looks does.
 
-**E 不等于「修它」。** 给它打个补丁是 H⁺（纳入约束），那是工程；
-E 是问「**它反复出现，真的是同一个原因吗**」——异常本身成为研究对象。
+**E is not "fix it".** Patching it is H⁺ (fold it into the constraints), which is
+engineering. E asks: **is it really the same cause every time it recurs?** — the anomaly
+itself becomes the object of study.
 
 ---
 
-## 二、分诊：三问，按顺序
+## 2. Triage: three questions, in order
 
-### 问一：答案由设计决定，还是由运行决定？
+### Question 1: is the answer decided by design, or by running?
 
-| | 含义 | 类型 |
+| | Meaning | Type |
 |---|---|---|
-| **设计决定** | 问的是「我造的东西是不是按设计工作」 | **工具** |
-| 设计决定，但别人也会照做 | 改的是做研究的方法 | **方法学** |
-| **运行决定** | 问的是「一个我没有完全设计的系统会怎么行为」 | **世界** |
+| **decided by design** | asking whether the thing I built works as designed | **tool** |
+| decided by design, but others would do the same | changing how research is done | **methodology** |
+| **decided by running** | asking how a system I did not fully design will behave | **world** |
 
-**不要用「答案取不取决于某个测量」当判据。** 它对人工生命、纯计算对象直接失效
-——那里模拟本身就是研究对象。「设计 vs 运行」覆盖得了这些。
+**Do not use "does the answer depend on some measurement" as the test.** It fails outright
+for artificial life and purely computational objects, where the simulation *is* the object
+of study. "design vs running" covers those.
 
-**工具与方法学类问题完全正当**，但**不许声称关于世界的结论**。
+**Tool and methodology questions are entirely legitimate** — but **they may not claim
+conclusions about the world.**
 
-### 问二：对手方攻的是哪一层？
+### Question 2: which layer is the counterparty attacking?
 
-先说出一个**具体的**对手方——不是「有人可能不同意」，而是**指名哪一条**、
-以及**那条错了会导致什么不同**。指名比造句难伪造。
+Name a **specific** counterparty first — not "someone might disagree", but **which claim**,
+and **what would be different if that claim were wrong**. Naming is harder to fake than
+phrasing.
 
-| 对手方攻 | 含义 | 正确产出 |
+| The counterparty attacks | Meaning | Correct output |
 |---|---|---|
-| **结论** | 机制无争议，争的是后果 | 模拟可以裁定 → **结论** |
-| **前提**（机制/参数/模型形式）| 争的是模型本身 | **不能**裁定 → 见 §四的回路 |
-| **问题本身有无意义** | 定义之争 | 不要模拟 |
+| **the conclusion** | the mechanism is uncontested, the consequence is | simulation can settle it → **a conclusion** |
+| **a premise** (mechanism / parameters / model form) | the model itself is in dispute | **cannot** settle it → see the loop in §4 |
+| **whether the question means anything** | a dispute about definitions | do not simulate |
 
-**填完看一眼：如果对手方押的是「支持你」，说明这个候选太安全，重挑。**
+**Then look again: if the counterparty is betting *with* you, the candidate is too safe.
+Pick another.**
 
-### 问三：谁会因为这个答案改变做法？
+### Question 3: who changes what they do because of the answer?
 
-说不出**具体的人**和**具体的决定**，就是「不重要但可判定」那一档——
-**它能通过后面所有的门，而它不值得问。**
-
----
-
-## 三、可判定化：四件套，缺一不可
-
-**事前**说得出：
-
-1. **机制** —— 什么改变什么
-2. **观测量** —— 跑完取哪个数
-3. **对照** —— 这个数要和什么比
-4. **什么变异会让它变红** ← **分水岭**
-
-第 4 条最容易被跳过，也最致命。**一个问题可计算，不在于你能不能算出一个数，
-在于你能不能事前说出什么会让这个数被判为假。**
-
-**配套的反例**（实测栽过两次）：变异必须**真的能检测到东西**。
-「把列表乘以 2」不改变它第 i 个元素；「替换显示出来的四位小数」不改变
-JSON 里的全精度值。**用一个检测不出任何东西的变异去宣布通过，是自欺。**
-
-### 判据的形状
-
-- **合取**，不是加权。任一条假即整体假。
-- **判据不能是这次修改为之而生的那个差异**（构造性判据 = 循环论证）。
-- **「行为相同」通常不够**。实测：一个参数填错，轨迹完全相同、无人报警。
-  要比就比**逐项相同**。
+If you cannot name **a specific person** and **a specific decision**, this is the
+"unimportant but decidable" tier — **it will pass every gate downstream and it is not worth
+asking.**
 
 ---
 
-## 四、不可判定时：改造，而不是丢弃
+## 3. Making it decidable: four pieces, none optional
 
-### 改造的模式只有一条
+Stated **in advance**:
 
-> **把「能不能」换成「有没有一个能事前命名的变异会让它变红」。**
+1. **the mechanism** — what changes what
+2. **the observable** — which number you read off at the end
+3. **the control** — what that number is compared against
+4. **which mutation would turn it red** ← **the watershed**
 
-三个实测例子：
+The fourth is the easiest to skip and the most fatal. **A question is computable not
+because you can produce a number, but because you can say in advance what would have it
+judged false.**
 
-| 原问题 | 改造成 |
+**The accompanying counterexample** (walked into twice): the mutation must **actually
+detect something**. "Multiply the list by 2" does not change its i-th element; "replace the
+four decimals that get displayed" does not change the full-precision value in the JSON.
+**Declaring a pass on the strength of a mutation that detects nothing is self-deception.**
+
+### The shape of the criteria
+
+- **A conjunction, not a weighted score.** Any one false makes the whole false.
+- **The criterion must not be the very difference this change was made to produce**
+  (a constructed criterion is circular).
+- **"behaves the same" is usually not enough.** Measured: one wrong parameter left the
+  trajectory identical and nothing raised an alarm. Compare **item by item**.
+
+---
+
+## 4. When it is not decidable: reshape it, do not discard it
+
+### There is exactly one reshaping pattern
+
+> **Replace "can it" with "is there a mutation, nameable in advance, that would turn it
+> red".**
+
+Three measured examples:
+
+| Original question | Reshaped into |
 |---|---|
-| 这个声明**能不能**自动推导 | 推导结果与手写结果**逐项相同**（不是「行为相同」） |
-| 这个唯象模型**能不能**表示这个自由度 | 把参数钉到**一个**点，看它在**其余**点动不动 |
-| 这个框架**需不需要**某个特性 | 该特性能否用**封闭算符集**的纯数据表达 |
+| **can** this declaration be derived automatically | the derived declaration is **identical item by item** to the hand-written one (not "behaves the same") |
+| **can** this phenomenological model represent this degree of freedom | pin the parameter at **one** point and see whether it moves at **the others** |
+| **does** this framework need some feature | can the feature be expressed as pure data over a **closed operator set** |
 
-### 没有现成的模拟器怎么办：五个选项，按代价排序
+### No simulator for it: five options, ordered by cost
 
-| | 做法 | 动作 | 代价（实测量级）|
+| | What to do | Move | Cost (measured order of magnitude) |
 |---|---|---|---|
-| 1 | **换问法**，让现有的够得着 | B / H | 最便宜，最常被跳过 |
-| 2 | **接一个第三方模拟器** | G 换基质 | 数十行声明 |
-| 3 | **扩展现有的** | H⁺ | 视缺口 |
-| 4 | **从头写** | C 操作化 | 数百到数千行 |
-| 5 | **判定它不该用模拟回答** | —— | 零 |
+| 1 | **reframe the question** so what you have can reach it | B / H | cheapest, and most often skipped |
+| 2 | **admit a third-party simulator** | G, change the substrate | tens of lines of declaration |
+| 3 | **extend what you have** | H⁺ | depends on the gap |
+| 4 | **write one from scratch** | C, operationalise | hundreds to thousands of lines |
+| 5 | **judge that it should not be answered by simulation** | — | zero |
 
-**选项 5 不是失败。** 「重要但不可判定」的正确产出是
-**「要让它可判定，前提必须变成什么样」**，不是一个结论。
+**Option 5 is not a failure.** The correct output for "important but undecidable" is
+**"what the premises would have to become for it to be decidable"**, not a conclusion.
 
-### 对手方攻前提时，那是回路不是墙
+### When the counterparty attacks a premise, that is a loop, not a wall
 
 ```
-问题 → 对手方
-        ├─ 攻结论 → 裁定 → 结论
-        └─ 攻前提 → 那条前提的修改就是下一轮 → 回到顶
+question -> counterparty
+             |- attacks the conclusion -> settle it -> a conclusion
+             `- attacks a premise      -> revising that premise is the next round -> back to the top
 ```
 
-**但回路需要正当性条件，否则退化成拟合：**
+**But the loop needs a legitimacy condition, or it degenerates into curve-fitting:**
 
-> **新一轮的判据，不能是这一轮修改为之而生的那个差异。**
+> **The next round's criterion must not be the very difference this round's revision was
+> made to produce.**
 
-给模型加一条反应,它当然就能产出那个东西了——拿「它现在能了」当判据是循环。
-正确形状：**在一个点上定住新参数，预测其余点。**
+Add a reaction to a model and of course it can now produce that thing — taking "it can now"
+as the criterion is circular. The correct shape: **fix the new parameter at one point and
+predict the others.**
 
-**停止条件**：当某一轮的前提修改**给不出一个非构造性的判别预测**时，停。
-给不出，说明这轮改的东西只能贴合已知差异，不能预测别的——那是加参数，不是改进模型。
+**Stopping condition**: stop when a round's revision **yields no non-constructive
+discriminating prediction**. If it cannot, that round only fits the known difference and
+predicts nothing else — that is adding a parameter, not improving a model.
 
-**⚠️ 「对手方攻了前提 → 我改模型 → 现在对了」正是 HARKing 的模型版。**
-唯一挡得住它的是**每一轮迭代都先冻结判据，再改模型**。
+**⚠️ "the counterparty attacked a premise → I changed the model → now it is right" is
+HARKing at the level of the model.** The only thing that stops it is **freezing the
+criteria before changing the model, every single round.**
 
 ---
 
-## 五、产出：一份带锚的 goal 草稿
+## 5. Output: an anchored goal draft
 
-下游会用机器门检查这些锚。**说不出的，下游会拒绝。**
+Downstream machine gates check these anchors. **Whatever you cannot state, downstream
+rejects.**
 
 ```markdown
-# Goal — <一句话，是个问句>
+# Goal — <one sentence, phrased as a question>
 
-<!--@evidence: literature_searched=yes, sources=N, verdict=已知|部分已知|未知-->
-<!--@counterparty: 指名哪一条前提或结论，以及那条错了会导致什么不同-->
+<!--@evidence: literature_searched=yes, sources=N, verdict=known|partly known|unknown-->
+<!--@counterparty: which premise or conclusion, and what would differ if it were wrong-->
 <!--@attack_layer: conclusion|premise|definition-->
 <!--@decides: design|run-->
-<!--@who_changes_behavior: 具体的人 + 具体的决定-->
+<!--@who_changes_behavior: a specific person + a specific decision-->
 <!--@size_estimate: impl_lines=N, criteria=1, failure_modes=1-->
 
-## 1. 要买什么          （含起草期间的便宜证伪结果，先记在这里）
-## 2. 达成判据          <!--@criterion: C1-->  合取；不依赖 H1
-## 3. 明确不做
-## 4. 事前声明的已知风险  （包括「即使成立也不证明的那件事」）
-## 5. 收尾判定          （事后填：achieved / not_achieved / regressed / not_applicable）
+## 1. What this buys      (including cheap falsification results found while drafting)
+## 2. Success criteria    <!--@criterion: C1-->  a conjunction; independent of H1
+## 3. Explicitly not doing
+## 4. Risks declared in advance  (including what this does not prove even if it holds)
+## 5. Closeout judgement  (filled in afterwards: achieved / not_achieved / regressed / not_applicable)
 ```
 
-**`failure_modes` 必须是 1。** 超过一个，判定就会含混。
-拆不到 1，说明问题还没拆开——成分列全、失败方式唯一，两者都做到才算拆对。
+**`failure_modes` must be 1.** More than one and the judgement turns muddy. If it will not
+reduce to 1, the question has not been split yet — a complete list of components *and* a
+single mode of failure, both, is what splitting correctly means.
 
-**规模估计：成分列全后直接报。** 实测：列全后直接报误差 ±5%；
-给整体加一个系数反而更差。只对「明显是没做过的类型」的那一项单独加成。
+**Size estimate: list the components in full, then report the sum directly.** Measured:
+reporting the sum directly lands within ±5%; applying an overall correction factor makes it
+worse. Add a margin only to the one component that is obviously of a kind never done before.
 
 ---
 
-## 六、自查：这份草稿会不会通过所有门却不值得问
+## 6. Self-check: would this draft pass every gate and still not be worth asking
 
-按顺序，任一条为「否」即退回：
+In order; any "no" sends it back:
 
-- [ ] 起草时**真的不知道**答案（答案已知的问题，门全过、毫无价值）
-- [ ] **失败也有产出**——说得清边界在哪
-- [ ] 对手方**指名到具体一条**，不是一句话
-- [ ] 对手方押的是**反对**你，不是支持你
-- [ ] 四件套齐全，**第 4 条那个变异真的能检测到东西**
-- [ ] 达成判据**不是** H1 的逐条重复
+- [ ] you genuinely **do not know** the answer while drafting (a question whose answer is
+      known passes every gate and is worth nothing)
+- [ ] **failure still produces something** — you can say where the boundary is
+- [ ] the counterparty is **named down to one specific claim**, not a sentence
+- [ ] the counterparty is betting **against** you, not with you
+- [ ] all four pieces are present, and **the mutation in piece 4 really does detect something**
+- [ ] the success criteria are **not** a restatement of H1
 - [ ] `failure_modes = 1`
-- [ ] 说得出**谁会改变做法**、改什么
+- [ ] you can say **who changes what they do**, and to what
 
 ---
 
-## 七、Fixtures：已知答案的分档题
+## 7. Fixtures: graded questions with known answers
 
-新规则先做成会红的 fixture，再改规则——**对方法论本身做 TDD**。
+A new rule is first made into a fixture that goes red, then the rule is changed — **TDD on
+the methodology itself.**
 
-| 题 | 正确档 | 为什么容易判错 |
+| Question | Correct tier | Why it is easy to grade wrong |
 |---|---|---|
-| 「只装声明的依赖，冻结产物还重放得出来吗」 | **方法学** | 有对手方、有文献、有负控，**最像科学**，但答案由设计决定 |
-| 「唯象模型 vs 机制模型，网络层买到了什么」 | **方法学** | 有真实生物现象、有教科书曲线，**最容易被误判成世界** |
-| 「把已知模型在新平台上重表达，逐位一致」 | **工具** | 判据是「逐位一致」，复现的是已知结果 |
-| 「冻结这个位点会导致灭绝还是均匀削弱」 | **世界** | 人工生命里没有外部测量——**用「设计 vs 运行」才判得对** |
+| "install only the declared dependencies — can the frozen artifact still be replayed?" | **methodology** | it has a counterparty, literature and negative controls, so it **looks the most like science** — but the answer is decided by design |
+| "phenomenological vs mechanistic model: what did the network layer buy?" | **methodology** | a real biological phenomenon and textbook curves make it **the easiest to misgrade as a world question** |
+| "re-express a known model on a new platform, bit-for-bit" | **tool** | the criterion is "bit-for-bit" and it reproduces a known result |
+| "does freezing this locus cause extinction or a uniform weakening?" | **world** | in artificial life there is no external measurement — **only "design vs running" grades it correctly** |
 
 ---
 
-## 八、证据分级（哪些规则被验证过）
+## 8. Evidence grading: which rules have been checked
 
-| 规则 | 状态 |
+| Rule | Status |
 |---|---|
-| 八类动作完备、E/F 内生二分、开新交叉 3.2% | **有语料统计**（164 + 94 篇） |
-| 「变异必须真能检测到东西」 | **实测栽过两次** |
-| 「行为相同不够，要逐项相同」 | **实测栽过一次** |
-| 规模估计「列全后直接报」 | **三次校准，±5%** |
-| 「设计 vs 运行」分档 | **回溯验证 20 例**，未做前瞻验证 |
-| 「谁会改变做法」当重要性门 | **未验证**——从没拦住过一个真实候选 |
-| 五个选项的代价排序 | 选项 2/4 有实测量级；1/3/5 未实测 |
+| eight moves complete, E/F endogenous-only, 3.2% for new intersections | **corpus statistics** (164 + 94 papers) |
+| "the mutation must really detect something" | **walked into twice** |
+| "behaving the same is not enough; compare item by item" | **walked into once** |
+| size estimate: "list in full, report directly" | **calibrated three times, ±5%** |
+| the "design vs running" grading | **20 cases validated retrospectively**, never prospectively |
+| "who changes what they do" as an importance gate | **unvalidated** — it has never yet stopped a real candidate |

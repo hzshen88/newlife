@@ -1,121 +1,146 @@
 ---
 name: preregister-verdict
-description: 帮用户写一份不会自伤的预注册判据，然后冻结它。当用户已经有了明确的问题、要写 prereg.md、要定 H1/H0 与判定单元、或要跑 newlife freeze 时使用。核心是「冻结前先跑试探，覆盖判据里出现的每一个量」。不触发：问题还没成形（那是 decidable-question）、或只是改代码。
+description: Help the user write a preregistration whose criteria will not sabotage themselves, then freeze it. Use when the question is already clear and they are writing prereg.md, fixing H1/H0 and the judgement units, or about to run `newlife freeze`. The core rule is "pilot before freezing, covering every quantity that appears in a criterion". Not for a question that has not taken shape yet (that is decidable-question), and not for ordinary code changes.
 ---
 
-# preregister-verdict —— 写一份不会自伤的判据
+# preregister-verdict — writing criteria that will not sabotage themselves
 
-判据一旦冻结就不能改。**改不了的东西写错了，代价是整轮作废。**
+Once frozen, criteria cannot be changed. **Something unchangeable that is wrong costs you
+the whole round.**
 
-本文的每一条都来自真实的失败，不是一般性建议。**三次判定，两次因为判据自身的缺陷
-而作废，而科学部分当时是对的。**
-
----
-
-## 铁律一：试探必须覆盖判据里出现的**每一个**量
-
-**不是覆盖大部分。**
-
-- **失败一**：冻结了积分窗口 `t=5.0`，没跑过任何试探。实际两个模型稳态差 1.8%，
-  而判据要 <1e-3 → 作废。**一次两秒的运行就会发现。**
-- **失败二**：跑了试探，看了 t½ 和稳态，**唯独只看了一条轨迹的「不同取值数」
-  （401/401），就写了一条关于「每条轨迹」的判据**。另一个模型收敛后增量在
-  float64 里归零，得 177/401 → 作废。
-
-**做法**：把判据表里每一条的**通过条件**逐字读一遍，列出其中出现的每一个可测量的量。
-对每一个问：**这个数我实际跑出来看过吗？** 没看过的，要么现在去测，要么删掉那条判据。
-
-> **「我推导过所以我知道」不算看过。** 数值积分、浮点、离散步长都会插进来。
+Every rule below comes from an actual failure, not from general advice.
+**Three judgements, two of them thrown out because of a defect in the criteria
+themselves — while the science underneath was right both times.**
 
 ---
 
-## 铁律二：卫生检查属于**作废条件**，不属于科学合取式
+## Rule one: the pilot must cover **every** quantity that appears in a criterion
 
-判据说「假设成不成立」，作废条件说「这次运行算不算数」。**混在一起，一条机械检查
-就能否决一次科学上成功的运行。**
+**Not most of them.**
 
-- **失败三**：一条「步长有没有生效」的卫生检查被同时放进合取式和作废条件。
-  它在完全合法的数据上失败（模型收敛了），**于是否决了一轮 S3/S4/S7 全部成立的运行**。
+- **Failure one**: an integration window of `t=5.0` was frozen with no pilot run at all.
+  The two models' steady states differed by 1.8% while the criterion demanded <1e-3 →
+  invalid. **A two-second run would have found it.**
+- **Failure two**: a pilot *was* run — t½ and steady states were checked — but
+  **only one trajectory's "distinct value count" was looked at (401/401) before writing a
+  criterion about "every trajectory"**. The other model's increments underflowed to zero
+  after convergence, giving 177/401 → invalid.
 
-**判别法**：问「这条判据会不会在**完全正常**的数据上失败？」
-- 会 → 它是卫生检查，放进 IC，或者干脆删掉
-- 不会 → 它是科学判据，可以进合取式
+**How**: read the pass-condition of every row in the criteria table word for word and list
+every measurable quantity in it. For each one ask: **have I actually run this and looked at
+the number?** If not, either measure it now or delete that criterion.
 
-**推论**：**库层已经硬失败的东西，不要再写一条问题级判据去查。**
-为一个刚修好的 bug 再加一道自己的检查，等于给自己发否决权。
-
----
-
-## 铁律三：确证性的轮次必须留一格**真盲的**
-
-复现已知结果时，判据往往是「确证我已经看过的数」——那样整轮不带信息量。
-
-**做法**：判据表加一列「侦察过？」，逐条标注 `已见` / `盲` / `机械`。
-**至少留一维是从没跑过的。** 常见的盲维度：换一个参数、换一个尺度、
-往外推一步而不是内插。
-
-- **正例**：八格里六格的数起草前已看过，唯独没跑过衰减率 `a` 这一维。
-  两格盲的判据（差随 a 递减、比值与 a 无关）**都是从模型结构推出来的预测**，
-  跑完成立——**那一轮的全部信息量在这两格上**。
-
-盲的那格要**从机制推导出来**，不要拍脑袋。推导过程写进预注册 §1，
-这样它成立时才算数，不成立时也知道是哪一步错了。
+> **"I derived it, so I know" does not count as having looked.** Numerical integration,
+> floating point and discrete timesteps all get a vote.
 
 ---
 
-## 铁律四：每条判据必须**自证能红**
+## Rule two: hygiene checks belong in the **invalidation conditions**, not the conjunction
 
-**恒真的判据永远不会红，而人只查红的东西。**
+Criteria say whether the hypothesis holds. Invalidation conditions say whether the run
+counts at all. **Merge them and one mechanical check can veto a scientifically successful
+run.**
 
-- **失败四**：一条负控写成 `[f(x) for _ in SWEEP]`——循环变量丢了，五次跑同一份
-  配置，判据在任何配置下都为真，**在合取里待了整整一个里程碑没被发现**。
-- **失败五**：自证代码写成 `a > b is False`。那是 Python 链式比较
-  `(a > b) and (b is False)`，**恒为假**——「判据能红」这一格自己坏了。
+- **Failure three**: a "did the timestep take effect" hygiene check was placed in both the
+  conjunction and the invalidation set. It failed on perfectly legitimate data (the model
+  had converged), **vetoing a round in which every scientific unit held.**
 
-**做法**：把每条判据写成**纯谓词**（只吃数、不跑仿真），然后在 runner 里用合成反例
-运行时自证它返回假。**每个演示写成独立语句**，不要链式比较。
+**The test**: ask "could this criterion fail on **completely normal** data?"
+- yes → it is a hygiene check; move it to IC, or drop it
+- no → it is a scientific criterion and may enter the conjunction
 
-跑 `newlife check` —— 它的假扫描扫描器抓得住第一种。
-
----
-
-## 铁律五：预注册的单元名必须与 runner 输出的键**逐个对上**
-
-    预注册写 verdict = S0 ∧ S1 ∧ S2 ∧ S3，runner 只算三个 —— 没人会发现
-
-合取比它看起来的弱一格。反向同样要查：**产物里有预注册没声明的单元，
-那是事后加进来的判据。**
-
-`newlife check` 的单元对齐门查这个。**它第一次真实使用就抓到一处。**
+**Corollary**: **do not write a question-level criterion for something the library already
+hard-fails on.** Adding your own check for a bug you just fixed is handing yourself a veto.
 
 ---
 
-## 冻结前的清单
+## Rule three: a confirmatory round must keep one unit genuinely **blind**
 
-- [ ] **跑一次试探**，覆盖判据里出现的每一个量（铁律一）
-- [ ] 判据表加「侦察过？」列，逐条标注；**确认至少一格是盲的**（铁律三）
-- [ ] 每条判据问一遍「会不会在正常数据上失败」；会的挪进 IC（铁律二）
-- [ ] 每条判据问一遍「什么情况下它会红」；答不上来的是恒真的（铁律四）
-- [ ] 判据与作废条件**分开写**——否则结果不好时会被 IC 冒领
-- [ ] §5 写明**这次不证明什么**，收尾时不许用「证了 A」冒充「B 也成立」
-- [ ] `git log -- <prereg 路径>` 确认为空——**冻结必须是它的第一次提交**
+When reproducing a known result, the criteria tend to confirm numbers you have already
+seen — and then the round carries no information.
 
-然后：
+**How**: add a "Piloted?" column to the criteria table and mark every row
+`seen` / `blind` / `mechanical`. **Keep at least one dimension you have never run.**
+Common blind dimensions: change a parameter, change a scale, extrapolate one step out
+rather than interpolate.
+
+- **A positive example**: six of eight units had been seen before drafting; only the decay
+  rate had never been swept. The two blind criteria (the gap shrinks with the rate; the
+  ratio is independent of it) were **both derived from the structure of the model**, and
+  both held. **All of that round's information was in those two units.**
+
+Derive the blind unit **from the mechanism**; do not guess. Put the derivation in §1 of the
+registration, so that it means something when it holds and you know which step was wrong
+when it does not.
+
+---
+
+## Rule four: every criterion must **prove it can go red**
+
+**A criterion that is true by construction never goes red, and people only investigate what
+is red.**
+
+- **Failure four**: a negative control written as `[f(x) for _ in SWEEP]` — the loop
+  variable was discarded, so five runs of the same configuration were compared with each
+  other. True under any configuration, **and it sat inside the conjunction for an entire
+  milestone.**
+- **Failure five**: the self-proof was written `a > b is False`. In Python that is the
+  chained comparison `(a > b) and (b is False)` — **always false**. The "this criterion can
+  fail" slot was itself broken.
+
+**How**: write each criterion as a **pure predicate** (taking numbers, running no
+simulation), then have the runner feed it synthetic counterexamples at runtime and confirm
+it returns false. **Write each demonstration as an independent statement** — no chained
+comparisons.
+
+Run `newlife check` — its vacuous-criterion scan catches the first kind.
+
+---
+
+## Rule five: the unit names must match the runner's keys, one for one
+
+    the registration says  verdict = S0 ∧ S1 ∧ S2 ∧ S3
+    the runner computed only three — **and nobody would notice**
+
+The conjunction is one unit weaker than it looks. Check the reverse too: **a unit in the
+artifact that the registration never declared** is a criterion added after the fact.
+
+The unit-alignment gate in `newlife check` checks this. **It caught a real misalignment the
+first time it ran.**
+
+---
+
+## Before freezing
+
+- [ ] **run a pilot** covering every quantity that appears in a criterion (rule one)
+- [ ] add the "Piloted?" column and mark every row; **confirm at least one is blind** (rule three)
+- [ ] ask of each criterion "could it fail on normal data?"; move those that could into IC (rule two)
+- [ ] ask of each criterion "what would make it go red?"; no answer means it is vacuous (rule four)
+- [ ] write the criteria and the invalidation conditions **separately** — otherwise a
+      disappointing result gets quietly reclassified as "the run didn't count"
+- [ ] §5 states **what this round does not establish**; at closeout "we showed A" must never
+      stand in for "B also holds"
+- [ ] `git log -- <prereg path>` is empty — **the freeze must be its first commit**
+
+Then:
 
 ```bash
-newlife freeze questions/<slug>      # 这个提交就是时间证明
+newlife freeze questions/<slug>      # this commit IS the timestamp
 ```
 
-**冻结之后**：判据不能改。发现判据本身有缺陷，正确动作是**另起一份新的预注册**
-（`newlife init` 一个新 slug），**把旧的那份 INVALID 原样留着**——
-它是结论怎么来的记录，不是失败品。**永远不要 re-freeze。**
+**After the freeze**: the criteria cannot change. If the criteria themselves turn out to be
+defective, the correct move is to **write a new registration** (`newlife init` with a new
+slug) and **leave the old one INVALID exactly as it stands** — it is the record of how the
+conclusion was reached, not a failed attempt to be tidied away. **Never re-freeze.**
 
 ---
 
-## 预注册的骨架
+## The shape of a registration
 
-`newlife init` 生成的 `prereg.md` 已经是这个形状：§1 假设 · §2 判定单元（机械合取）·
-§3 冻结的实现约束 · §4 结果作废条件 · §5 结论边界。
+The `prereg.md` that `newlife init` generates already has it: §1 hypothesis · §2 judgement
+units (mechanical conjunction) · §3 frozen implementation constraints · §4 invalidation
+conditions · §5 boundary of the conclusion.
 
-**§0 加一段「起草期间看过什么」**——如实列出所有已经跑过的数。
-这不是坦白，是让读者能区分哪几格是确证、哪几格是盲的。
+**Add a §0 saying what you had already seen while drafting** — every number already run.
+This is not a confession; it is what lets a reader tell which units are confirmatory and
+which are blind.
