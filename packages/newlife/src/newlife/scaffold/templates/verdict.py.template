@@ -1,10 +1,12 @@
-"""{title} —— 判定 runner。
+"""{title} — verdict runner.
 
-判据冻结在 `prereg.md` 里（见那份文件的 §2）。**verdict = 各单元的机械合取，不手填。**
+The criteria are frozen in `prereg.md` (see its §2). **The verdict is a mechanical
+conjunction of the units and is never written by hand.**
 
-**本 runner 不运行任何其他问题的 runner**（预注册 F4）。安全绳只有两条：
-自我复现、环境未变。问题之间是兄弟不是父子——重跑别人的旧结论，
-既不增加本结论的可信度，也会让 50 个问题彼此纠缠。
+**This runner does not run any other question's runner** (registration F4). There are
+exactly two safety lines: self-reproduction and an unchanged environment. Questions are
+siblings, not a chain — rerunning someone else's old conclusion adds nothing to the
+credibility of this one, and with fifty questions it entangles all of them.
 """
 
 from __future__ import annotations
@@ -20,36 +22,44 @@ from newlife import provenance
 from newlife.core.verdict_seam import RenderSpec, decide, emit, exit_code
 
 HERE = Path(__file__).resolve().parent
-INNER = "_NEWLIFE_INNER_RUN"        # 内层复现跑的标记，防止无限递归
+INNER = "_NEWLIFE_INNER_RUN"        # marks the inner reproduction run; stops infinite recursion
 
 # ─────────────────────────────────────────────────────────────────────
-# 你的世界。**下面到「判据」为止，全部替换成你自己的东西。**
+# YOUR WORLD. **Replace everything from here down to "criteria" with your own.**
 # ─────────────────────────────────────────────────────────────────────
 SWEEP = (1.0, 2.0, 4.0, 8.0)
 
 
 def model(x: float) -> float:
-    """占位：一个确定性的平凡模型。换成你的积木组装。"""
+    """Placeholder: a trivial deterministic model. Replace with your own assembly.
+
+    `newlife blocks` lists every Process/Step installed in this environment.
+    """
     return x * x
 
 
 # ─────────────────────────────────────────────────────────────────────
-# 判据。**每条写成纯谓词** —— 这样才能拿合成输入证明它会红（预注册 F1）。
+# CRITERIA. **Write each one as a pure predicate** — that is what lets the runner
+# prove, with synthetic inputs, that it can go red (registration F1).
 # ─────────────────────────────────────────────────────────────────────
 def strictly_increasing(values: list[float]) -> bool:
     return all(b > a for a, b in zip(values, values[1:]))
 
 
 def criteria_can_fail() -> dict[str, bool]:
-    """**F1：每条判据都必须能红。** 运行时自证，不靠散文。
+    """**F1: every criterion must be able to go red.** Proved at runtime, not asserted
+    in prose.
 
-    第十九个里程碑的教训：一条负控写成 `[f(x) for _ in SWEEP]`——循环变量丢了，
-    五次跑同一份配置，判据恒真、判定力为零，在合取里待了整整一个里程碑。
-    **恒真的判据永远不会红，而人只查红的东西。**
+    Where this comes from: a negative control once written as `[f(x) for _ in SWEEP]` —
+    the loop variable was discarded, so five identical runs were compared against each
+    other. The criterion was true by construction, had zero discriminating power, and sat
+    inside the conjunction for an entire milestone.
+    **A criterion that is true by construction never goes red, and people only
+    investigate what is red.**
     """
     return {
-        "常数序列上不成立": strictly_increasing([1.0, 1.0, 1.0]) is False,
-        "下降序列上不成立": strictly_increasing([3.0, 2.0, 1.0]) is False,
+        "false on a constant sequence": strictly_increasing([1.0, 1.0, 1.0]) is False,
+        "false on a decreasing sequence": strictly_increasing([3.0, 2.0, 1.0]) is False,
     }
 
 
@@ -67,15 +77,17 @@ def main() -> int:
     can_fail = criteria_can_fail()
     s1 = prov["env_lock_sha256"] == provenance.file_digest(HERE / "env.lock")
     s2 = strictly_increasing(observed)
-    # **「判据能红」是合取里看得见的一格，不是嵌在别人里面的细节。**
-    # 第一版把它折进 S2 的一个子字段，于是预注册写着 S0∧S1∧S2∧S3、代码只算三个——
-    # `newlife check` 的单元对齐门第一次真实使用就抓到了这一处。
+    # **"the criteria can fail" is its own visible slot in the conjunction, not a
+    # detail nested inside another unit.** The first version folded it into a sub-field
+    # of S2, so the registration read S0∧S1∧S2∧S3 while the code computed three —
+    # the unit-alignment gate in `newlife check` caught exactly this the first time it
+    # ran against a real question folder.
     units = {"S1_env_unchanged": {"passed": s1},
              "S2_increases_across_sweep": {"passed": s2},
              "S3_criteria_can_fail": {"passed": all(can_fail.values()),
                                       "demonstrations": can_fail}}
 
-    invalid = not s1                       # IC-2：环境变了就不是判定结果
+    invalid = not s1                       # IC-2: a changed environment is not a judgement
     passed = all(u["passed"] for u in units.values())
     verdict = decide(h1=(not invalid) and passed,
                      h0=(not invalid) and not passed, invalid=invalid)
@@ -83,24 +95,27 @@ def main() -> int:
     summary = {"schema": "{slug}.v1", "provenance": prov,
                "sweep": list(SWEEP), "observed": observed, "units": units}
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    # **键名就是「还没算 S0」**：S0 不可能写进被它复现的这份文件（写进去两次运行
-    # 必然不同），所以最终 verdict 只能落在 reproduction.json 里。
-    # 这里若也叫 `verdict`，产物就会在 S0 为假时显示 H1——**判据被单层结果冒领**。
+    # **The key name says "S0 not counted yet".** S0 cannot be written into the file it
+    # reproduces — doing so would make the two runs differ by construction — so the final
+    # verdict can only live in reproduction.json. Calling this one `verdict` too would
+    # make the artifact show H1 while S0 was false: **one layer passing itself off as the
+    # whole conjunction.**
     summary, _ = emit(verdict, summary,
                       RenderSpec(verdict_key="verdict_before_reproduction"), args.out)
 
     if os.environ.get(INNER):
         return exit_code(verdict)
 
-    # ── S0：起一个独立进程再跑一遍，逐字节比对 ──────────────────────
-    # **记录写在另一个文件里**：写进 summary.json 自己，两次运行必然不同，
-    # 于是「逐字节相同」永远不成立——自我复现的记录不能放进被复现的那份产物。
+    # ── S0: run this file again in a separate process, compare bytes ────────────
+    # **The record goes in a different file.** Written into summary.json itself, the two
+    # runs would necessarily differ and "byte-identical" could never hold — the record of
+    # a reproduction cannot live inside the artifact being reproduced.
     probe = HERE / "results/.reproduction-probe.json"
     subprocess.run([sys.executable, __file__, "--out", str(probe)],
                    env={**os.environ, INNER: "1"}, capture_output=True, check=False)
     s0 = probe.exists() and probe.read_bytes() == args.out.read_bytes()
     probe.unlink(missing_ok=True)
-    final = verdict if s0 else "INVALID"     # S0 为假 = 这次运行没有判定力
+    final = verdict if s0 else "INVALID"     # S0 false = this run had no discriminating power
     (HERE / "results/reproduction.json").write_text(json.dumps(
         {"schema": "self-reproduction.v1", "S0_byte_identical_on_rerun": s0,
          "verdict": final, "verdict_before_reproduction": verdict,
@@ -110,7 +125,8 @@ def main() -> int:
     for name, unit in units.items():
         print(f"  {name:34s} {unit['passed']}")
     print(f"  {'S0_byte_identical_on_rerun':34s} {s0}")
-    print(f"\nverdict: {final}" + ("" if s0 else "   ← 两次运行结果不同，本次没有判定力"))
+    print(f"\nverdict: {final}"
+          + ("" if s0 else "   <- the two runs disagreed; this run has no power"))
     return exit_code(final)
 
 

@@ -2,44 +2,58 @@
 
 **Frozen at commit:** _pending_
 
-## 1. 假设
+## 1. Hypothesis
 
-- **H1**：（一句话。**必须是能被这次运行证伪的那一句**，不是研究方向。）
-- **H0**：任一条不成立。**H0 必须指出是哪一条。**
+- **H1**: (one sentence. **It must be the sentence this run could falsify** — not a
+  research direction.)
+- **H0**: any one of them fails. **H0 must name which one.**
 
-## 2. 判定单元（机械合取，runner 计算，**不手填**）
+## 2. Judgement units (mechanical conjunction, computed by the runner — **never filled in by hand**)
 
-| 单元 | 内容 | 通过条件 |
-|---|---|---|
-| **S0** | 自我复现 | 同一 runner 独立跑两遍，产物逐字节相同 |
-| **S1** | 环境未变 | `env.lock` 的 sha256 等于产物中记录的值 |
-| **S2** | （你的正控） | |
-| **S3** | 每条判据都自证能红 | 同一谓词在合成的反例输入上返回假，runner 运行时算出 |
+| Unit | What | Passes when | Piloted? |
+|---|---|---|---|
+| **S0** | Self-reproduction | two independent runs produce byte-identical artifacts | mechanical |
+| **S1** | Environment unchanged | sha256 of `env.lock` matches the one in the artifact | mechanical |
+| **S2** | (your positive control) | | |
+| **S3** | every criterion proves it can fail | each predicate returns false on a synthetic counterexample, computed at runtime | mechanical |
 
-**verdict = S0 ∧ S1 ∧ S2 ∧ S3。** 任一为假即 H0；**S0 为假即 INVALID**
-（两次运行结果不同 = 这次没有判定力，不是「假设不成立」）。
+**verdict = S0 ∧ S1 ∧ S2 ∧ S3.** Any one false → H0; **S0 false → INVALID**
+(two runs disagreeing means this run had no discriminating power — that is not
+"the hypothesis failed").
 
-**最终 verdict 落在 `results/reproduction.json`**，不在 `summary.json` 里——
-S0 不可能写进被它复现的那份文件。`summary.json` 里的键叫
-`verdict_before_reproduction`，**刻意不叫 `verdict`**，免得它冒领。
+**The final verdict lives in `results/reproduction.json`**, not in `summary.json` —
+S0 cannot be written into the file it is reproducing. The key in `summary.json` is
+called `verdict_before_reproduction`, **deliberately not `verdict`**, so it cannot
+pass itself off as the real one.
 
-## 3. 冻结的实现约束
+**Fill in the "Piloted?" column for every unit** — `seen` / `blind` / `mechanical`.
+A confirmatory round in which nothing is blind carries no information.
 
-- **F1**：每一条判据都必须**能红**。runner 里用合成输入运行时自证，
-  不靠散文断言。**恒真的判据永远不会红，而人只查红的东西。**
-- **F2**：`passed` 由合取算出，不手填。
-- **F3**：产物必须记录 newlife 的源码摘要、`env.lock` 哈希、平台与 Python 版本。
-- **F4**：**本问题的判定不得运行任何其他问题的 runner。** 问题之间是兄弟，不是父子。
+## 3. Frozen implementation constraints
 
-## 4. 结果作废条件（**与判据分开写**）
+- **F1**: **Every criterion must be able to go red.** Prove it in the runner at runtime
+  with synthetic inputs, not in prose. **A criterion that is true by construction never
+  goes red, and people only investigate what is red.**
+- **F2**: `passed` is computed from the conjunction, never assigned.
+- **F3**: the artifact records the newlife source digest, the `env.lock` hash, the
+  platform and the Python version.
+- **F4**: **this question's verdict must not run any other question's runner.**
+  Questions are siblings, not a chain.
 
-判据说「假设成不成立」，作废条件说「这次运行算不算数」。
-混在一起，结果不好时就会被作废条件冒领。
+## 4. Invalidation conditions (**written separately from the criteria**)
 
-- **IC-1**：任一积木跑不出结果 → 环境问题，作废。
-- **IC-2**：S1 为假（环境变了）→ 不是判定结果，重建环境再跑。
+Criteria say whether the hypothesis holds. Invalidation conditions say whether this run
+counts at all. Merge them and a disappointing result gets quietly reclassified as
+"the run didn't count".
 
-## 5. 事前声明：结论的边界
+- **IC-1**: a building block fails to produce a result → environment problem, invalid.
+- **IC-2**: S1 false (the environment changed) → not a judgement; rebuild and rerun.
 
-（这次**不**证明什么。收尾时必须把「证明了 A」和「没证明 B」分开写，
-**不许用前者冒充后者**。）
+**Hygiene checks belong here, not in the conjunction.** A mechanical check that can fail
+on perfectly legitimate data must never hold veto power over a scientifically successful
+run.
+
+## 5. Declared in advance: the boundary of the conclusion
+
+(What this run does **not** establish. At closeout, "we showed A" and "we did not show B"
+must be written as separate sentences — **the first must never stand in for the second**.)

@@ -70,5 +70,5 @@ def test_blocks_reports_a_broken_package_instead_of_hiding_it() -> None:
 
     found = list(discovery.blocks(("process_bigraph", "no_such_package_xyz")))
     broken = [m for top, m, names in found if not names]
-    assert any("import 失败" in m for m in broken)
+    assert any("import failed" in m for m in broken)
     assert any(names for _, _, names in found), "一个积木都没扫到"

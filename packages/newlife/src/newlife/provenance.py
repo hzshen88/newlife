@@ -1,18 +1,20 @@
-"""判定产物的出身：**这一次是在什么东西上跑出来的。**
+"""Where a verdict artifact came from: **what exactly was this run made on.**
 
-## 为什么不能只记版本号
+## Why the version string is not enough
 
-`newlife` 的版本写死在 `pyproject.toml` 里，每次构建都是 `0.1.0`——
-**拿它指认不出用的是哪一版库**。用户仓库形态的第一次实测就撞在这里：
-产物想记「我用的哪一版 newlife」，在技术上办不到。
+`newlife`'s version is pinned in `pyproject.toml` and comes out as `0.1.0` on every
+build — **it identifies nothing**. The first real user run hit this immediately: the
+artifact wanted to record which build of newlife produced it, and technically could not.
 
-`uv pip freeze` 也不行，它记的是 `newlife @ file:///…/newlife-0.1.0-py3-none-any.whl`，
-**一个本地路径**——换台机器既复现不了也校验不了。
+`uv pip freeze` does not help either: it records
+`newlife @ file:///.../newlife-0.1.0-py3-none-any.whl` — **a local path**, neither
+reproducible nor checkable on another machine.
 
-所以这里记的是**装出来的那份源码的内容摘要**：包目录下全部 `.py`，按相对路径
-排序后逐个哈希。同一份 wheel 装在哪里都一样，改动一个字节就变。
+So what is recorded here is a **content digest of the installed source**: every `.py`
+under the package directory, hashed in sorted relative-path order. Identical wherever the
+same wheel is installed; different if one byte changes.
 
-**这不是给人看的字段，是给「下次还能不能对上」用的。**
+**This is not a field for humans to read. It is what answers "does it still match".**
 """
 
 from __future__ import annotations
@@ -26,7 +28,10 @@ from typing import Any
 
 
 def package_digest(package: Any) -> str:
-    """一个已安装包的源码内容摘要。**版本号骗得了人，这个骗不了。**"""
+    """Content digest of an installed package's source.
+
+    **A version string can lie about what is installed. This cannot.**
+    """
     root = Path(package.__file__).resolve().parent
     digest = hashlib.sha256()
     for path in sorted(root.rglob("*.py")):
@@ -39,15 +44,17 @@ def package_digest(package: Any) -> str:
 
 
 def file_digest(path: Path) -> str:
-    """一个文件的 sha256。用来钉 `env.lock`。"""
+    """sha256 of one file. Used to pin `env.lock`."""
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def snapshot(**extra: Any) -> dict[str, Any]:
-    """写进产物的那一格。
+    """The provenance block written into the artifact.
 
-    `extra` 里放这个问题特有的东西——冻结提交、求解器身份、随机种子。
-    **第十七个里程碑定过规矩：求解器身份进合取**，那条规矩在这里有位置了。
+    Put question-specific facts in `extra` — the freeze commit, the solver identity, the
+    random seed. **A rule established earlier: the solver identity belongs inside the
+    conjunction**, because byte-identical reproduction buys "the same solver made the same
+    choice", not "the same mathematical answer". This is where that rule has a home.
     """
     import newlife
 
@@ -55,8 +62,9 @@ def snapshot(**extra: Any) -> dict[str, Any]:
     try:
         version = importlib.metadata.version("newlife")
     except importlib.metadata.PackageNotFoundError:
-        # 从源码目录直接跑（没装成 distribution）。**不许填 "unknown" 蒙混过去**——
-        # 那读起来像一个版本号。写成一句人一眼看得出不是版本的话。
+        # Running straight from a source tree (not installed as a distribution).
+        # **Do not paper over this with "unknown"** — that reads like a version string.
+        # Write a sentence nobody could mistake for one.
         version = "UNAVAILABLE: newlife is not installed as a distribution"
     return {
         "newlife_version": version,
@@ -69,26 +77,28 @@ def snapshot(**extra: Any) -> dict[str, Any]:
 
 
 def frozen_at(prereg: Path) -> str:
-    """从预注册自己的图章行读冻结提交。
+    """Read the freeze commit from the registration's own stamp line.
 
-    **不让 runner 手写这个 SHA**——手写就会漂移，而它恰恰是「产物晚于冻结」的
-    全部证据：一个 SHA 在它的提交存在之前写不出来，**指名即晚于**。
+    **The runner must not hand-write this SHA.** Hand-written, it drifts — and it is the
+    entire evidence that the artifact post-dates the freeze: a SHA cannot be written down
+    before the commit it names exists. **Naming it is dating yourself after it.**
     """
     for line in Path(prereg).read_text().splitlines():
         if line.startswith("**Frozen at commit:**"):
             sha = line.split(":**", 1)[1].strip().strip("`_")
             if sha and sha != "pending":
                 return sha
-            raise SystemExit(f"{prereg} 还没冻结——先跑 `newlife freeze`。")
-    raise SystemExit(f"{prereg} 里没有 `**Frozen at commit:**` 行，不是一份预注册。")
+            raise SystemExit(f"{prereg} is not frozen yet — run `newlife freeze` first.")
+    raise SystemExit(f"{prereg} has no `**Frozen at commit:**` line; it is not a registration.")
 
 
 def env_lock_lines() -> list[str]:
-    """当前环境里装了什么。**只用 stdlib**，不依赖 pip 或 uv。
+    """What is installed in the current environment. **stdlib only** — no pip, no uv.
 
-    `uv venv` 建的环境**没有 pip**，`pip freeze` 直接不存在——用户记录环境最自然的
-    那条命令在这个工具链下是空的。而 `uv pip freeze` 把本地 wheel 记成
-    `name @ file:///…`，**一个换台机器就失效的路径**。这里两个坑都绕开。
+    A `uv venv` **has no pip**, so `pip freeze` — the most natural way a user would record
+    their environment — simply does not exist under this toolchain. And `uv pip freeze`
+    records a local wheel as `name @ file:///…`, **a path that means nothing on another
+    machine**. This sidesteps both.
     """
     seen = {}
     for dist in importlib.metadata.distributions():

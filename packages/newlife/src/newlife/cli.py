@@ -1,15 +1,16 @@
-"""`newlife` 命令行。**一个问题一个文件夹，从建到审。**
+"""The `newlife` command line. **One folder per question, from scaffold to audit.**
 
-    newlife init <slug>      建骨架并提交（prereg.md 除外，见 scaffold 模块文档）
-    newlife freeze <folder>  冻结判据——这个提交就是「判据早于结果」的时间证明
-    newlife run <folder>     跑判定
-    newlife check <folder>   三条门：假扫描 · 静默退化 · 预注册↔runner 单元对齐
-    newlife blocks           列出这个环境里可接入的第三方积木
-    newlife skills install   把提问与写判据的 skill 装进你的 AI 配置目录
-    newlife audit <folder>   判据没被改过，且产物晚于冻结
+    newlife init <slug>      scaffold and commit it (prereg.md deliberately excluded)
+    newlife freeze <folder>  freeze the criteria — this commit IS the timestamp
+    newlife run <folder>     compute the verdict
+    newlife check <folder>   three gates: vacuous criteria, silent degradation, unit alignment
+    newlife blocks           list the third-party building blocks in this environment
+    newlife skills install   put the question-shaping skills where your AI reads them
+    newlife audit <folder>   the criteria were never edited, and the outputs post-date the freeze
 
-**顺序即纪律**：先写判据、再冻结、再跑、最后审。跳过冻结那一步，
-结果好不好看都可以事后调判据去迎合——那是 HARKing，且事后无法分辨。
+**The order is the discipline**: write the criteria, freeze, run, audit. Skip the freeze
+and the criteria can be adjusted afterwards to fit whatever came out — that is HARKing,
+and after the fact nobody can tell it happened.
 """
 
 from __future__ import annotations
@@ -24,31 +25,36 @@ from newlife.gates import (
     silent_degradation_scan, unit_alignment, vacuous_criterion_scan,
 )
 
-
 SKILLS = Path(__file__).resolve().parent / "skills"
 
 
 def _blocks() -> int:
-    """列出可接入的积木。**装完 wheel 之后用户无从知道手上有什么**，这是补那个洞。"""
-    from newlife.adapters.process_bigraph import discovery   # 惰性：没装 extra 也能用别的子命令
+    """List the admissible building blocks.
+
+    **After installing the wheel a user has no way to know what is available** —
+    this closes that hole.
+    """
+    from newlife.adapters.process_bigraph import discovery   # lazy: the extras are optional
 
     count = 0
     for top, module, names in discovery.blocks():
         if not names:
-            print(f"[{top}] {module}")            # import 失败，照实报
+            print(f"[{top}] {module}")            # import failed — reported, not hidden
             continue
         count += len(names)
         print(f"  {module:52s} {', '.join(names)}")
-    print(f"\n{count} 个可接入的 Process/Step。**能不能接进来还要看它的 `update` "
-          f"返回什么形状**——那由 admit() 在运行时硬失败，这里不假装检查过。")
+    print(f"\n{count} admissible Process/Step classes. **Whether one can actually be "
+          f"admitted also depends on the shape its `update` returns** — admit() hard-fails "
+          f"on that at runtime, and this listing does not pretend to have checked it.")
     return 0
 
 
 def _skills(args) -> int:
-    """把 skill 拷进 AI 的配置目录。**逐字拷贝，不做任何变换**——
+    """Copy the skills into the AI's config directory. **Verbatim, with no transformation.**
 
-    母本与部署副本是同一份文件。「两份会漂移」是这个项目反复付过学费的形状：
-    skill 教用户跑一个库还没有的命令，而没有任何机械防线能发现。
+    The master and the deployed copy are the same file. "two copies drift apart" is a
+    shape this project has paid for repeatedly: a skill telling the user to run a command
+    the library does not have yet, with no mechanical defence that would notice.
     """
     sources = sorted(p for p in SKILLS.iterdir() if (p / "SKILL.md").is_file())
     if args.action == "path":
@@ -66,37 +72,38 @@ def _skills(args) -> int:
             continue
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(body)
-        print(f"  装好 {target}")
+        print(f"  installed {target}")
     for t in skipped:
-        print(f"  跳过 {t} —— 已存在且内容不同。**不覆盖你改过的东西**；"
-              f"确认要覆盖就加 --force")
-    print(f"\n用别的 AI 的话：`newlife skills path` 打印母本路径，整份贴进去即可。")
+        print(f"  skipped {t} — already present with different content. "
+              f"**Your edits are not overwritten**; pass --force if you meant to.")
+    print(f"\nFor another AI: `newlife skills path` prints the masters — paste one in whole.")
     return 1 if skipped else 0
 
 
 def _check(folder: Path) -> int:
-    """三条打在**用户自己文件**上的门。
+    """The three gates that apply to **the user's own files**.
 
-    其余留在 newlife 仓库：`check_goal_ready` 认的是另一套 goal 锚点格式、
-    `verify_doc_claims` 要一份验证脚本台账、`run_gates` 的参数是 goal/question/ledger
-    三件套——**它们假定了另一套文档流水线**。这不是省略，是归属。
+    The rest stay in the newlife repository: `check_goal_ready` reads a different goal
+    anchor format, `verify_doc_claims` needs a verification-script ledger, and `run_gates`
+    takes a goal/question/ledger triple — **they assume a separate document pipeline**.
+    That is attribution, not omission.
     """
     runner = folder / "verdict.py"
     checks = [
-        ("判据恒真（假扫描）", lambda: vacuous_criterion_scan.main([str(runner)])),
-        ("静默退化", lambda: silent_degradation_scan.main([str(runner)])),
-        ("预注册↔runner 单元对齐", lambda: unit_alignment.main([str(folder)])),
+        ("vacuous criteria", lambda: vacuous_criterion_scan.main([str(runner)])),
+        ("silent degradation", lambda: silent_degradation_scan.main([str(runner)])),
+        ("registration <-> runner unit alignment", lambda: unit_alignment.main([str(folder)])),
     ]
     failed = []
     for name, run in checks:
-        print(f"── {name} " + "─" * max(0, 46 - len(name)))
+        print(f"-- {name} " + "-" * max(0, 46 - len(name)))
         if run() != 0:
             failed.append(name)
     print()
     if failed:
-        print(f"{len(failed)}/{len(checks)} 条门红：{'、'.join(failed)}")
+        print(f"{len(failed)}/{len(checks)} gates red: {', '.join(failed)}")
         return 1
-    print(f"全部 {len(checks)} 条门通过。")
+    print(f"All {len(checks)} gates passed.")
     return 0
 
 
@@ -104,21 +111,23 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="newlife", description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
 
-    p_init = sub.add_parser("init", help="建一个问题文件夹")
-    p_init.add_argument("slug", help="如 2026-09-05-yield-input-or-outcome")
+    p_init = sub.add_parser("init", help="scaffold a question folder")
+    p_init.add_argument("slug", help="e.g. 2026-09-05-yield-input-or-outcome")
     p_init.add_argument("--no-commit", action="store_true",
-                        help="不自动提交骨架。**注意：随后 `git add -A` 会锁死冻结能力**")
-    for name, help_ in (("freeze", "冻结判据"), ("run", "跑判定"),
-                        ("check", "跑门"), ("audit", "审计")):
+                        help="do not commit the scaffold. **Careful: a later `git add -A` "
+                             "then makes the freeze impossible**")
+    for name, help_ in (("freeze", "freeze the criteria"), ("run", "compute the verdict"),
+                        ("check", "run the gates"), ("audit", "audit the freeze")):
         p = sub.add_parser(name, help=help_)
-        p.add_argument("folder", type=Path, help="问题文件夹")
-    sub.add_parser("blocks", help="列出可接入的第三方积木")
-    p_sk = sub.add_parser("skills", help="装 skill 到 AI 配置目录")
+        p.add_argument("folder", type=Path, help="question folder")
+    sub.add_parser("blocks", help="list admissible third-party building blocks")
+    p_sk = sub.add_parser("skills", help="install the skills into your AI config directory")
     p_sk.add_argument("action", choices=("install", "path"))
     p_sk.add_argument("--dest", type=Path, default=Path.home() / ".claude/skills",
-                      help="装到哪（默认 ~/.claude/skills）")
+                      help="where to install (default ~/.claude/skills)")
     p_sk.add_argument("--force", action="store_true",
-                      help="目标已存在且内容不同时才需要——**默认不覆盖你改过的东西**")
+                      help="only needed when the target exists with different content — "
+                           "**your edits are not overwritten by default**")
 
     args = ap.parse_args(argv)
     cwd = Path.cwd()
@@ -130,19 +139,21 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "init":
         folder = scaffold.init(args.slug, cwd=cwd, commit=not args.no_commit)
         rel = folder.relative_to(scaffold.repo_root(cwd))
-        print(f"已建 {rel}/ —— 骨架{'已提交' if not args.no_commit else '未提交'}，"
-              f"**prereg.md 刻意没有提交**。\n"
-              f"接下来：\n"
-              f"  1. 编辑 {rel}/prereg.md 写判据。**每条都要能红。**\n"
-              f"  2. newlife freeze {rel}      ← 冻结之前不要提交它\n"
-              f"  3. 编辑 {rel}/verdict.py 换成你的世界\n"
+        print(f"Created {rel}/ — scaffold "
+              f"{'committed' if not args.no_commit else 'NOT committed'}, "
+              f"**prereg.md deliberately left uncommitted**.\n"
+              f"Next:\n"
+              f"  1. edit {rel}/prereg.md and write the criteria. "
+              f"**Each one must be able to go red.**\n"
+              f"  2. newlife freeze {rel}      <- do not commit it before this\n"
+              f"  3. edit {rel}/verdict.py and put your world in it\n"
               f"  4. newlife run {rel} && git add {rel}/results && git commit\n"
-              f"  5. newlife audit {rel}")
+              f"  5. newlife check {rel} && newlife audit {rel}")
         return 0
 
     folder = args.folder.resolve()
     if not folder.is_dir():
-        raise SystemExit(f"{args.folder} 不是一个目录。")
+        raise SystemExit(f"{args.folder} is not a directory.")
     if args.cmd == "freeze":
         return scaffold.freeze(folder, cwd=cwd)
     if args.cmd == "audit":

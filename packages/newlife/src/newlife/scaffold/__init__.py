@@ -1,31 +1,34 @@
-"""一个问题一个文件夹：建骨架、冻结判据、审计。
+"""One folder per question: scaffold it, freeze the criteria, audit the freeze.
 
-## 布局
+## Layout
 
-    my-research/                     ← 一次 git init，一个仓库
-    ├── .gitignore
-    └── questions/
-        ├── 2026-09-05-<slug>/
-        │   ├── prereg.md            ← 判据，冻结在这里
-        │   ├── verdict.py           ← 判定 runner
-        │   ├── env.lock             ← 跑这次时装了什么
-        │   └── results/
-        └── 2026-09-12-<另一个>/      ← **兄弟，不是父子**
+    my-research/                     <- one `git init`, one repository
+    |-- .gitignore
+    `-- questions/
+        |-- 2026-09-05-<slug>/
+        |   |-- prereg.md            <- the criteria, frozen here
+        |   |-- verdict.py           <- the verdict runner
+        |   |-- env.lock             <- what was installed for this run
+        |   `-- results/
+        `-- 2026-09-12-<another>/    <- **a sibling, not a child**
 
-**预注册与产物必须同仓**：`prereg.sh` 的 chronology 靠 git 祖先关系证明
-「产物晚于冻结」，而祖先关系**只存在于一个仓库之内**。本项目自己踩过这个坑——
-预注册在一个仓库、产物在另一个，22 份预注册的 chronology **一次都没建立过**，
-而旧版脚本在检查了零个产物之后照样打印「predictions pre-date outputs」。
+**The registration and the outputs must share a repository**: the chronology check proves
+"the outputs post-date the freeze" from git ancestry, and **ancestry exists only within
+one repository**. This project walked into that itself — registrations in one repository,
+artifacts in another, so chronology was **never established for any of 22 registrations**,
+while the old script printed "predictions pre-date outputs" after examining zero outputs.
 
-**但不是一个问题一个仓库**：那意味着 N 次 `git init`、N 个远端、没法共享辅助代码。
-一个仓库多个问题文件夹同样有共同祖先，实测成立。
+**But not one repository per question**: that would mean N `git init`s, N remotes, and no
+way to share helper code. One repository with several question folders shares ancestry
+just as well — verified.
 
-## 为什么 `init` 会自己提交
+## Why `init` commits on your behalf
 
-**冻结必须是 `prereg.md` 的第一次提交。** 而用户最自然的动作是「建好文件夹就
-`git add -A && git commit`」——这一下就把冻结能力锁死了，且不可撤销（历史已经在那）。
-所以 `init` **替用户把骨架提交掉，唯独留下 `prereg.md` 不提交**：
-这样用户没有理由在冻结前再跑一次 `git add -A`。
+**The freeze must be `prereg.md`'s first commit.** And the most natural thing a user does
+after creating a folder is `git add -A && git commit` — which destroys that ability in one
+step, irreversibly (the history is already there). So `init` **commits the scaffold for
+the user and leaves exactly `prereg.md` uncommitted**: there is then no reason to run
+`git add -A` before freezing.
 """
 
 from __future__ import annotations
@@ -39,7 +42,7 @@ from newlife import provenance
 
 TEMPLATES = Path(__file__).resolve().parent / "templates"
 PREREG_SH = Path(__file__).resolve().parent / "prereg.sh"
-SCAFFOLD_FILES = ("verdict.py", "env.lock")     # **不含 prereg.md**，见模块文档
+SCAFFOLD_FILES = ("verdict.py", "env.lock")     # **prereg.md excluded** — see module docstring
 
 
 def _git(root: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess:
@@ -48,23 +51,28 @@ def _git(root: Path, *args: str, check: bool = True) -> subprocess.CompletedProc
 
 
 def repo_root(start: Path) -> Path:
-    """所在的 git 仓库根。**不在仓库里就硬失败**——没有 git 就没有时间证明。"""
+    """The enclosing git repository root.
+
+    **Hard-fails outside a repository** — without git there is no timestamp.
+    """
     try:
         out = _git(start, "rev-parse", "--show-toplevel")
     except (subprocess.CalledProcessError, FileNotFoundError) as exc:
         raise SystemExit(
-            f"{start} 不在一个 git 仓库里。判定的可信度全部来自 git 历史"
-            f"（冻结提交即时间证明），所以这一步没有退路：先 `git init`。\n原始错误：{exc}"
+            f"{start} is not inside a git repository. Every bit of credibility a verdict\n"
+            f"has comes from git history (the freeze commit IS the timestamp), so there is\n"
+            f"no fallback here: run `git init` first.\nUnderlying error: {exc}"
         ) from exc
     return Path(out.stdout.strip())
 
 
 def init(slug: str, *, cwd: Path, commit: bool = True) -> Path:
-    """建一个问题文件夹，并把骨架提交掉（`prereg.md` 除外）。"""
+    """Create a question folder and commit the scaffold (all but `prereg.md`)."""
     root = repo_root(cwd)
     folder = root / "questions" / slug
     if folder.exists():
-        raise SystemExit(f"{folder} 已存在——换一个 slug，不要覆盖已有的问题。")
+        raise SystemExit(f"{folder} already exists — pick another slug rather than\n"
+                         f"overwriting an existing question.")
     (folder / "results").mkdir(parents=True)
 
     title = slug.split("-", 3)[-1].replace("-", " ") or slug
@@ -86,28 +94,31 @@ def init(slug: str, *, cwd: Path, commit: bool = True) -> Path:
         if gitignore.exists():
             paths.append(".gitignore")
         _git(root, "add", *paths)
-        _git(root, "commit", "-m", f"question({slug}): 骨架（prereg 未提交，待冻结）")
+        _git(root, "commit", "-m", f"question({slug}): scaffold (prereg.md left uncommitted, awaiting freeze)")
     return folder
 
 
 def freeze(folder: Path, *, cwd: Path) -> int:
-    """冻结这个问题的判据。**冻结必须是 `prereg.md` 的第一次提交。**"""
+    """Freeze this question's criteria. **The freeze must be `prereg.md`'s first commit.**"""
     root = repo_root(cwd)
     prereg = (folder / "prereg.md").resolve()
     rel = prereg.relative_to(root)
     history = _git(root, "log", "--format=%h", "--", str(rel), check=False).stdout.strip()
     if history:
         raise SystemExit(
-            f"{rel} 已经有 git 历史，冻结必须是它的第一次提交——"
-            f"否则那个提交证明不了「判据早于结果」。\n"
-            f"**补救**：`git mv {rel} {rel.with_name('prereg-v2.md')}` 之后冻结新文件"
-            f"（旧的留在历史里，不要删——它是这次改动本身的记录）。"
+            f"{rel} already has git history, and the freeze must be its first commit —\n"
+            f"otherwise that commit cannot prove the criteria predate the results.\n"
+            f"**Recovery**: `git mv {rel} {rel.with_name('prereg-v2.md')}`, then freeze the\n"
+            f"new file. Leave the old one in history — it is the record of this very change."
         )
     return _run_prereg(root, "freeze", str(rel))
 
 
 def audit(folder: Path, *, cwd: Path) -> int:
-    """审计：判据没被改过，且产物晚于冻结。**范围自动划到这个问题自己。**"""
+    """Audit: the criteria were never edited, and the outputs post-date the freeze.
+
+    **The scope is narrowed to this question automatically.**
+    """
     root = repo_root(cwd)
     rel = (folder / "prereg.md").resolve().relative_to(root)
     return _run_prereg(root, "audit", "--results", str(rel.parent / "results"), str(rel))

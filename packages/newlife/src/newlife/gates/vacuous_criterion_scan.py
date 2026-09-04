@@ -1,26 +1,31 @@
-"""假扫描扫描器：**名为扫描、实为重复**的推导式。
+#!/usr/bin/env python3
+"""Scan for fake sweeps: comprehensions that are **named a sweep but are a repetition**.
 
-## 这条门为什么存在
+## Why this gate exists
 
-第十九个里程碑的 Z5 是一条**负控**，冻结判据写的是「`yield` 设成 dFBA 某点的产率后
-**重扫**，Monod 产率仍逐点恒定」。实现是：
+A negative control once had its criterion frozen as "set `yield` to the value dFBA
+reaches at one point, **re-sweep**, and confirm Monod's yield still does not move".
+The implementation was:
 
     monod_pinned = [_run(MONOD, "foreign-monod", pinned) for _ in O2_SWEEP]
 
-`O2_SWEEP` 被迭代了，但**循环变量丢掉了**——五次跑的是同一份配置。于是判据
-`max - min < 1e-9` 在**任何**物理配置下都为真（实测 yield 从 1e-6 到 1e3 全绿），
-判定力为零。它在合取里待了整整一个里程碑没被发现，因为**恒真的判据永远不会红**，
-而人只会去查红的东西。
+`O2_SWEEP` is iterated, but **the loop variable is discarded** — five runs of the same
+configuration. So the criterion `max - min < 1e-9` was true under **any** physical
+configuration (measured: green for `yield` from 1e-6 to 1e3), with zero discriminating
+power. It sat inside the conjunction for an entire milestone, because **a criterion that
+is true by construction never goes red, and people only investigate what is red.**
 
-## 判据
+## The rule
 
-对**具名模块级常量**做推导式，而循环变量在元素表达式里未被引用 —— 报。
+A comprehension over a **named module-level constant** whose loop variable is never
+referenced in the element expression -> reported.
 
-`range(n)` 这类不报：对它做推导本就是「重复 n 次」，在随机过程里是正当写法。
-**具名常量不同**——给一组值起了名字，就是在说这些值本身有意义。
+`range(n)` is not reported: comprehending over it means "repeat n times", which is a
+legitimate way to write replicate trials in a stochastic process. **A named constant is
+different** — giving a set of values a name says the values themselves matter.
 
-    python3 scripts/gates/vacuous_criterion_scan.py <file.py> ...
-    python3 scripts/gates/vacuous_criterion_scan.py --selftest
+    python3 vacuous_criterion_scan.py <file.py> ...
+    python3 vacuous_criterion_scan.py --selftest
 """
 
 from __future__ import annotations
@@ -30,11 +35,11 @@ import ast
 import pathlib
 import sys
 
-Finding = tuple[int, str, str]      # 行号 · 常量名 · 循环变量
+Finding = tuple[int, str, str]      # line number, constant name, loop variable
 
 
 def _named_constants(tree: ast.Module) -> set[str]:
-    """模块级 `NAME = <序列字面量>` 的名字。"""
+    """Names bound by a module-level `NAME = <sequence literal>`."""
     names = set()
     for node in tree.body:
         if isinstance(node, ast.Assign) and isinstance(node.value, (ast.Tuple, ast.List, ast.Set)):
@@ -54,7 +59,7 @@ def scan(source: str) -> list[Finding]:
     for node in ast.walk(tree):
         if not isinstance(node, comprehensions):
             continue
-        # 元素表达式：DictComp 有 key/value，其余有 elt
+        # Element expression: DictComp has key/value, the rest have elt
         parts = ([node.key, node.value] if isinstance(node, ast.DictComp) else [node.elt])
         used = set().union(*(_targets(p) for p in parts))
         for gen in node.generators:
@@ -74,30 +79,37 @@ SELFTEST_GREEN = ("SWEEP = (1, 2, 3)\n"
 
 
 def _selftest() -> int:
-    """负控：假扫描必须被抓到，真扫描与 `range` 重复必须不报。"""
+    """Negative control: a fake sweep must be caught; a real sweep and a `range`
+    repetition must not be."""
     ok = True
     if not scan(SELFTEST_RED):
-        print("  [失败] 丢弃循环变量的假扫描没有被报出来"); ok = False
+        print("  [FAIL] a fake sweep discarding its loop variable was not reported"); ok = False
     if scan(SELFTEST_GREEN):
-        print(f"  [失败] 真扫描/range 重复被误报：{scan(SELFTEST_GREEN)}"); ok = False
-    print("  自检通过：假扫描红、真扫描与 range 重复绿。" if ok else "  自检失败。")
+        print(f"  [FAIL] false positive on a real sweep / range repetition: {scan(SELFTEST_GREEN)}"); ok = False
+    print("  selftest passed: fake sweep red, real sweep and range repetition green."
+          if ok else "  selftest FAILED.")
     return 0 if ok else 1
 
 
 KNOWN_VACUOUS = {("newlife/conform/yield_verdict.py", "O2_SWEEP"): 2}
-"""**处置已作出（2026-09-04），不是待办。**
+"""**Disposition already made (2026-09-04). This is not a to-do.**
 
-第十九个里程碑的预注册已冻结，判定产物逐字节可复现。改 runner 会毁掉那次复现，
-所以**不改**——照 `verdict_rot.KNOWN_BROKEN` 的先例：记录，不掩盖，也不重写历史。
+That milestone's registration is frozen and its artifact reproduces byte-identically.
+Editing the runner would destroy that reproduction, so **it is not edited** — following
+the precedent of `verdict_rot.KNOWN_BROKEN`: record it, do not hide it, do not rewrite
+history.
 
-两处分别是 Z4 与 Z5 的 Monod 扫描。Z5 因此**恒真、零判定力**（实测 `yield` 从
-1e-6 到 1e3 全绿）；Z4 的判据是逐点比对声明值，单点即可成立，不受影响，但它在
-产物表格里与氧并列印出，读起来像扫描。结论本身不依赖 Z5——
-Z3（dFBA 产率随氧变，幅度 56%）∧ Z4（Monod 产率恒定）已由算术蕴含它。
+The two occurrences are the Monod sweeps behind Z4 and Z5. Z5 is therefore **true by
+construction with zero discriminating power** (measured: green for `yield` from 1e-6 to
+1e3). Z4 compares each point against a declared constant, which holds at a single point,
+so it is unaffected — but it is printed alongside the oxygen column in the artifact, where
+it reads like a sweep. The conclusion does not depend on Z5: Z3 (dFBA's yield varies with
+oxygen by 56%) and Z4 (Monod's is constant) already entail it arithmetically.
 
-完整处置见 `docs/worlds/019-yield-input-or-outcome.md`。
-**登记的是精确条数**：同一文件同一常量上再多一处假扫描，或这两处消失，都会红——
-豁免不会无声累积，也不会变成僵尸。
+Full disposition: `docs/worlds/019-yield-input-or-outcome.md`.
+**The registered figure is an exact count**: one more fake sweep on the same constant in
+the same file, or these two disappearing, both turn this red — an exemption neither
+accumulates silently nor becomes a zombie.
 """
 
 
@@ -105,13 +117,14 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("paths", nargs="*", type=pathlib.Path)
     ap.add_argument("--selftest", action="store_true")
-    args = ap.parse_args(argv)          # None → 读 sys.argv，当脚本跑时不变
+    args = ap.parse_args(argv)          # None -> read sys.argv; unchanged when run as a script
     if args.selftest:
         return _selftest()
 
     seen: dict[tuple[str, str], int] = {}
-    # 登记项只在**它那个文件真被扫到**时才核对条数——扫描范围小不等于缺陷消失，
-    # 拿「没扫到」当「已修好」正是静默降级本身。
+    # A registered entry is only checked when **its file was actually scanned** — a
+    # narrower scan does not mean the defect went away, and treating "not scanned" as
+    # "already fixed" is silent degradation itself.
     in_scope = {k for k in KNOWN_VACUOUS
                 if any(str(q).endswith(k[0]) for q in args.paths)}
     unregistered = 0
@@ -123,23 +136,24 @@ def main(argv: list[str] | None = None) -> int:
                 seen[key] = seen.get(key, 0) + 1
                 continue
             unregistered += 1
-            print(f"{path}:{lineno}: 对具名常量 {const} 迭代，但循环变量 "
-                  f"{target} 未被使用 —— 这不是扫描，是重复 len({const}) 次")
+            print(f"{path}:{lineno}: iterates the named constant {const}, but the loop "
+                  f"variable {target} is never used — this is not a sweep, it is a "
+                  f"repetition len({const}) times")
 
     drifted = [(k, KNOWN_VACUOUS[k], seen.get(k, 0))
                for k in in_scope if seen.get(k, 0) != KNOWN_VACUOUS[k]]
     for (rel, const), want, got in drifted:
-        print(f"{rel}: {const} 上登记 {want} 处已知假扫描，实际扫到 {got} 处 —— "
-              f"{'登记已过期' if got < want else '出现了新的、未登记的'}")
+        print(f"{rel}: {want} known fake sweep(s) registered on {const}, {got} found — "
+              f"{'the registration is stale' if got < want else 'a new, unregistered one appeared'}")
 
     for rel, const in in_scope:
         want = KNOWN_VACUOUS[(rel, const)]
         if not any(k == (rel, const) for k, *_ in drifted):
-            print(f"[已登记] {rel}: {const} 上 {want} 处，处置见 KNOWN_VACUOUS 文档字符串")
+            print(f"[registered] {rel}: {want} on {const}; disposition in the KNOWN_VACUOUS docstring")
 
     if unregistered:
-        print(f"\n{unregistered} 处未登记的假扫描。判据若建立在它们之上，则**恒真**——"
-              f"负控不会红，等于没有负控。")
+        print(f"\n{unregistered} unregistered fake sweep(s). A criterion built on one is **true by "
+              f"construction** — a negative control that cannot go red is not a control.")
     return 1 if (unregistered or drifted) else 0
 
 
