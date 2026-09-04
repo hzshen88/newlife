@@ -36,16 +36,27 @@ def _blocks() -> int:
     """
     from newlife.adapters.process_bigraph import discovery   # lazy: the extras are optional
 
-    count = 0
+    count, unimportable = 0, []
     for top, module, names in discovery.blocks():
         if not names:
             print(f"[{top}] {module}")            # import failed — reported, not hidden
+            unimportable.append(top)
             continue
         count += len(names)
         print(f"  {module:52s} {', '.join(names)}")
     print(f"\n{count} admissible Process/Step classes. Whether one can actually be "
           f"admitted also depends on the shape its `update` returns — admit() hard-fails "
           f"on that at runtime, and this listing does not pretend to have checked it.")
+    # "0 admissible" reads like "there are none" when the cause is "the extras are not
+    # installed". The per-package failures above already say which import failed, but the
+    # summary has to say what to do about it — **naming a cause without the remedy still
+    # leaves the reader stuck**, and this is the first command a new user reaches for.
+    if not count and unimportable:
+        print("\nNothing could be imported. The simulation backends ship as optional extras:"
+              "\n    pip install 'newlife[spatio-flux]'      "
+              "# Monod, dFBA (GLPK included), diffusion, particles"
+              "\n    pip install 'newlife[process-bigraph]'  # the runtime alone"
+              "\n'spatio-flux' pulls in 'process-bigraph' as well, so the first is enough.")
     return 0
 
 
