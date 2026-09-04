@@ -61,6 +61,13 @@ provenance (which build of newlife by source digest, not the version string; whi
 environment by lockfile hash), the self-reproduction check, and the slot where each
 criterion proves it can fail. Replace the placeholder model with your own.
 
+> **What the first four real questions produced** — one toolchain smoke run, two honestly
+> recorded `INVALID`s, and one `H1` reproducing Rosenfeld–Elowitz–Alon (2002) with a blind
+> prediction that held — is written up in
+> [`docs/product/2026-09-04-first-user-questions.md`](docs/product/2026-09-04-first-user-questions.md).
+> The first of them also surfaced a silent defect in this library that four milestones with
+> third-party code had missed, because all four happened to use the same timestep.
+
 > **Why "proves it can fail" is a required slot**: this project shipped a negative
 > control that was true by construction and nobody noticed for a whole milestone.
 > See [`docs/worlds/019-yield-input-or-outcome.md`](docs/worlds/019-yield-input-or-outcome.md) §6.
