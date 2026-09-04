@@ -43,10 +43,17 @@ jobs:
           path: dist/
           if-no-files-found: error
 
-  publish:
+  # 两个 job，各自的 environment。**PyPI 不允许同一套 owner/repo/workflow/environment
+  # 为两个不同项目各注册一个 pending publisher**（会报 "already been registered for a
+  # different project name"），所以 environment 名必须分开。
+  #
+  # 顺带解决另一件事：一次上传两个包时，前一个成功、后一个失败会卡住重试——
+  # 拆成两个 job 之后，GitHub 的「只重跑失败的 job」就够用，
+  # **不必给成功的那个加 skip-existing 去掩盖重复上传。**
+  publish-proofroot:
     needs: build
     runs-on: ubuntu-latest
-    environment: pypi
+    environment: pypi-proofroot
     permissions:
       id-token: write
     steps:
@@ -54,5 +61,29 @@ jobs:
         with:
           name: python-distributions
           path: dist/
-      - name: Publish proofroot and newlife with PyPI Trusted Publishing
+      - name: Isolate proofroot artifacts
+        run: mkdir -p upload && mv dist/proofroot-* upload/
+      - name: Publish proofroot with PyPI Trusted Publishing
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: upload/
+
+  # newlife 依赖 proofroot<0.2,>=0.1，所以 proofroot 必须先上去——
+  # 否则 `pip install newlife` 会死在找不到依赖。**needs 把这个顺序钉死。**
+  publish-newlife:
+    needs: publish-proofroot
+    runs-on: ubuntu-latest
+    environment: pypi-newlife
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-distributions
+          path: dist/
+      - name: Isolate newlife artifacts
+        run: mkdir -p upload && mv dist/newlife-* upload/
+      - name: Publish newlife with PyPI Trusted Publishing
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: upload/
