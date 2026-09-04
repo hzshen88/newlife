@@ -152,8 +152,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"[registered] {rel}: {want} on {const}; disposition in the KNOWN_VACUOUS docstring")
 
     if unregistered:
-        print(f"\n{unregistered} unregistered fake sweep(s). A criterion built on one is **true by "
-              f"construction** — a negative control that cannot go red is not a control.")
+        print(f"\n{unregistered} unregistered fake sweep(s). A criterion built on one is true by "
+              f"construction — a negative control that cannot go red is not a control.")
     return 1 if (unregistered or drifted) else 0
 
 

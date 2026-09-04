@@ -5,6 +5,7 @@ description = "Language-neutral trust core for reproducible simulation: named RN
 readme = "README.md"
 requires-python = ">=3.12"
 license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [{ name = "hzshen88" }]
 keywords = ["reproducibility", "provenance", "rng-streams",
             "canonical-serialization", "trust-core"]
@@ -24,9 +25,14 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/proofroot"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"vectors/canonical_vectors.json" = "proofroot/vectors/canonical_vectors.json"
+"vectors/evidencecore_rng_v1.json" = "proofroot/vectors/evidencecore_rng_v1.json"
+
 [dependency-groups]
 dev = ["pytest>=8"]
 
 [project.urls]
 Homepage = "https://github.com/hzshen88/newlife"
 Repository = "https://github.com/hzshen88/newlife"
+Documentation = "https://github.com/hzshen88/newlife/tree/main/packages/proofroot"

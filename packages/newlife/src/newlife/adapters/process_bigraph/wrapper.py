@@ -236,24 +236,15 @@ class GuardedStep(Step):
 
 
 def run_composite(composite: Composite, duration: float, profile: BiologicalProfile) -> None:
-    """推进 `duration` 长。**时长与 process 自己的步长对不上就硬失败。**
-
-    对不上时 pb 会把请求攒着、只在累够一个 interval 时才真跑一次，**不出任何声音**。
-    第一个真实用户问题栽在这里：按 0.02 推进而节点 interval 是 1.0，
-    251 个采样点只有 5 个不同取值——**而数字看起来完全合理**，0.98 对 0.99。
-    这是科学意义上的静默退化：结果没有错到能被一眼看出来。
-
-    只核对 `build_composite` 建的那些（它们记了 `newlife_interval`）；
-    别处自己拼的 composite 由调用方自己负责，**这里不假装检查过**。
-    """
+    """Advance a composite, rejecting durations incompatible with its process interval."""
     step = getattr(composite, "newlife_interval", None)
     if step is not None:
         ratio = duration / step
         if ratio < 1 or abs(ratio - round(ratio)) > 1e-9:
             raise SpecValidationError(
-                f"推进时长 {duration} 不是 process 步长 {step} 的正整数倍——"
-                f"pb 会把请求攒着少跑很多步且不报错。"
-                f"要更细的步长，请在 build_composite(interval=…) 里声明。"
+                f"duration {duration} is not a positive integer multiple of process "
+                f"interval {step}; process-bigraph would silently run fewer steps. "
+                "Declare a finer interval in build_composite(interval=...)."
             )
     trace_length = len(profile.pending_trace)
     audit_length = len(profile.runtime_audit)

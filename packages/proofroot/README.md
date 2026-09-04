@@ -3,6 +3,31 @@
 Language-neutral trust core for reproducible simulation. Zero dependencies,
 zero domain semantics.
 
+## Install and use
+
+Requires Python 3.12 or newer.
+
+```bash
+python -m pip install proofroot
+```
+
+```python
+import random
+
+from proofroot import EVIDENCECORE_RNG_V1, RngBank, canonical_bytes
+
+bank = RngBank(
+    root_seed=42,
+    names=["mutation", "selection"],
+    rng_strategy=EVIDENCECORE_RNG_V1,
+    stream_factory=random.Random,
+)
+mutation_rng = bank.rng_stream("mutation")
+print(bank.stream_seeds())
+print(mutation_rng.random())
+print(canonical_bytes({"answer": 42}))
+```
+
 Everything every simulation community needs and none of what any single one
 wants to own: named RNG stream seed derivation (`evidencecore-rng-v1`), bank
 semantics invariants (declared streams, lowercase normalization, forward-only),
@@ -21,4 +46,4 @@ monorepo is the frozen oracle generating this package's cross-language test
 vectors. ParaLife's legacy compatibility layers (legacy encodings, UPPER-CASE
 phase spellings) are deliberately **not** ported here.
 
-Design rationale: `docs/design/proposal.md` §5.10 in the repository root.
+Design rationale: [proposal §5.10](https://github.com/hzshen88/newlife/blob/main/docs/design/proposal.md).

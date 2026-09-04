@@ -5,6 +5,7 @@ description = "Preregistration harness for simulation: freeze what would count a
 readme = "README.md"
 requires-python = ">=3.12"
 license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [{ name = "hzshen88" }]
 keywords = ["preregistration", "reproducibility", "simulation", "provenance",
             "systems-biology", "scientific-workflow"]
@@ -15,7 +16,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
-dependencies = ["proofroot"]
+dependencies = ["proofroot>=0.1,<0.2"]
 
 [project.optional-dependencies]
 process-bigraph = ["process-bigraph==1.8.3"]

@@ -33,9 +33,9 @@ the user and leaves exactly `prereg.md` uncommitted**: there is then no reason t
 
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
-import sys
 from pathlib import Path
 
 from newlife import provenance
@@ -43,6 +43,7 @@ from newlife import provenance
 TEMPLATES = Path(__file__).resolve().parent / "templates"
 PREREG_SH = Path(__file__).resolve().parent / "prereg.sh"
 SCAFFOLD_FILES = ("verdict.py", "env.lock")     # **prereg.md excluded** — see module docstring
+SAFE_SLUG = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\Z")
 
 
 def _git(root: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess:
@@ -63,11 +64,21 @@ def repo_root(start: Path) -> Path:
             f"has comes from git history (the freeze commit IS the timestamp), so there is\n"
             f"no fallback here: run `git init` first.\nUnderlying error: {exc}"
         ) from exc
-    return Path(out.stdout.strip())
+    # Git preserves the spelling used to enter a worktree.  On macOS, for
+    # example, a repository reached through /tmp may be reported under /tmp
+    # even though Path.resolve() spells the same directory /private/tmp.
+    # Canonicalise once so every later relative-path calculation uses the
+    # same namespace.
+    return Path(out.stdout.strip()).resolve()
 
 
 def init(slug: str, *, cwd: Path, commit: bool = True) -> Path:
     """Create a question folder and commit the scaffold (all but `prereg.md`)."""
+    if not SAFE_SLUG.fullmatch(slug):
+        raise SystemExit(
+            "slug must be one safe path component: start with an ASCII letter or digit, "
+            "then use only letters, digits, '.', '_', or '-'."
+        )
     root = repo_root(cwd)
     folder = root / "questions" / slug
     if folder.exists():
@@ -85,16 +96,21 @@ def init(slug: str, *, cwd: Path, commit: bool = True) -> Path:
         "\n".join(provenance.env_lock_lines()) + "\n", encoding="utf-8")
 
     gitignore = root / ".gitignore"
-    if not gitignore.exists():
+    created_gitignore = not gitignore.exists()
+    if created_gitignore:
         shutil.copyfile(TEMPLATES / "gitignore", gitignore)
 
     rel = folder.relative_to(root)
     if commit:
         paths = [str(rel / name) for name in SCAFFOLD_FILES]
-        if gitignore.exists():
+        if created_gitignore:
             paths.append(".gitignore")
         _git(root, "add", *paths)
-        _git(root, "commit", "-m", f"question({slug}): scaffold (prereg.md left uncommitted, awaiting freeze)")
+        # Limit the commit as well as the preceding add.  A plain `git commit`
+        # would also consume unrelated changes the user had already staged.
+        _git(root, "commit", "-m",
+             f"question({slug}): scaffold (prereg.md left uncommitted, awaiting freeze)",
+             "--", *paths)
     return folder
 
 
@@ -108,7 +124,7 @@ def freeze(folder: Path, *, cwd: Path) -> int:
         raise SystemExit(
             f"{rel} already has git history, and the freeze must be its first commit —\n"
             f"otherwise that commit cannot prove the criteria predate the results.\n"
-            f"**Recovery**: `git mv {rel} {rel.with_name('prereg-v2.md')}`, then freeze the\n"
+            f"Recovery: `git mv {rel} {rel.with_name('prereg-v2.md')}`, then freeze the\n"
             f"new file. Leave the old one in history — it is the record of this very change."
         )
     return _run_prereg(root, "freeze", str(rel))

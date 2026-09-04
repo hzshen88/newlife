@@ -1,13 +1,6 @@
-"""用 process-bigraph 跑一个 `WorldSpec`。**WorldSpec 的第二个消费者。**
+"""Execute a ``WorldSpec`` through process-bigraph's graph scheduler.
 
-`core.harness.GenericWorld` 是第一个。它逐阶段 pull（`guarded_read` → `apply_batch`），
-因为 `ReferenceKernel` 就长那样。**pb 不是那个形状**：它要先拿到整张图，再由自己的
-调度器按接线依赖驱动各节点。所以本模块不是 `WorldRuntime` 的一个实现——
-它是同一份声明的另一条执行路径。这个落差本身是本里程碑的产物（预注册 1b9257a §5）。
-
-**接线是机械导出的，不是每个世界另配一份**：
-读端口来自 `StateClaim(permission="read")`，写端口来自 `permission="own"`。
-声明里已有的东西，不再要求世界重说一遍。
+Input and output wiring is derived mechanically from the world's state claims.
 """
 
 from __future__ import annotations
@@ -55,7 +48,8 @@ def _lowering_table(spec: Any, write_paths: tuple[tuple[str, ...], ...]) -> dict
         store = _STORE_TYPE_FOR_EFFECT.get(kind)
         if store is None:
             raise SpecValidationError(
-                f"{spec.identity} 声明了 Effect {kind}，pb 侧没有对应的 store 语义"
+                f"{spec.identity} declares Effect {kind}, but process-bigraph has no "
+                "corresponding store semantics"
             )
         port = _port(write_paths[0]) if store != "noop" else ""
         table[kind] = (port, store)
@@ -67,7 +61,7 @@ def run_world(
     streams: Mapping[str, Any],
     runtime: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """跑一个 replicate，返回与 `GenericWorld.run()` 同形状的观测。"""
+    """Run one replicate and return observations shaped like ``GenericWorld.run()``."""
     runtime = dict(runtime or {})
     profile = BiologicalProfile()
     mechanisms = {m.identity: m for m in _resolve(spec.specs_from)()}
@@ -125,7 +119,7 @@ def _make_stage_class(
     writes: tuple[tuple[str, ...], ...],
     table: Mapping[str, tuple[str, str]],
 ) -> type:
-    """一个阶段一个 `GuardedStep` 子类。`propose` 把 pb 的端口视图翻回路径视图。"""
+    """Build a ``GuardedStep`` subclass that translates port views back to path views."""
     in_schema = {_port(p): {"_type": "map"} for p in reads}
     out_schema = {_port(p): {"_type": "map"} for p in writes}
 

@@ -1,4 +1,4 @@
-"""The `newlife` command line. **One folder per question, from scaffold to audit.**
+"""The newlife command line: one folder per question, from scaffold to audit.
 
     newlife init <slug>      scaffold and commit it (prereg.md deliberately excluded)
     newlife freeze <folder>  freeze the criteria — this commit IS the timestamp
@@ -43,8 +43,8 @@ def _blocks() -> int:
             continue
         count += len(names)
         print(f"  {module:52s} {', '.join(names)}")
-    print(f"\n{count} admissible Process/Step classes. **Whether one can actually be "
-          f"admitted also depends on the shape its `update` returns** — admit() hard-fails "
+    print(f"\n{count} admissible Process/Step classes. Whether one can actually be "
+          f"admitted also depends on the shape its `update` returns — admit() hard-fails "
           f"on that at runtime, and this listing does not pretend to have checked it.")
     return 0
 
@@ -75,7 +75,7 @@ def _skills(args) -> int:
         print(f"  installed {target}")
     for t in skipped:
         print(f"  skipped {t} — already present with different content. "
-              f"**Your edits are not overwritten**; pass --force if you meant to.")
+              f"Your edits are not overwritten; pass --force if you meant to.")
     print(f"\nFor another AI: `newlife skills path` prints the masters — paste one in whole.")
     return 1 if skipped else 0
 
@@ -112,10 +112,13 @@ def main(argv: list[str] | None = None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     p_init = sub.add_parser("init", help="scaffold a question folder")
-    p_init.add_argument("slug", help="e.g. 2026-09-05-yield-input-or-outcome")
+    p_init.add_argument(
+        "slug",
+        help="one safe path component, e.g. 2026-09-05-yield-input-or-outcome",
+    )
     p_init.add_argument("--no-commit", action="store_true",
-                        help="do not commit the scaffold. **Careful: a later `git add -A` "
-                             "then makes the freeze impossible**")
+                        help="do not commit the scaffold; a later 'git add -A' then makes "
+                             "the freeze impossible")
     for name, help_ in (("freeze", "freeze the criteria"), ("run", "compute the verdict"),
                         ("check", "run the gates"), ("audit", "audit the freeze")):
         p = sub.add_parser(name, help=help_)
@@ -126,8 +129,8 @@ def main(argv: list[str] | None = None) -> int:
     p_sk.add_argument("--dest", type=Path, default=Path.home() / ".claude/skills",
                       help="where to install (default ~/.claude/skills)")
     p_sk.add_argument("--force", action="store_true",
-                      help="only needed when the target exists with different content — "
-                           "**your edits are not overwritten by default**")
+                      help="only needed when the target exists with different content; "
+                           "your edits are not overwritten by default")
 
     args = ap.parse_args(argv)
     cwd = Path.cwd()
@@ -141,10 +144,10 @@ def main(argv: list[str] | None = None) -> int:
         rel = folder.relative_to(scaffold.repo_root(cwd))
         print(f"Created {rel}/ — scaffold "
               f"{'committed' if not args.no_commit else 'NOT committed'}, "
-              f"**prereg.md deliberately left uncommitted**.\n"
+              f"prereg.md deliberately left uncommitted.\n"
               f"Next:\n"
               f"  1. edit {rel}/prereg.md and write the criteria. "
-              f"**Each one must be able to go red.**\n"
+              f"Each one must be able to go red.\n"
               f"  2. newlife freeze {rel}      <- do not commit it before this\n"
               f"  3. edit {rel}/verdict.py and put your world in it\n"
               f"  4. newlife run {rel} && git add {rel}/results && git commit\n"

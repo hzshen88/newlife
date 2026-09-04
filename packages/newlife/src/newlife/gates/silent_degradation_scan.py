@@ -305,8 +305,8 @@ def scan(path: pathlib.Path, exemptions: list | None = None) -> list[tuple[int, 
                 findings.append((
                     fn.lineno,
                     f"{fn.name}(): the exemption's reason is missing or too short "
-                    f"({len(reason)} < {MIN_REASON_CHARS} chars) — **the exemption does "
-                    f"not take effect**. Spell out why 'no match' is normal here, or "
+                    f"({len(reason)} < {MIN_REASON_CHARS} chars) — the exemption does "
+                    f"not take effect. Spell out why 'no match' is normal here, or "
                     f"turn it into a hard failure",
                 ))
         r2_hit: set[str] = set()
@@ -333,7 +333,7 @@ def scan(path: pathlib.Path, exemptions: list | None = None) -> list[tuple[int, 
             if unbound:
                 findings.append((
                     unbound[0],
-                    f"{fn.name}(): the regex match result is **never bound to a name** "
+                    f"{fn.name}(): the regex match result is never bound to a name "
                     f"(passed straight into another call), so nothing can check it on "
                     f"failure — bind it first, then decide between raising and declaring "
                     f"an exemption",
@@ -344,7 +344,7 @@ def scan(path: pathlib.Path, exemptions: list | None = None) -> list[tuple[int, 
                     findings.append((
                         assigned_at,
                         f"{fn.name}(): {name} is bound from a regex match, but the function "
-                        f"has **no hard-failure path at all** for it "
+                        f"has no hard-failure path at all for it "
                         f"(raise/assert/sys.exit/non-zero return) — however the default is "
                         f"spelled, a parse failure raises nothing. If 'no match' really is "
                         f"normal here, declare it with a line "
@@ -446,15 +446,14 @@ def run_selftest() -> int:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("paths", nargs="*", type=pathlib.Path)
-    ap.add_argument("--selftest", action="store_true", help="检验覆盖面本身")
+    ap.add_argument("--selftest", action="store_true", help="test the scanner's own coverage")
     ap.add_argument(
         "--max-exemptions",
         type=int,
         default=0,
         metavar="N",
-        help="声明的豁免上限，**默认 0（default-deny）**。要放行豁免必须显式写出数字。"
-             "首版默认 None（无限），第四轮外审把它记为「新保护默认关闭」的第三次出现："
-             "同一份文件，走 run_gates 会红、直接跑却全绿。保护的默认值必须是严的那一端。",
+        help="maximum number of declared exemptions (default: 0, deny by default); "
+             "allowing exemptions requires an explicit limit",
     )
     args = ap.parse_args(argv)          # None → 读 sys.argv，当脚本跑时不变
 

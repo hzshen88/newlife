@@ -1,17 +1,8 @@
-"""通用 harness：把「怎么跑一个世界」从各世界的 `world.py` 里收上来。
+"""Generic world assembly, stage orchestration, and observation extraction.
 
-规格来自第七世界的判定（预注册 `c10dcb3`）：harness 要提供五块，本模块实现 World 4
-用得到的三块——**引擎装配** / **阶段执行与编排** / **观测提取**。另两块
-（数值复现、运行时契约强制）World 4 用不到，本模块不含，**用不到不等于它们不存在**。
-
-**世界侧只留声明与机制代码。** 声明是纯数据：不含 lambda、不含可调用对象、
-不含 `eval`/`exec`/`getattr` 构造——预注册 §3.2 冻结了这条，由 AST 检查。
-机制函数由**点分路径字符串**指名（`"module:function"`）：字符串是数据，被指名的函数
-是 `model`，本就该是代码（`proposal.md` §1.4 第三层）。
-
-**为什么 `reuse_trace` 的字段名进配置**：`results/*/summary.json` 原样嵌入这份 trace，
-字段名是该世界对外的声明契约。harness 算事实，配置给名字——把名字硬编进 harness
-才是把一个世界的特殊性焊死在通用件里。
+World declarations remain pure data. Mechanism functions are named by
+``module:function`` strings, while the harness resolves and executes them.
+World-specific artifact field names stay in the declaration.
 """
 
 from __future__ import annotations
@@ -25,7 +16,7 @@ from newlife.core.runtime import RuntimeFactory, WorldRuntime
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class StageSpec:
-    """一个阶段：跑哪个机制、用哪个 step、静态参数与命名流各是什么。"""
+    """Declare a stage's mechanism, step, static parameters, and named streams."""
 
     identity: str
     step: str                                   # "module:function"
@@ -51,7 +42,7 @@ OPERATORS = {
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class Clause:
-    """终止条件的一个子句：`{已声明的观测量, 算符, 常量或配置字段}`。纯数据。"""
+    """Pure-data loop condition over an observable, operator, and value."""
 
     observable: str
     op: str
@@ -60,12 +51,11 @@ class Clause:
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class LoopSpec:
-    """tick 循环：每轮跑哪些阶段，什么时候停。
+    """Declare which stages run per tick and the conjunctive stop condition.
 
-    `while_all` 的全部子句同时为真才继续——**只有合取**。
-    `observables` 把子句里的名字绑到宿主对象的属性/方法名（字符串，不是可调用对象）。
-    `per_iteration_params` 声明「每轮重算一次」的参数取自宿主的哪个方法——
-    这是绑定点，不是取值语言：没有表达式，只有名字。
+    ``observables`` binds condition names to host attributes or methods.
+    ``per_iteration_params`` binds stage parameters to host values recomputed
+    once per iteration.
     """
 
     stages: tuple[str, ...]
@@ -78,7 +68,7 @@ class LoopSpec:
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class ObservationSpec:
-    """从哪个阶段的第几条记录、取哪些 payload 字段。"""
+    """Declare the stage record and payload fields returned as observations."""
 
     stage: str
     record: int
@@ -88,7 +78,7 @@ class ObservationSpec:
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class ReuseTraceSpec:
-    """复用证据的形状。字段名属世界的声明契约，故在配置里。"""
+    """Declare the shape and field names of mechanism-reuse evidence."""
 
     schema: str
     subject_stage: str
@@ -99,7 +89,7 @@ class ReuseTraceSpec:
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class WorldSpec:
-    """一个世界的全部声明。**纯数据。**"""
+    """A world's complete pure-data declaration."""
 
     protocol_version: str
     state_roots: Mapping[str, Any]
@@ -111,15 +101,15 @@ class WorldSpec:
 
 
 def _resolve(dotted: str) -> Callable[..., Any]:
-    """`"module:function"` → 函数对象。**取的是对象本身**，复用判据靠对象同一性。"""
+    """Resolve a ``module:function`` string to the function object itself."""
     module_name, _, attr = dotted.partition(":")
     if not attr:
-        raise ValueError(f"需要 'module:function' 形式，得到 {dotted!r}")
+        raise ValueError(f"expected 'module:function', got {dotted!r}")
     return getattr(importlib.import_module(module_name), attr)
 
 
 class GenericWorld:
-    """按 `WorldSpec` 跑一个 replicate。世界侧不再需要写这些。"""
+    """Run one replicate from a ``WorldSpec`` declaration."""
 
     def __init__(
         self,
@@ -173,7 +163,7 @@ class GenericWorld:
         return result
 
     def _read_observable(self, host: Any, name: str) -> Any:
-        """按声明的名字从宿主取观测量。属性取值，方法调用一次；**没有路径解析**。"""
+        """Read a declared host attribute, calling it once if it is callable."""
         loop = self.spec.loop
         assert loop is not None
         attr = getattr(host, loop.observables[name])
@@ -192,10 +182,10 @@ class GenericWorld:
         return True
 
     def run_loop(self, host: Any, config: Any) -> int:
-        """驱动 tick 循环。宿主提供观测量与每轮重算的参数，harness 管顺序与终止。"""
+        """Drive the tick loop while the host supplies observables and parameters."""
         loop = self.spec.loop
         if loop is None:
-            raise ValueError("本世界未声明 loop")
+            raise ValueError("this world does not declare a loop")
         by_identity = {st.identity: st for st in self.spec.stages}
         iterations = 0
         while self._should_continue(host, config):
@@ -222,10 +212,10 @@ class GenericWorld:
         return out
 
     def reuse_trace(self) -> dict[str, Any]:
-        """复用证据。harness 算事实，`ReuseTraceSpec` 给字段名。"""
+        """Compute reuse facts and render their declared field names."""
         rt = self.spec.reuse_trace
         if rt is None:
-            raise ValueError("本世界未声明 reuse_trace")
+            raise ValueError("this world does not declare reuse_trace")
         step = self._steps[rt.subject_stage]
         source = importlib.import_module(rt.declared_source)
         declared = getattr(source, step.__name__, None)
@@ -247,11 +237,7 @@ class GenericWorld:
 
 
 def config_is_pure_data(module_path: str) -> tuple[bool, list[str]]:
-    """预注册 §3.2：配置里不得出现 lambda / 函数定义 / eval 类构造。
-
-    由 AST 检查，不靠自觉。**若终止条件或观测提取只能用 lambda 表达，
-    就是胶水没被吃掉。**
-    """
+    """Check that a declaration module contains no executable configuration constructs."""
     import ast, pathlib  # noqa: PLC0415
 
     tree = ast.parse(pathlib.Path(module_path).read_text())

@@ -39,7 +39,8 @@
 #   --results so an earlier study's outputs don't trip the check.
 #   Paths containing whitespace are not supported.
 #
-# Exit codes: 0 = all checks passed, 1 = at least one FAIL, 2 = usage error.
+# Exit codes: 0 = all checks passed, 1 = at least one FAIL, 2 = usage error,
+#             3 = PARTIAL (integrity checked, but chronology not established).
 
 set -eu
 
@@ -60,12 +61,15 @@ die() {
 }
 
 repo_root() {
-    git rev-parse --show-toplevel 2>/dev/null || die "not inside a git repository"
+    _root=$(git rev-parse --show-toplevel 2>/dev/null) \
+        || die "not inside a git repository"
+    (cd "$_root" && pwd -P) \
+        || die "cannot resolve repository root: $_root"
 }
 
 # rel_path <file> -> path relative to the repo root
 rel_path() {
-    _abs=$(cd "$(dirname "$1")" 2>/dev/null && pwd) || die "no such file: $1"
+    _abs=$(cd "$(dirname "$1")" 2>/dev/null && pwd -P) || die "no such file: $1"
     _abs="$_abs/$(basename "$1")"
     printf '%s\n' "${_abs#"$ROOT"/}"
 }
@@ -338,7 +342,10 @@ cmd_audit() {
             echo "        CHRONOLOGY was NOT established: no committed outputs were examined."
             echo "        This audit does NOT show that any result post-dates the freeze."
         fi
-        exit 0
+        if [ "$CHRONO_CHECKED" -gt 0 ]; then
+            exit 0
+        fi
+        exit 3
     else
         echo "RESULT: FAIL ($FAILS failed check(s), $WARNS warning(s))"
         echo "A failed audit means the confirmatory label cannot be defended."

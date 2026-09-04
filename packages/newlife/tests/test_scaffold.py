@@ -8,6 +8,7 @@ from __future__ import annotations
 import ast
 import subprocess
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -37,6 +38,22 @@ def test_digest_identifies_content_not_location() -> None:
     assert len(provenance.package_digest(newlife)) == 64
 
 
+def test_digest_covers_non_python_package_assets(tmp_path: Path) -> None:
+    """The freeze script, templates, and skills are part of the build identity too."""
+    package = tmp_path / "fake_package"
+    package.mkdir()
+    init = package / "__init__.py"
+    asset = package / "skill.md"
+    init.write_text("\n")
+    asset.write_text("before\n")
+    fake = SimpleNamespace(__file__=str(init))
+
+    before = provenance.package_digest(fake)
+    asset.write_text("after\n")
+
+    assert provenance.package_digest(fake) != before
+
+
 def test_frozen_at_refuses_an_unfrozen_prereg(tmp_path: Path) -> None:
     """还没冻结就想跑判定 → 硬失败。**不许静默填一个空 SHA。**"""
     p = tmp_path / "prereg.md"
@@ -59,7 +76,69 @@ def test_init_commits_the_scaffold_but_not_the_prereg(tmp_path: Path) -> None:
     tracked = subprocess.run(["git", "-C", str(repo), "ls-files"],
                              capture_output=True, text=True, check=True).stdout
     assert "verdict.py" in tracked and "env.lock" in tracked
+    assert ".gitignore" in tracked
     assert "prereg.md" not in tracked
+
+
+def test_init_does_not_commit_unrelated_staged_or_gitignore_changes(tmp_path: Path) -> None:
+    repo = _repo(tmp_path)
+    (repo / ".gitignore").write_text("base\n")
+    (repo / "baseline.txt").write_text("base\n")
+    subprocess.run(["git", "-C", str(repo), "add", ".gitignore", "baseline.txt"], check=True)
+    subprocess.run(["git", "-C", str(repo), "commit", "-qm", "baseline"], check=True)
+
+    (repo / ".gitignore").write_text("base\nuser-change\n")
+    (repo / "staged.txt").write_text("user staged work\n")
+    subprocess.run(["git", "-C", str(repo), "add", "staged.txt"], check=True)
+
+    scaffold.init("2026-09-05-x", cwd=repo)
+
+    committed = subprocess.run(
+        ["git", "-C", str(repo), "diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"],
+        capture_output=True, text=True, check=True,
+    ).stdout.splitlines()
+    assert set(committed) == {
+        "questions/2026-09-05-x/env.lock",
+        "questions/2026-09-05-x/verdict.py",
+    }
+    staged = subprocess.run(
+        ["git", "-C", str(repo), "diff", "--cached", "--name-only"],
+        capture_output=True, text=True, check=True,
+    ).stdout.splitlines()
+    unstaged = subprocess.run(
+        ["git", "-C", str(repo), "diff", "--name-only"],
+        capture_output=True, text=True, check=True,
+    ).stdout.splitlines()
+    assert staged == ["staged.txt"]
+    assert unstaged == [".gitignore"]
+
+
+def test_symlinked_repo_path_freezes_and_audits(tmp_path: Path) -> None:
+    real = _repo(tmp_path / "real")
+    alias = tmp_path / "alias"
+    alias.symlink_to(real, target_is_directory=True)
+    (real / "baseline.txt").write_text("base\n")
+    subprocess.run(["git", "-C", str(real), "add", "baseline.txt"], check=True)
+    subprocess.run(["git", "-C", str(real), "commit", "-qm", "baseline"], check=True)
+
+    folder = scaffold.init("2026-09-05-linked", cwd=alias)
+    assert scaffold.freeze(folder, cwd=alias) == 0
+    (folder / "results" / "summary.json").write_text("{}\n")
+    subprocess.run(["git", "-C", str(real), "add", "questions/2026-09-05-linked/results"], check=True)
+    subprocess.run(["git", "-C", str(real), "commit", "-qm", "result"], check=True)
+
+    assert scaffold.audit(folder, cwd=alias) == 0
+
+
+def test_audit_partial_is_nonzero(tmp_path: Path) -> None:
+    repo = _repo(tmp_path)
+    (repo / "baseline.txt").write_text("base\n")
+    subprocess.run(["git", "-C", str(repo), "add", "baseline.txt"], check=True)
+    subprocess.run(["git", "-C", str(repo), "commit", "-qm", "baseline"], check=True)
+    folder = scaffold.init("2026-09-05-no-results", cwd=repo)
+    assert scaffold.freeze(folder, cwd=repo) == 0
+
+    assert scaffold.audit(folder, cwd=repo) == 3
 
 
 def test_freeze_refuses_and_says_how_to_recover(tmp_path: Path) -> None:
@@ -77,3 +156,28 @@ def test_init_refuses_outside_a_git_repo(tmp_path: Path) -> None:
     """没有 git 就没有时间证明。**这一步没有退路，不许降级继续。**"""
     with pytest.raises(SystemExit):
         scaffold.init("x", cwd=tmp_path / "nowhere")
+
+
+@pytest.mark.parametrize(
+    "slug",
+    ["", ".", "..", ".hidden", "../outside", "nested/question", r"..\outside"],
+)
+def test_init_rejects_slug_that_is_not_one_safe_path_component(
+    tmp_path: Path, slug: str,
+) -> None:
+    repo = _repo(tmp_path)
+
+    with pytest.raises(SystemExit, match="one safe path component"):
+        scaffold.init(slug, cwd=repo)
+
+    assert not (repo / "questions").exists()
+
+
+def test_init_rejects_absolute_slug_without_writing_outside_repo(tmp_path: Path) -> None:
+    repo = _repo(tmp_path / "repo")
+    outside = tmp_path / "outside"
+
+    with pytest.raises(SystemExit, match="one safe path component"):
+        scaffold.init(str(outside), cwd=repo)
+
+    assert not outside.exists()

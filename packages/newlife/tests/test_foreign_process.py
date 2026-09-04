@@ -22,7 +22,7 @@ def test_mis_declared_operation_hard_fails():
     from newlife.conform.foreign_process_verdict import _admitted_trajectory
 
     wrong = (PortBinding("mass", D.MASS_PATH, "set"),)
-    with pytest.raises(SpecValidationError, match="假定算符"):
+    with pytest.raises(SpecValidationError, match="requires operation"):
         _admitted_trajectory(D.SPEC, wrong)
 
 

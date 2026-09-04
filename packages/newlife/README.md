@@ -4,13 +4,34 @@
 *before* you run anything; let the machine — not your judgement after the fact —
 decide whether the criteria were met.
 
+## Install
+
+Requires Python 3.12 or newer and `git`.
+
 ```bash
+python -m pip install newlife
+# Optional simulation backends:
+python -m pip install "newlife[process-bigraph]"
+python -m pip install "newlife[spatio-flux]"
+```
+
+Start in your own repository:
+
+```bash
+mkdir my-research && cd my-research
+git init
+git config user.name "Your Name"
+git config user.email "you@example.com"
 newlife init 2026-09-05-my-question   # scaffold a question folder; commits it,
                                       # deliberately leaving prereg.md uncommitted
-newlife freeze questions/…            # ← this commit IS the timestamp
-newlife run    questions/…            # verdict computed as a conjunction, never hand-written
-newlife check  questions/…            # three gates on your own files
-newlife audit  questions/…            # four things proved from git alone
+$EDITOR questions/2026-09-05-my-question/prereg.md
+newlife freeze questions/2026-09-05-my-question
+$EDITOR questions/2026-09-05-my-question/verdict.py
+newlife run questions/2026-09-05-my-question
+newlife check questions/2026-09-05-my-question
+git add questions/2026-09-05-my-question/results
+git commit -m "record verdict"
+newlife audit questions/2026-09-05-my-question
 ```
 
 `audit` proves, from commit ancestry rather than forgeable dates: the registration has a
@@ -45,13 +66,8 @@ Also included: `newlife skills install` puts two AI skills (shaping a question i
 decidable one; writing a registration that will not veto itself) where your assistant
 reads them.
 
-## Install
-
-Requires Python ≥ 3.12 and `git` — the freeze commit is the timestamp, so git is not
-optional. Depends on `proofroot` for the trust core (RNG stream derivation, canonical
-serialization, evidence-tier vocabulary).
-
-Simulation backends are optional extras: `newlife[process-bigraph]`, `newlife[spatio-flux]`.
+`proofroot` is installed transitively and supplies RNG stream derivation, canonical
+serialization, and the evidence-tier vocabulary.
 
 Source, design rationale, and the record of every milestone judged so far:
 <https://github.com/hzshen88/newlife>

@@ -98,27 +98,27 @@ def check(table: set[str], conj: set[str], made: set[str]) -> list[str]:
     problems = []
     if not table:
         problems.append("no judgement unit parsed out of prereg.md §2 — table rows must "
-                        "look like `| **S1** | … |`. **On an empty set, \"everything lines "
-                        "up\" is true by construction.**")
+                        "look like `| **S1** | … |`. On an empty set, \"everything lines "
+                        "up\" is true by construction.")
         return problems
     for missing in sorted(table - conj):
-        problems.append(f"{missing}: declared in the table but **absent from the "
-                        f"`verdict = …` conjunction** — it takes no part in the judgement")
+        problems.append(f"{missing}: declared in the table but absent from the "
+                        f"`verdict = …` conjunction — it takes no part in the judgement")
     for extra in sorted(conj - table):
-        problems.append(f"{extra}: appears in the conjunction but **is not defined in the "
-                        f"table** — nobody can say what it means")
+        problems.append(f"{extra}: appears in the conjunction but is not defined in the "
+                        f"table — nobody can say what it means")
     if not made:
         problems.append("no judgement unit parsed out of the artifact — either the runner "
                         "has not been run, or the `units` keys are not shaped like `S1_…`. "
-                        "**This is not the same as \"no criterion was computed\"**: one "
+                        "This is not the same as \"no criterion was computed\": one "
                         "wrong character in the parser once reported all four units as "
                         "missing, pointing the reader somewhere entirely wrong.")
         return problems
     for missing in sorted(table - made):
-        problems.append(f"{missing}: declared in the registration but **absent from the "
-                        f"artifact** — the criterion is on paper, the power is not in the code")
+        problems.append(f"{missing}: declared in the registration but absent from the "
+                        f"artifact — the criterion is on paper, the power is not in the code")
     for extra in sorted(made - table):
-        problems.append(f"{extra}: computed in the artifact but **never declared** — a "
+        problems.append(f"{extra}: computed in the artifact but never declared — a "
                         f"criterion added after the fact, HARKing at the unit level")
     return problems
 
@@ -194,8 +194,8 @@ def main(argv: list[str] | None = None) -> int:
     for p in problems:
         print(f"{args.folder}: {p}")
     if problems:
-        print(f"\n{len(problems)} misalignment(s). **What the registration says and what "
-              f"the code does must match word for word** — one unit short and the "
+        print(f"\n{len(problems)} misalignment(s). What the registration says and what "
+              f"the code does must match word for word — one unit short and the "
               f"conjunction is weaker than it looks.")
         return 1
     print(f"{args.folder}: units aligned — {len(table)} declared "

@@ -1,0 +1,58 @@
+name: build-and-publish
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Configure test Git identity
+        run: |
+          git config --global user.name "newlife release CI"
+          git config --global user.email "release-ci@example.invalid"
+      - name: Require tag to match both package versions
+        run: python scripts/check_release_version.py "$GITHUB_REF_NAME"
+      - name: Test proofroot
+        run: |
+          uv sync --package proofroot
+          uv run --package proofroot pytest packages/proofroot/tests -q
+      - name: Test newlife
+        run: |
+          uv sync --package newlife --extra process-bigraph
+          uv run --package newlife pytest packages/newlife/tests -q
+      - name: Check architecture imports
+        run: python scripts/check_imports.py
+      - name: Build and inspect both distributions
+        run: |
+          uv build --all-packages --out-dir dist
+          uvx --from twine twine check dist/*
+          uvx check-wheel-contents dist/*.whl
+          python scripts/check_release_artifacts.py dist
+          python scripts/smoke_release_install.py dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-distributions
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-distributions
+          path: dist/
+      - name: Publish proofroot and newlife with PyPI Trusted Publishing
+        uses: pypa/gh-action-pypi-publish@release/v1

@@ -13,15 +13,21 @@ scientific semantics a bare composition runtime does not provide.
 
 Your question lives in **your** repository, not this one.
 
-**Not on PyPI yet** — build the wheel from this repository and install that:
+Install the preregistration harness from PyPI. `proofroot` is installed as its
+trust-core dependency; install it directly only when you need that lower-level API.
 
 ```bash
-git clone <this repo> && cd newlife && uv build --all-packages --out-dir dist
-cd ~/my-research && git init   # the freeze commit IS the timestamp — git is not optional
-uv venv && uv pip install --python .venv \
-    /path/to/newlife/dist/newlife-*.whl /path/to/newlife/dist/proofroot-*.whl
-.venv/bin/newlife skills install    # put the question-shaping skills where your AI reads them
-.venv/bin/newlife init 2026-09-05-my-question
+python -m pip install newlife
+# Optional simulation backends:
+python -m pip install "newlife[process-bigraph]"
+python -m pip install "newlife[spatio-flux]"
+
+mkdir my-research && cd my-research
+git init                              # git is required: the freeze commit is the timestamp
+git config user.name "Your Name"
+git config user.email "you@example.com"
+newlife skills install                # install the question-shaping skills for your AI
+newlife init 2026-09-05-my-question
 ```
 
 That scaffolds `questions/2026-09-05-my-question/` and **commits it while
@@ -148,7 +154,7 @@ needed for the trust core:
 
 ```bash
 uv sync --package proofroot
-uv run --package proofroot pytest packages/proofroot/tests -q   # 121 passed
+uv run --package proofroot pytest packages/proofroot/tests -q
 ```
 
 `newlife` itself needs the pinned upstream runtime, which lives behind an
@@ -157,7 +163,7 @@ the core, and packaging enforces it):
 
 ```bash
 uv sync --package newlife --extra process-bigraph
-uv run --package newlife pytest packages/newlife/tests -q      # 174 passed
+uv run --package newlife pytest packages/newlife/tests -q
 python3 scripts/check_imports.py                               # import-lint
 ```
 
@@ -184,6 +190,10 @@ recorded by the Julia reference implementation, so it additionally needs Julia
 and a local [ParaLife](https://github.com/hzshen88/paralife) `parworlds`
 checkout. See [`examples/first-world/README.md`](examples/first-world/) for the
 commands and `--parworlds` path.
+
+Release maintainers should follow [`docs/releasing.md`](docs/releasing.md). A tagged
+release builds and validates both distributions before publishing them through PyPI
+Trusted Publishing; no long-lived upload token is stored in GitHub.
 
 ## Repository map
 

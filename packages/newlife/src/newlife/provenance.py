@@ -10,9 +10,11 @@ artifact wanted to record which build of newlife produced it, and technically co
 `newlife @ file:///.../newlife-0.1.0-py3-none-any.whl` — **a local path**, neither
 reproducible nor checkable on another machine.
 
-So what is recorded here is a **content digest of the installed source**: every `.py`
-under the package directory, hashed in sorted relative-path order. Identical wherever the
-same wheel is installed; different if one byte changes.
+So what is recorded here is a **content digest of the installed package**: every stable
+file under the package directory (Python, shell, templates, and skills), hashed in sorted
+relative-path order with platform-neutral path spelling. Interpreter caches are excluded.
+The digest is identical wherever the same wheel is installed and changes if any shipped
+content byte changes.
 
 **This is not a field for humans to read. It is what answers "does it still match".**
 """
@@ -28,16 +30,25 @@ from typing import Any
 
 
 def package_digest(package: Any) -> str:
-    """Content digest of an installed package's source.
+    """Content digest of every stable file shipped inside an installed package.
 
     **A version string can lie about what is installed. This cannot.**
     """
     root = Path(package.__file__).resolve().parent
     digest = hashlib.sha256()
-    for path in sorted(root.rglob("*.py")):
-        if "__pycache__" in path.parts:
+    paths = sorted(
+        path for path in root.rglob("*")
+        if path.is_file()
+        and "__pycache__" not in path.parts
+        and path.suffix not in {".pyc", ".pyo"}
+    )
+    for path in paths:
+        relative = path.relative_to(root)
+        if "__pycache__" in relative.parts:
             continue
-        digest.update(str(path.relative_to(root)).encode())
+        # POSIX spelling makes the digest identical for the same wheel on
+        # Windows and Unix instead of hashing platform-native separators.
+        digest.update(relative.as_posix().encode())
         digest.update(b"\0")
         digest.update(path.read_bytes())
     return digest.hexdigest()

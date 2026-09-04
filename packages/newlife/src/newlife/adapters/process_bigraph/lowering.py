@@ -31,20 +31,11 @@ StoreHandler = Callable[[LoweredOp, str, dict[str, Any], float], dict[str, Any]]
 
 
 def _expect(op: LoweredOp, wanted: str, store: str) -> None:
-    """store handler 假定了某个算符，就必须校验它。
-
-    第十五个里程碑（`results/fifteenth/`）发现的缺口：`sum-float-add` 假定进来的是
-    ADD，却从不检查——于是把声明表里的 `operation` 填成 `set` **产出完全相同的轨迹，
-    没有任何东西报警**。而接第三方 process 时，那张表正是由我们**代写**的，
-    是最容易填错、也最没人复核的一处。
-
-    `_budget_proposal_projection` 与 `_resolved_position_envelope` 本来就这么做，
-    只是 StateDelta 那几个 handler 漏了。这里补齐。
-    """
+    """Require the operation assumed by a store handler."""
     if op.op != wanted:
         raise SpecValidationError(
-            f"store 类型 {store!r} 假定算符 {wanted!r}，实际收到 {op.op!r}——"
-            "声明表与 store 语义对不上，不许静默按假定处理"
+            f"store type {store!r} requires operation {wanted!r}, got {op.op!r}; "
+            "the declaration does not match the store semantics"
         )
 
 
@@ -70,7 +61,8 @@ def _sum_map_add(op: LoweredOp, port: str, _view, _interval) -> dict[str, Any]:
     _expect(op, OP_ADD, "sum-map-add")
     if not isinstance(op.payload, Mapping):
         raise SpecValidationError(
-            f"store 类型 'sum-map-add' 要求映射负载，收到 {type(op.payload).__name__}"
+            "store type 'sum-map-add' requires a mapping payload, got "
+            f"{type(op.payload).__name__}"
         )
     return {port: dict(op.payload)}
 
