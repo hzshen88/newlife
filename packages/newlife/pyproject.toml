@@ -12,6 +12,9 @@ process-bigraph = ["process-bigraph==1.8.3"]
 # 第十六个里程碑：一个真正独立的第三方包。走 optional extra，不进主依赖面
 spatio-flux = ["spatio-flux==1.4.0"]
 
+[project.scripts]
+newlife = "newlife.cli:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -21,6 +24,9 @@ proofroot = { workspace = true }
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/newlife"]
+# 模板与 vendored 的 prereg.sh 不是 .py，必须显式带进 wheel——
+# 「冻结工具不随库发布」是用户拿不到时间证明的直接原因。
+artifacts = ["src/newlife/scaffold/prereg.sh", "src/newlife/scaffold/templates/*"]
 
 [dependency-groups]
 dev = ["pytest>=8"]

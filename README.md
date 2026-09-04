@@ -9,7 +9,47 @@ scientific semantics a bare composition runtime does not provide.
 | [`packages/proofroot`](packages/proofroot/) | Language-neutral trust core: named RNG stream derivation, run phases, evidence tiers, canonical serialization spec + cross-language vectors. Zero dependencies, zero domain semantics. | — |
 | [`packages/newlife`](packages/newlife/) | BiologicalProfile: the four contracts (StateClaim / MechanismSpec / Effect / Resolver), path authority, read-only alias guard, single-path lowering, canonical traces. | proofroot |
 
-## Quickstart
+## Ask your own question
+
+Your question lives in **your** repository, not this one.
+
+```bash
+uv pip install newlife
+cd my-research && git init     # the freeze commit IS the timestamp — git is not optional
+newlife init 2026-09-05-my-question
+```
+
+That scaffolds `questions/2026-09-05-my-question/` and **commits it while
+deliberately leaving `prereg.md` uncommitted**. The freeze has to be that file's
+first commit, and the natural habit — `git add -A` right after creating a folder
+— destroys that irreversibly.
+
+```bash
+$EDITOR questions/2026-09-05-my-question/prereg.md    # the criteria
+newlife freeze questions/2026-09-05-my-question       # ← this commit is the proof
+$EDITOR questions/2026-09-05-my-question/verdict.py   # your world
+newlife run   questions/2026-09-05-my-question
+git add questions/2026-09-05-my-question/results && git commit -m "verdict"
+newlife audit questions/2026-09-05-my-question
+```
+
+`audit` proves four things from git alone: the registration has a freeze commit,
+the stamped hash matches it, the content was never edited afterwards, and **every
+committed output post-dates the freeze**. That last one needs the registration and
+the results to share a git ancestry, which is why they live in one repository, one
+folder per question. Questions are siblings, not a chain: **a question's verdict
+never runs another question's runner.**
+
+The generated `verdict.py` already carries what every question needs identically —
+provenance (which build of newlife by source digest, not the version string; which
+environment by lockfile hash), the self-reproduction check, and the slot where each
+criterion proves it can fail. Replace the placeholder model with your own.
+
+> **Why "proves it can fail" is a required slot**: this project shipped a negative
+> control that was true by construction and nobody noticed for a whole milestone.
+> See [`docs/worlds/019-yield-input-or-outcome.md`](docs/worlds/019-yield-input-or-outcome.md) §6.
+
+## Quickstart (contributing to newlife itself)
 
 Requires Python ≥ 3.12 and [uv](https://docs.astral.sh/uv/). Nothing else is
 needed for the trust core:
