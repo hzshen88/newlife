@@ -21,10 +21,29 @@ from __future__ import annotations
 import dataclasses
 import hashlib
 import inspect
+import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any, Sequence
+
+_LEDGER_ENV = "NEWLIFE_SAFETY_LINE_LEDGER"
+"""进程树内「这个 runner 已经跑过了」的账本路径。
+
+**去重前是指数的。** 每个 runner 的安全绳无条件重跑它全部的上游，而上游又各自
+重跑自己的上游：f(n) = 1 + Σ_{k<n} f(k)，即 **f(n) = 2^(n-1)**。第十九个里程碑
+展开成 17 个子进程（第十五个跑 8 次、第十六 4 次、第十七 2 次），实测 300.66 秒。
+
+**去重是语义免费的**：安全绳断言的是「重跑这个 runner，它的产物逐字节不变」。
+这个断言在一棵进程树里成立一次就够了，跑第二遍不增加任何信息。
+
+**用文件而不是环境变量传递**，因为环境变量只能往下传：A 依赖 B 和 C、B 和 C 都依赖 D
+时，A 无从得知 B 已经跑过 D。今天的依赖图恰好没有这种菱形，**但「里程碑排成一条线」
+正是要拆掉的那个假设**——用户的问题之间是兄弟不是父子。
+
+**先登记再执行**：万一依赖成环，也是停下而不是无限递归。
+"""
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -45,12 +64,18 @@ def check_baselines(
     **git 不可用时硬失败并指名**（第十三个里程碑的教训）——那是环境缺失，
     不是「基线不同」。**不许静默取一个对自己有利的默认值。**
     """
-    for module in runner_modules:
-        run = subprocess.run(
-            [sys.executable, "-m", module], cwd=repo, capture_output=True, text=True
-        )
-        if run.returncode != 0:
-            return BaselineCheck(False, module, run.returncode, "")
+    ledger = os.environ.get(_LEDGER_ENV)
+    owner = ledger is None          # 树根负责建账本，也负责删
+    if owner:
+        handle, ledger = tempfile.mkstemp(prefix="newlife-safety-line-")
+        os.close(handle)
+    try:
+        failed = _run_upstream(repo, runner_modules, Path(ledger))
+    finally:
+        if owner:
+            Path(ledger).unlink(missing_ok=True)
+    if failed is not None:
+        return failed
     try:
         status = subprocess.run(
             ["git", "status", "--porcelain", "--", *baselines],
@@ -63,6 +88,29 @@ def check_baselines(
         ) from exc
     dirty = status.stdout.strip()
     return BaselineCheck(dirty == "", None, None, dirty)
+
+
+def _run_upstream(
+    repo: Path, runner_modules: Sequence[str], ledger: Path
+) -> BaselineCheck | None:
+    """跑还没跑过的上游 runner；返回 None 表示都过了。
+
+    **跳过的那些并非没被检查**——是这棵进程树里已经有人跑过它并写过它的产物，
+    下面的 `git status` 读的正是同一批文件。跳过不改变任何上报值，
+    所以判定产物逐字节不变。
+    """
+    for module in runner_modules:
+        if module in ledger.read_text().split():
+            continue
+        with ledger.open("a") as fh:
+            fh.write(module + "\n")     # 先登记后执行：成环时停下，不递归到死
+        run = subprocess.run(
+            [sys.executable, "-m", module], cwd=repo, capture_output=True, text=True,
+            env={**os.environ, _LEDGER_ENV: str(ledger)},
+        )
+        if run.returncode != 0:
+            return BaselineCheck(False, module, run.returncode, "")
+    return None
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
