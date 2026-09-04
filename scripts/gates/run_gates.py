@@ -19,7 +19,7 @@ import subprocess
 import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
-ROOT = HERE.parent
+ROOT = HERE.parents[1]          # 仓库根：用户传的相对路径从这里解
 
 # 日常路径会跑的 gate：**注册表即执行体**，不是两份手写清单。
 #
@@ -27,17 +27,24 @@ ROOT = HERE.parent
 # 加了 `_run(...)` 却忘了登记就没人管。这里把 kind → 命令的构造合成一份，
 # 「注册表说跑了而实际没跑」和「跑了却没登记」都变成结构上不可能。
 def _gates(args, scan_targets: list[str]) -> dict:
-    V = "verification/verify_doc_claims.py"
-    S = "verification/silent_degradation_scan.py"
+    # **门与被扫的源码同仓之后，这些路径必须锚在 HERE**——搬进 newlife 时
+    # 它们还留着 exloop 的 `verification/` 前缀，八个门全部「can't open file」。
+    V = str(HERE / "verify_doc_claims.py")
+    S = str(HERE / "silent_degradation_scan.py")
+    C = str(HERE / "vacuous_criterion_scan.py")
     return {
         # 各机制自身的性质，不依赖任何存储值
         "frozen_selftest": [V, "--selftest"],
         "silentdeg_selftest": [S, "--selftest"],
+        "vacuous_selftest": [C, "--selftest"],
         # 对本里程碑文档与代码的检查
         # 豁免上限：现有 3 处（mutation_scan 的分类过滤器、本扫描器的豁免探测器、
         # 第五世界分类器逐行匹配 check 表格行、gate_selftest 的 expect_check）。
         # 要新增豁免，必须在这里显式改这个数——增长留在 diff 里，不会无声累积。
         "silentdeg": [S, "--max-exemptions", "5", *scan_targets],
+        # 第十九个里程碑的 Z5：判据建立在一个「名为扫描、实为重复」的推导式上，
+        # 于是恒真、永不变红，在合取里待了一整个里程碑。
+        "vacuous": [C, *scan_targets],
         "ledger": [V, "--ledger", str(args.ledger), str(args.question)],
         "frozen": [V, "--ledger", str(args.ledger), str(args.goal)],
         "trace": [V, "--trace", f"goal={args.goal}", str(args.question)],
@@ -89,16 +96,17 @@ def main() -> int:
     ap.add_argument(
         "--scan-external",
         nargs="*",
-        default=["~/Projects/newlife/packages/newlife/src",
-                 "~/Projects/newlife/packages/proofroot/src"],
-        help=("仓外也要扫的源码根。**第十三个里程碑暴露的范围缺口**：扫描器一直只扫 exloop "
+        default=[],
+        help=("仓外也要扫的源码根。**第十三个里程碑暴露的范围缺口**：扫描器当时只扫 exloop "
               "的验证脚本，而那处 silent_output 在 newlife 的 conform/ 里——"
-              "工具够得着的范围本身就是一个洞。"),
+              "工具够得着的范围本身就是一个洞。门搬进 newlife 后本仓源码已由 `--scan` "
+              "递归覆盖，**默认为空**；要扫别的仓库再显式传。"),
     )
     args = ap.parse_args()
 
     scan_targets = [
-        str(p) for d in args.scan for p in sorted((ROOT / d).glob("*.py"))
+        str(p) for d in args.scan for p in sorted((ROOT / d).rglob("*.py"))
+        if "__pycache__" not in str(p)          # glob("*.py") 够不到 packages/ 下的任何东西
     ] + [
         str(p)
         for d in args.scan_external

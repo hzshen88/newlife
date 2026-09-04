@@ -43,18 +43,18 @@ LEDGER = "verification/checks.json"
 FIXTURES = [
     dict(id="F3", origin="第 5、6 轮红队：文档声称某 check 覆盖了 A 函数，"
                          "而运行时观测到的是 B——covers 是观测，不是声明。",
-         mutate=(QUESTION, "covers=drift-->", "covers=endpoint-->"), red="claims"),
+         mutate=(QUESTION, "covers=drift-->", "covers=endpoint-->"), red="ledger"),
     dict(id="F4", origin="v0.3 冻结的 prereg 把 '7 units' 写成 9——数字抄错，"
                          "冻结后只能靠 implementation-log 更正。",
-         mutate=(QUESTION, "path_len=13", "path_len=12"), red="claims"),
+         mutate=(QUESTION, "path_len=13", "path_len=12"), red="ledger"),
     dict(id="F5", origin="引用一个不存在的 check——手滑，或脚本重构后编号变了"
                          "而文档没跟。",
-         mutate=(QUESTION, "<!--@check-1:", "<!--@check-99:"), red="claims"),
+         mutate=(QUESTION, "<!--@check-1:", "<!--@check-99:"), red="ledger"),
     dict(id="F6", origin="第三世界正文里真躺过一个过期的 SHA-256：锚里是新的，"
                          "散文里是旧的。同一事实写了两遍，第二遍漂移了。",
          # **不写死哈希字面量**——语料一改它就失配，起草时正是这么断的。
          mutate=(QUESTION, "<!--@script: sha256=", "<!--@script: sha256=dead"),
-         red="claims"),
+         red="ledger"),
     dict(id="F7", origin="goal 的某条达成判据没有任何下游落点——这一层没兑现上一层，"
                          "而收尾时才发现。",
          mutate=(QUESTION, "<!--@goal: C3-->", ""), red="trace"),
@@ -66,7 +66,7 @@ FIXTURES = [
                           "结局——词表被下游偷偷扩了。",
          mutate=(QUESTION, "<!--@outcome: C1=constant-->",
                  "<!--@outcome: C1=constant--><!--@outcome: C1=deferred-->"),
-         red="vocab"),
+         red="vocabulary"),
     dict(id="F15", origin="外审用 git log 实测发现：goal 状态行写着 frozen，"
                           "而内容在冻结之后被改过。",
          mutate=(GOAL, "**封闭意味着不许扩。**",
@@ -97,6 +97,13 @@ FIXTURES = [
                  '        ln for ln in text.splitlines() if "@frozen:" not in ln)\n'
                  "    return ANCHOR_RE.sub("),
          red="frozen_selftest"),
+    dict(id="F22", origin="第十九个里程碑 Z5：判据建立在 `for _ in O2_SWEEP` 上——"
+                          "**恒真的判据永远不会红，而人只查红的东西**。本变异照 F14 "
+                          "的形状把识别面缩空：认不出元组常量，假扫描就再也报不出来。",
+         mutate=("__gate__/vacuous_criterion_scan.py",
+                 "isinstance(node.value, (ast.Tuple, ast.List, ast.Set))",
+                 "isinstance(node.value, ast.Dict)"),
+         red="vacuous_selftest"),
 ]
 
 # ── 反向对照：下游还没起草时，追溯链必须报 PENDING 且 exit 0 ────────
@@ -107,16 +114,23 @@ GREEN_FIXTURE = dict(
     red=None)
 
 
+# 未变异时必须全绿的组件。**`all_gates` 是整条日常路径**——单门自检全绿而聚合
+# 入口是死的，正是搬进 newlife 时真实发生的事。
+BASELINE = ("ledger", "trace", "frozen", "goal_ready", "all_gates")
+
+
 def _run(component: str, work: pathlib.Path) -> int:
     gates = work / "__gate__"
     q, g, led = work / QUESTION, work / GOAL, work / LEDGER
     cmds = {
-        "claims": [gates / "verify_doc_claims.py", "--ledger", led, q],
+        # **键名与 `run_gates.GATE_KINDS` 逐字对齐**——交叉核对因此是纯子集判断，
+        # 不需要别名表。别名表是第三份手写清单，一样会腐烂。
+        "ledger": [gates / "verify_doc_claims.py", "--ledger", led, q],
         "trace": [gates / "verify_doc_claims.py", "--trace", f"goal={g}", q],
         # `--vocabulary` 是独立 flag，不在 `--trace` 里；`frozen` 锚只在带 `--ledger`
         # 的那条路径上被检查。**起草时两处都调错了，于是两条 fixture 打了空——
         # 「变异之后仍然绿」当场把它报出来了，这正是这套自检存在的理由。**
-        "vocab": [gates / "verify_doc_claims.py", "--vocabulary", f"goal={g}", q],
+        "vocabulary": [gates / "verify_doc_claims.py", "--vocabulary", f"goal={g}", q],
         "frozen": [gates / "verify_doc_claims.py", "--ledger", led, g],
         "goal_ready": [gates / "check_goal_ready.py", g],
         "frozen_selftest": [gates / "verify_doc_claims.py", "--selftest"],
@@ -125,6 +139,11 @@ def _run(component: str, work: pathlib.Path) -> int:
         # 「用一个检测不出东西的东西判定通过」的又一次。
         "mutscan_selftest": [gates / "mutation_scan.py",
                               work / "verification/example_check.py", "--quiet"],
+        "vacuous_selftest": [gates / "vacuous_criterion_scan.py", "--selftest"],
+        # 整条日常路径。**搬进 newlife 时它八个门全部 can't open file，而单门自检
+        # 12/12 全绿**——门能抓住，却没人证明过它会被跑。
+        "all_gates": [gates / "run_gates.py", "--goal", g, "--question", q,
+                      "--ledger", led],
     }[component]
     return subprocess.run([sys.executable, *map(str, cmds)],
                           cwd=work, capture_output=True, text=True).returncode
@@ -137,12 +156,28 @@ def _workspace() -> pathlib.Path:
     return work
 
 
+def _cross_check() -> list[str]:
+    """`run_gates` 的文档承诺过这条，而搬进 newlife 的这份拷贝里**它根本不存在**——
+    于是聚合入口的八个门全部 `can't open file` 而无人发现。承诺要么兑现，要么删掉。
+
+    规矩：自检用到的每一种 gate，必须在 `GATE_KINDS` 里，或在 `EXEMPT` 里写明理由。
+    `_selftest` 后缀先剥掉再查（`mutscan_selftest` 对应豁免项 `mutscan`）。
+    """
+    sys.path.insert(0, str(GATES))
+    import run_gates
+    known = set(run_gates.GATE_KINDS) | set(run_gates.EXEMPT)
+    used = {fx["red"] for fx in FIXTURES} | set(BASELINE) - {"all_gates"}
+    return [f"{c}: 自检在用，但既不在 run_gates.GATE_KINDS 也不在 EXEMPT —— "
+            f"加了新门却没接进日常路径" for c in sorted(used)
+            if c not in known and c.removesuffix("_selftest") not in known]
+
+
 def main() -> int:
-    failures: list[str] = []
+    failures: list[str] = _cross_check()
 
     # 前提：未变异时全绿。不成立就谈不上「变异让它变红」。
     base = _workspace()
-    for comp in ("claims", "trace", "frozen", "goal_ready"):
+    for comp in BASELINE:
         if _run(comp, base) != 0:
             failures.append(f"前提不成立：未变异时 {comp} 就是红的")
     shutil.rmtree(base)
