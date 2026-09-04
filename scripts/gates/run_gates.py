@@ -20,6 +20,11 @@ import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]          # 仓库根：用户传的相对路径从这里解
+# 随包发布的那几条。**先看自己身边**：`gate_selftest` 把两处的门一起拷进一个
+# 临时工作区再变异，那里没有 `packages/…` 这层目录——写死仓库路径会让整条
+# 日常路径在自检的工作区里打不开文件，而那正是这个文件上一次栽的跟头。
+_SIBLING = HERE / "unit_alignment.py"
+PKG_GATES = HERE if _SIBLING.exists() else ROOT / "packages/newlife/src/newlife/gates"
 
 # 日常路径会跑的 gate：**注册表即执行体**，不是两份手写清单。
 #
@@ -30,18 +35,23 @@ def _gates(args, scan_targets: list[str]) -> dict:
     # **门与被扫的源码同仓之后，这些路径必须锚在 HERE**——搬进 newlife 时
     # 它们还留着 exloop 的 `verification/` 前缀，八个门全部「can't open file」。
     V = str(HERE / "verify_doc_claims.py")
-    S = str(HERE / "silent_degradation_scan.py")
-    C = str(HERE / "vacuous_criterion_scan.py")
+    # **这两条已搬进包**（`newlife/gates/`），因为它们直接适用于用户的问题文件夹；
+    # 留在这里的那几条假定了 goal/question/ledger 三件套，发出去用户也用不上。
+    S = str(PKG_GATES / "silent_degradation_scan.py")
+    C = str(PKG_GATES / "vacuous_criterion_scan.py")
+    U = str(PKG_GATES / "unit_alignment.py")
     return {
         # 各机制自身的性质，不依赖任何存储值
         "frozen_selftest": [V, "--selftest"],
         "silentdeg_selftest": [S, "--selftest"],
         "vacuous_selftest": [C, "--selftest"],
+        "alignment_selftest": [U, "--selftest"],
         # 对本里程碑文档与代码的检查
-        # 豁免上限：现有 3 处（mutation_scan 的分类过滤器、本扫描器的豁免探测器、
-        # 第五世界分类器逐行匹配 check 表格行、gate_selftest 的 expect_check）。
+        # 豁免上限：现有 6 处（mutation_scan 的分类过滤器、本扫描器的豁免探测器、
+        # verdict.py 的 pytest 输出谓词，以及 unit_alignment 的三处逐行筛选——
+        # 「不是每一行都是表格行、不是每个键都是单元名」，聚合为空的情形由 check() 硬报）。
         # 要新增豁免，必须在这里显式改这个数——增长留在 diff 里，不会无声累积。
-        "silentdeg": [S, "--max-exemptions", "5", *scan_targets],
+        "silentdeg": [S, "--max-exemptions", "6", *scan_targets],
         # 第十九个里程碑的 Z5：判据建立在一个「名为扫描、实为重复」的推导式上，
         # 于是恒真、永不变红，在合取里待了一整个里程碑。
         "vacuous": [C, *scan_targets],

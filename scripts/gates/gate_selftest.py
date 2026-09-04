@@ -33,6 +33,9 @@ import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 GATES = ROOT / "scripts/gates"
+# 两条门已搬进包（随 wheel 发布）。它们仍是 stdlib-only 的独立脚本，
+# 所以照样能拷进临时工作区、变异、要求它变红。
+PKG_GATES = ROOT / "packages/newlife/src/newlife/gates"
 CORPUS = pathlib.Path(__file__).resolve().parent / "corpus"   # **不能放 examples/**：那层有条冻结的 v0.2 门——
                             # 应用层是配置数据，任何 Python 都算违规。语料带脚本。
 QUESTION = "questions/example.md"
@@ -104,6 +107,14 @@ FIXTURES = [
                  "isinstance(node.value, (ast.Tuple, ast.List, ast.Set))",
                  "isinstance(node.value, ast.Dict)"),
          red="vacuous_selftest"),
+    dict(id="F23", origin="单元对齐门起草时：`\\b` 在 `S1_env_unchanged` 的 `1` 与 `_` "
+                          "之间不成立，一个 JSON 键都认不出，于是**四条单元全被报成"
+                          "「预注册声明了但产物里没有」**。第一版自检只测判定逻辑、"
+                          "不测解析器，抓不住它——**检查太弱**。",
+         mutate=("__gate__/unit_alignment.py",
+                 'UNIT_KEY = re.compile(r"^([A-Z]+\\d+)(?:_|$)")',
+                 'UNIT_KEY = re.compile(r"\\b([A-Z]+\\d+)\\b")'),
+         red="alignment_selftest"),
 ]
 
 # ── 反向对照：下游还没起草时，追溯链必须报 PENDING 且 exit 0 ────────
@@ -140,6 +151,7 @@ def _run(component: str, work: pathlib.Path) -> int:
         "mutscan_selftest": [gates / "mutation_scan.py",
                               work / "verification/example_check.py", "--quiet"],
         "vacuous_selftest": [gates / "vacuous_criterion_scan.py", "--selftest"],
+        "alignment_selftest": [gates / "unit_alignment.py", "--selftest"],
         # 整条日常路径。**搬进 newlife 时它八个门全部 can't open file，而单门自检
         # 12/12 全绿**——门能抓住，却没人证明过它会被跑。
         "all_gates": [gates / "run_gates.py", "--goal", g, "--question", q,
@@ -153,6 +165,7 @@ def _workspace() -> pathlib.Path:
     work = pathlib.Path(tempfile.mkdtemp(prefix="_gate_selftest_"))
     shutil.copytree(CORPUS, work, dirs_exist_ok=True)
     shutil.copytree(GATES, work / "__gate__", dirs_exist_ok=True)
+    shutil.copytree(PKG_GATES, work / "__gate__", dirs_exist_ok=True)
     return work
 
 

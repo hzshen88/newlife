@@ -427,7 +427,7 @@ def run_selftest() -> int:
     return 0
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("paths", nargs="*", type=pathlib.Path)
     ap.add_argument("--selftest", action="store_true", help="检验覆盖面本身")
@@ -440,7 +440,7 @@ def main() -> int:
              "首版默认 None（无限），第四轮外审把它记为「新保护默认关闭」的第三次出现："
              "同一份文件，走 run_gates 会红、直接跑却全绿。保护的默认值必须是严的那一端。",
     )
-    args = ap.parse_args()
+    args = ap.parse_args(argv)          # None → 读 sys.argv，当脚本跑时不变
 
     if args.selftest:
         return run_selftest()

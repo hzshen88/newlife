@@ -101,11 +101,11 @@ Z3（dFBA 产率随氧变，幅度 56%）∧ Z4（Monod 产率恒定）已由算
 """
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("paths", nargs="*", type=pathlib.Path)
     ap.add_argument("--selftest", action="store_true")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)          # None → 读 sys.argv，当脚本跑时不变
     if args.selftest:
         return _selftest()
 

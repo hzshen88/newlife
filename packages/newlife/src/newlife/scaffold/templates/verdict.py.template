@@ -67,11 +67,16 @@ def main() -> int:
     can_fail = criteria_can_fail()
     s1 = prov["env_lock_sha256"] == provenance.file_digest(HERE / "env.lock")
     s2 = strictly_increasing(observed)
+    # **「判据能红」是合取里看得见的一格，不是嵌在别人里面的细节。**
+    # 第一版把它折进 S2 的一个子字段，于是预注册写着 S0∧S1∧S2∧S3、代码只算三个——
+    # `newlife check` 的单元对齐门第一次真实使用就抓到了这一处。
     units = {"S1_env_unchanged": {"passed": s1},
-             "S2_increases_across_sweep": {"passed": s2, "red_demonstrations": can_fail}}
+             "S2_increases_across_sweep": {"passed": s2},
+             "S3_criteria_can_fail": {"passed": all(can_fail.values()),
+                                      "demonstrations": can_fail}}
 
     invalid = not s1                       # IC-2：环境变了就不是判定结果
-    passed = all(u["passed"] for u in units.values()) and all(can_fail.values())
+    passed = all(u["passed"] for u in units.values())
     verdict = decide(h1=(not invalid) and passed,
                      h0=(not invalid) and not passed, invalid=invalid)
 

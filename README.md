@@ -29,9 +29,25 @@ $EDITOR questions/2026-09-05-my-question/prereg.md    # the criteria
 newlife freeze questions/2026-09-05-my-question       # ← this commit is the proof
 $EDITOR questions/2026-09-05-my-question/verdict.py   # your world
 newlife run   questions/2026-09-05-my-question
+newlife check questions/2026-09-05-my-question       # three gates, see below
 git add questions/2026-09-05-my-question/results && git commit -m "verdict"
 newlife audit questions/2026-09-05-my-question
 ```
+
+`check` runs three gates against **your own files**: a scan for criteria that are
+true by construction (a comprehension that iterates a named constant while
+discarding the loop variable — that is a repetition, not a sweep); a scan for
+parse-failures that silently fall back to a convenient default; and an alignment
+check that the units your `prereg.md` declares are exactly the units your runner
+computes. That last one caught a real misalignment the first time it ran on a real
+question folder: the registration said `verdict = S0 ∧ S1 ∧ S2 ∧ S3` while the
+runner had folded S3 into a sub-field of S2, so the conjunction was one unit weaker
+than it looked.
+
+The other gates in this repository — `check_goal_ready`, `verify_doc_claims`,
+`mutation_scan`, `run_gates` — are **not** shipped: they assume a separate document
+pipeline (goal anchors, a verification-script ledger). That is attribution, not
+omission.
 
 `audit` proves four things from git alone: the registration has a freeze commit,
 the stamped hash matches it, the content was never edited afterwards, and **every
