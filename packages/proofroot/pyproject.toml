@@ -5,6 +5,16 @@ description = "Language-neutral trust core for reproducible simulation: named RN
 readme = "README.md"
 requires-python = ">=3.12"
 license = "Apache-2.0"
+authors = [{ name = "hzshen88" }]
+keywords = ["reproducibility", "provenance", "rng-streams",
+            "canonical-serialization", "trust-core"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
 dependencies = []
 
 [build-system]
@@ -16,3 +26,7 @@ packages = ["src/proofroot"]
 
 [dependency-groups]
 dev = ["pytest>=8"]
+
+[project.urls]
+Homepage = "https://github.com/hzshen88/newlife"
+Repository = "https://github.com/hzshen88/newlife"

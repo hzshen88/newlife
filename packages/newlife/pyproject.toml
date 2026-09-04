@@ -1,10 +1,20 @@
 [project]
 name = "newlife"
 version = "0.1.0"
-description = "A verifiable profile layer for composable biological simulation: path authority, effect validation, single-path lowering, canonical evidence traces."
+description = "Preregistration harness for simulation: freeze what would count as an answer in git, compute the verdict mechanically, and prove from commit ancestry that the outputs post-date the freeze."
 readme = "README.md"
 requires-python = ">=3.12"
 license = "Apache-2.0"
+authors = [{ name = "hzshen88" }]
+keywords = ["preregistration", "reproducibility", "simulation", "provenance",
+            "systems-biology", "scientific-workflow"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
 dependencies = ["proofroot"]
 
 [project.optional-dependencies]
@@ -31,3 +41,7 @@ artifacts = ["src/newlife/scaffold/prereg.sh", "src/newlife/scaffold/templates/*
 
 [dependency-groups]
 dev = ["pytest>=8"]
+
+[project.urls]
+Homepage = "https://github.com/hzshen88/newlife"
+Repository = "https://github.com/hzshen88/newlife"
