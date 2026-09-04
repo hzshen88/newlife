@@ -52,4 +52,4 @@ def test_alignment_distinguishes_empty_parse_from_missing_units() -> None:
     """
     declared = {"S0", "S1", "S2"}
     problems = unit_alignment.check(declared, declared, set())
-    assert len(problems) == 1 and "一个判定单元都没解析到" in problems[0]
+    assert len(problems) == 1 and "no judgement unit parsed" in problems[0]

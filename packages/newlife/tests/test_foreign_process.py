@@ -38,5 +38,5 @@ def test_unbound_port_hard_fails():
     """第三方写了一个我们没为它声明的端口 → 硬失败，不静默丢弃。"""
     from newlife.conform.foreign_process_verdict import _admitted_trajectory
 
-    with pytest.raises(SpecValidationError, match="未声明的端口"):
+    with pytest.raises(SpecValidationError, match="undeclared port"):
         _admitted_trajectory(D.SPEC, (PortBinding("other", D.MASS_PATH, "add"),))

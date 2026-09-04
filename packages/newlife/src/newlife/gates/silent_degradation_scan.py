@@ -1,44 +1,54 @@
 #!/usr/bin/env python3
-"""扫出「解析失败 → 静默退化为默认值」这一类缺陷。
+"""Scan for the defect class "parse failed -> silently fall back to a default".
 
-这一类在本项目已经出现两次，两次都表现为 gate 因为**错误的原因**显示绿色：
+It has surfaced twice in this project, both times as a gate showing green **for the wrong
+reason**:
 
-1. `mutation_scan.py` 用固定前缀正则抽 check 标签，抽不到时 `all_checks` 成空集，
-   于是「每个 check 都被抓住」在空集上恒真——`moran_plan_grid.py` 长期显示假绿。
-2. `gate_coverage_check.py` 写成 `int(m.group(1)) if m else 0`，正则不中就把
-   「未触及计数」记成 0，覆盖率被系统性高估。
+1. a scanner extracted check labels with a fixed-prefix regex; when nothing matched,
+   `all_checks` became the empty set, and "every check was caught" is true by construction
+   on an empty set — one script showed false green for a long time.
+2. a coverage check written as `int(m.group(1)) if m else 0` recorded "untouched count" as
+   0 whenever the regex missed, systematically overstating coverage.
 
-出现两次就不该再靠人读代码发现。本工具只做一条**精确**规则，宁可漏报不误报：
+Twice is enough that it should not depend on someone reading the code. This tool applies
+one **precise** rule set, preferring false negatives to false positives:
 
-  R1（语法，高置信）：形如 `<expr> if <name> else <常量>` 的条件表达式，其中
-      `<name>` 在同一函数里由 `re.search` / `re.match` / `re.fullmatch` 赋值。
+  R1 (syntactic, high confidence): a conditional expression shaped
+      `<expr> if <name> else <constant>`, where `<name>` was bound in the same function by
+      `re.search` / `re.match` / `re.fullmatch`.
 
-  R2（语义，广覆盖）：函数里绑定了正则匹配结果，却**不存在任何针对该名字的硬失败
-      路径**（raise / assert / sys.exit / 非零 return）。
+  R2 (semantic, broad): a function binds a regex match result but **has no hard-failure
+      path for that name at all** (raise / assert / sys.exit / non-zero return).
 
-  R3（吞异常）：`except Exception:`（或裸 `except:`）的处理体**只有一个 `pass`**。
-      这是「尝试失败 → 什么都不做 → 继续往下走」的最直白写法。第十三个里程碑实测出的
-      那处 `silent_output` 就是它：`git` 不在时异常被吞掉，进程照常产出一份格式完好的
-      判定，**理由写成「基线不可得」而真实原因是 git 不在**——不是没报警，是报错了案由。
-      **规则刻意窄**：只认处理体恰好是 `pass` 的，`except ...: return False` 之类不报
-      （`probes.py` 里两个分支返回同值的探测器是正当的，报了就是误报）。
+  R3 (swallowed exception): an `except Exception:` (or bare `except:`) whose body is
+      **exactly one `pass`**. This is the most direct spelling of "the attempt failed, do
+      nothing, carry on". A measured instance: with `git` absent the exception was
+      swallowed and the process still emitted a well-formed verdict, **giving the reason as
+      "baseline unavailable" when the real cause was that git was missing** — not a missing
+      alarm, a misattributed one.
+      **The rule is deliberately narrow**: only a body that is exactly `pass`. Something
+      like `except ...: return False` is not reported — a probe whose two branches return
+      the same value is legitimate, and reporting it would be a false positive.
 
-**为什么需要 R2**：第二轮外审构造了 5 个语义完全等价的变体，R1 只抓住 1 个——
-`if/else` 语句、命名常量做默认值、`or` 惯用法、`try/except` 全部逃逸。其中「把魔法
-数字提成命名常量」恰恰是最常见的评审建议：一次善意重构就能让代码对 R1 隐身，语义
-一字未改。**R1 保证的只是「不再犯这两个历史坑的字面写法」，不是「这一类被盯住了」。**
+**Why R2 is needed**: an external review constructed five semantically equivalent variants;
+R1 caught one. `if/else` statements, a named constant as the default, the `or` idiom and
+`try/except` all escaped it. And "lift the magic number into a named constant" is among the
+most common review suggestions — one well-meant refactor makes the code invisible to R1
+with the semantics unchanged. **R1 only guarantees "the literal spelling of those two
+historical pits is not repeated", not "this class is being watched".**
 
-R2 不看默认值长什么样，只问一句：解析失败时，有没有一条会**炸**的路。没有就报。
+R2 does not look at what the default is. It asks one question: when parsing fails, is there
+a path that **blows up**? If not, it reports.
 
-**误报怎么办——声明，不是沉默。** 有些函数里「匹配不上」本就是正常分支（过滤、
-探测）。这种情况在函数体里写一行：
+**False positives — declare them, do not go quiet.** In some functions "no match" is the
+normal branch (filtering, probing). Write one line inside the function body:
 
-    # silent-degradation: ok —— <为什么匹配不上是正常的>
+    # silent-degradation: ok -- <why not matching is normal here>
 
-豁免因此是**写出来**的，和项目其他地方一样（run_gates 的 EXEMPT、covers 的
-UNVERIFIABLE）；沉默的豁免不算豁免。
+An exemption is therefore **written down**, as everywhere else in this project; a silent
+exemption is not an exemption.
 
-命中即 exit 1。
+Exit 1 on any hit.
 """
 
 from __future__ import annotations
@@ -294,9 +304,10 @@ def scan(path: pathlib.Path, exemptions: list | None = None) -> list[tuple[int, 
             else:
                 findings.append((
                     fn.lineno,
-                    f"{fn.name}(): 豁免声明的理由太短或缺失"
-                    f"（{len(reason)} < {MIN_REASON_CHARS} 字符）——**豁免不生效**。"
-                    f"写清楚为什么「匹配不上」在这里是正常的，否则请改成硬失败",
+                    f"{fn.name}(): the exemption's reason is missing or too short "
+                    f"({len(reason)} < {MIN_REASON_CHARS} chars) — **the exemption does "
+                    f"not take effect**. Spell out why 'no match' is normal here, or "
+                    f"turn it into a hard failure",
                 ))
         r2_hit: set[str] = set()
 
@@ -311,8 +322,9 @@ def scan(path: pathlib.Path, exemptions: list | None = None) -> list[tuple[int, 
                 if broad and only_pass:
                     findings.append((
                         node.lineno,
-                        f"{fn.name}(): `except Exception: pass` —— 尝试失败后什么都不做，"
-                        f"流程照常往下走。缺失的原因会被后面的代码写成别的案由",
+                        f"{fn.name}(): `except Exception: pass` — the attempt failed, nothing "
+                        f"was done, and the flow carried on. Downstream code will report "
+                        f"some other cause for what is missing",
                     ))
 
         # --- R2：整个函数里没有任何针对匹配结果的硬失败路径 ---
@@ -321,20 +333,22 @@ def scan(path: pathlib.Path, exemptions: list | None = None) -> list[tuple[int, 
             if unbound:
                 findings.append((
                     unbound[0],
-                    f"{fn.name}(): 正则匹配的结果**没有被绑定到任何名字**"
-                    f"（直接传给别的调用），因此无法在失败时检查它——"
-                    f"先接住它，再决定失败时炸还是声明豁免",
+                    f"{fn.name}(): the regex match result is **never bound to a name** "
+                    f"(passed straight into another call), so nothing can check it on "
+                    f"failure — bind it first, then decide between raising and declaring "
+                    f"an exemption",
                 ))
             for name, assigned_at in sorted(bound.items()):
                 if not _hard_fail_lines(fn, name):
                     r2_hit.add(name)
                     findings.append((
                         assigned_at,
-                        f"{fn.name}(): {name} 由正则赋值，但函数里**没有任何**针对它的"
-                        f"硬失败路径（raise/assert/sys.exit/非零 return）——"
-                        f"解析失败时无论用哪种写法给默认值都不会报错。"
-                        f"若「匹配不上」在此确属正常，写一行 "
-                        f"`# silent-degradation: ok —— 理由` 声明豁免",
+                        f"{fn.name}(): {name} is bound from a regex match, but the function "
+                        f"has **no hard-failure path at all** for it "
+                        f"(raise/assert/sys.exit/non-zero return) — however the default is "
+                        f"spelled, a parse failure raises nothing. If 'no match' really is "
+                        f"normal here, declare it with a line "
+                        f"`# silent-degradation: ok -- reason`",
                     ))
         for node in ast.walk(fn):
             if _skip_regex_rules or not isinstance(node, ast.IfExp):
@@ -353,8 +367,9 @@ def scan(path: pathlib.Path, exemptions: list | None = None) -> list[tuple[int, 
             findings.append((
                 node.lineno,
                 f"{fn.name}(): `… if {test.id} else {node.orelse.value!r}` —— "
-                f"{test.id} 由正则赋值（L{bound[test.id]}），不中即静默退化为 "
-                f"{node.orelse.value!r}，且此前无引用它的硬失败",
+                f"{test.id} is bound from a regex match (L{bound[test.id]}); a miss "
+                f"degrades silently to {node.orelse.value!r}, with no hard failure "
+                f"referencing it beforehand",
             ))
     return findings
 
@@ -411,18 +426,19 @@ def run_selftest() -> int:
         tmp.unlink()
         should = label in _MUST_FLAG
         if should and not hits:
-            failures.append(f"{label}: 应被报出却漏掉了——覆盖面被收窄了")
+            failures.append(f"{label}: should have been reported and was not — coverage narrowed")
         if not should and hits:
-            failures.append(f"{label}: 不该被报却报了——会误报的 gate 会被训练成忽略")
+            failures.append(f"{label}: reported when it should not be — a gate that cries wolf "
+                            f"gets trained into being ignored")
 
     for f in failures:
         print(f"[FAIL] coverage: {f}")
     if failures:
-        print(f"\n覆盖面自检：{len(failures)} 条不成立")
+        print(f"\ncoverage selftest: {len(failures)} case(s) failed")
         return 1
     print(
-        f"覆盖面自检：{len(_MUST_FLAG)} 种等价写法全部报出，"
-        f"{len(_MUST_NOT_FLAG)} 种正当写法全部放过"
+        f"coverage selftest: all {len(_MUST_FLAG)} equivalent spellings reported, "
+        f"all {len(_MUST_NOT_FLAG)} legitimate ones passed over"
     )
     return 0
 
@@ -456,24 +472,27 @@ def main(argv: list[str] | None = None) -> int:
 
     # 豁免每次都列出来。豁免可以有，看不见不行——看不见的豁免会累积成沉默的免检区。
     if all_exemptions:
-        print(f"\n声明的豁免 {len(all_exemptions)} 处（每次扫描都会列出）：")
+        print(f"\n{len(all_exemptions)} declared exemption(s) (listed on every scan):")
         for path, lineno, msg in all_exemptions:
             print(f"  {path}:{lineno}: {msg}")
     if len(all_exemptions) > args.max_exemptions:
         print(
-            f"\n声明的豁免 {len(all_exemptions)} 处，超过上限 {args.max_exemptions}。"
-            f"新增豁免要么改掉代码不再需要它，要么显式提高上限——"
-            f"后者会留在 diff 里，被人看见。"
+            f"\n{len(all_exemptions)} declared exemption(s), above the limit of "
+            f"{args.max_exemptions}. A new exemption means either changing the code so it "
+            f"is no longer needed, or raising the limit explicitly — the latter stays in "
+            f"the diff, where people can see it."
         )
         return 1
 
     if total:
         print(
-            f"\n{total} 处「解析失败静默退化」。正则不中时应硬失败并打印实际输出，"
-            "不要猜一个对自己有利的默认值。"
+            f"\n{total} occurrence(s) of 'parse failed -> silent fallback'. On a regex miss, fail "
+            f"hard and print what was actually seen, "
+            "rather than guessing a default that happens to suit you."
         )
         return 1
-    print(f"扫描 {len(args.paths)} 个文件，未发现静默退化模式（R1 语法 + R2 语义）")
+    print(f"scanned {len(args.paths)} file(s); no silent-degradation pattern found "
+          f"(R1 syntactic + R2 semantic + R3 swallowed)")
     return 0
 
 

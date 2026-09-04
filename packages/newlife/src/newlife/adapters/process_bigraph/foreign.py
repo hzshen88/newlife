@@ -1,27 +1,34 @@
-"""把一个**第三方 process-bigraph `Process`** 接进 newlife 的契约。
+"""Admit a **third-party process-bigraph `Process`** into newlife's contract.
 
-第三方的 `Process` 没有 Effect 的概念：它的 `update()` **直接返回引擎 update**。
-newlife 的契约要求每一次写入都来自已注册机制声明过的 `Effect`，由
-`BiologicalProfile.stage` 校验。这两件事之间需要一层翻译。
+A third-party `Process` has no notion of an Effect: its `update()` **returns an engine
+update directly**. newlife's contract requires every write to originate from an `Effect`
+declared by a registered mechanism, validated by `BiologicalProfile.stage`. A translation
+layer sits between the two.
 
-**接法**：`GuardedProcess.update` 本身就是 `propose → stage → lower` 三步，
-校验在 `stage`。所以这里只实现 `propose`——第三方的输出**只能**经 `stage` 进入
-store，适配器不自己放行、不直接返回引擎 update（预注册 `8d65582` §3 F2）。
+**How**: `GuardedProcess.update` is already the three steps propose -> stage -> lower, with
+validation in `stage`. So only `propose` is implemented here — the third party's output
+**can only** reach a store through `stage`; the adapter never waves it through and never
+returns an engine update itself.
 
-**第三方的源码不被改动**：这里是**实例化并调用**它，不是子类化并覆写 `update`（F1）。
-端口（`inputs()`/`outputs()`）也**向它要**，不由我们重述。
+**The third party's source is not modified**: it is *instantiated and called* here, not
+subclassed and overridden. Its ports (`inputs()`/`outputs()`) are **asked of it** rather
+than restated by us.
 
----
+## The weak point of this layer, stated where it cannot be missed
 
-**这一层的脆点，写在最显眼处。** `PortBinding` 那张表**只能由我们代写**，
-而其中两处信息第三方根本不提供：
+The `PortBinding` table **can only be written by us**, and two pieces of information in it
+are things the third party simply does not provide:
 
-- **这个端口对应哪条状态路径** —— `outputs()` 只说类型（`'float'`），不说位置
-- **写入是 `add` 还是 `set`** —— `Grow` 返回的是增量，但签名说不出来；填错
-  `set` 会把质量覆写成增量，**而结果照样跑得出来**
+- **which state path a port corresponds to** — `outputs()` gives a type (`'float'`), never
+  a location
+- **whether a write is `add` or `set`** — a process returning an increment cannot say so in
+  its signature, and getting it wrong (`set` where `add` was meant) overwrites the quantity
+  with the increment **while still producing results that run**
 
-FMI 用「接口描述由模型作者随实现一起交付」解决这件事。这里没有那个东西。
-所以本层给出的是「契约对**被代写的声明**有强制力」，**不是**「第三方可以安全地接」。
+FMI solves this by having the interface description shipped by the model author alongside
+the implementation. There is no such thing here. So what this layer establishes is that
+**the contract has force over a declaration written on the third party's behalf** — *not*
+that a third party can be admitted with no hand-written declaration at all.
 """
 
 from __future__ import annotations
@@ -40,9 +47,10 @@ from newlife.core.errors import SpecValidationError
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class PortBinding:
-    """第三方的一个输出端口 → newlife 的一条状态路径与写入算符。
+    """One third-party output port -> one newlife state path and write operator.
 
-    **这是我们替第三方说的话。** 它是断言，不是从第三方读出来的事实。
+    **This is us speaking on the third party's behalf.** It is an assertion, not a fact
+    read off the third party.
     """
 
     port: str
@@ -52,7 +60,8 @@ class PortBinding:
     def __post_init__(self) -> None:
         if self.operation not in OPERATIONS:
             raise SpecValidationError(
-                f"未知的写入算符 {self.operation!r}；词表是封闭的：{sorted(OPERATIONS)}"
+                f"unknown write operator {self.operation!r}; the vocabulary is closed: "
+                f"{sorted(OPERATIONS)}"
             )
 
 
@@ -61,14 +70,14 @@ def admit(
     bindings: Sequence[PortBinding],
     lowering: Mapping[str, tuple[str, str]],
 ) -> type[GuardedProcess]:
-    """生成一个把 `foreign_cls` 接进契约的 `GuardedProcess` 子类。"""
+    """Build a `GuardedProcess` subclass admitting `foreign_cls` into the contract."""
     bound = tuple(bindings)
     by_port = {b.port: b for b in bound}
     if len(by_port) != len(bound):
-        raise SpecValidationError("同一个端口被声明了两次")
+        raise SpecValidationError("the same port was declared twice")
 
     class _Admitted(GuardedProcess):
-        # 第三方的 config 键并进来，这样 pb 能按 node config 把它们传下去
+        # Merge the third party's config keys so pb can pass them down via node config
         config_schema = {
             "mechanism_id": "string",
             **dict(getattr(foreign_cls, "config_schema", {})),
@@ -82,7 +91,7 @@ def admit(
                 {k: self.config[k] for k in foreign_keys if k in self.config}, core
             )
 
-        # 端口向第三方要，不由我们重述
+        # Ports are asked of the third party, never restated by us
         def inputs(self) -> Any:
             return self._foreign.inputs()
 
@@ -93,36 +102,38 @@ def admit(
             raw = self._foreign.update(state, interval)
             if not isinstance(raw, Mapping):
                 raise SpecValidationError(
-                    f"{foreign_cls.__name__}.update 返回了 {type(raw).__name__}，"
-                    "本适配器只接受端口键的映射"
+                    f"{foreign_cls.__name__}.update returned {type(raw).__name__}; this "
+                    "adapter accepts only a mapping keyed by port name"
                 )
             effects = []
             for port, value in raw.items():
                 binding = by_port.get(port)
                 if binding is None:
-                    # 第三方写了一个我们没为它声明的端口——**硬失败**，
-                    # 不静默丢弃：丢弃等于让它的写入消失而无人知晓。
+                    # The third party wrote a port we never declared for it —
+                    # **hard-fail**. Dropping it silently would make its write vanish
+                    # with nobody the wiser.
                     raise SpecValidationError(
-                        f"{foreign_cls.__name__} 写了未声明的端口 {port!r}；"
-                        f"已声明的是 {sorted(by_port)}"
+                        f"{foreign_cls.__name__} wrote the undeclared port {port!r}; "
+                        f"declared ports are {sorted(by_port)}"
                     )
                 effects.append(StateDelta(binding.path, binding.operation, value))
             return Proposal(effects=tuple(effects))
 
     _Admitted.__name__ = f"Admitted_{foreign_cls.__name__}"
     _Admitted.__doc__ = (
-        f"{foreign_cls.__module__}.{foreign_cls.__name__} 经 newlife 契约接入。"
+        f"{foreign_cls.__module__}.{foreign_cls.__name__} admitted through newlife's contract."
     )
     return _Admitted
 
 
 def _wire(value: Any) -> Any:
-    """一条接线：整体接一条路径，或**按 key 逐个**接到不同的 store。
+    """One wiring: a whole port to one path, or **per key** to different stores.
 
-    第十七个里程碑加：第三方的 `DynamicFBA` 把 `substrates` 端口接成
-    `{mol_id: 路径}`，每个底物一条。**这是同一个坑的第三层**——
-    第十五个里程碑以为「一张接线表够了」，第十六个拆成读写两张，
-    这次发现表里的**值**也不只有一种形状。
+    Added when a third-party `DynamicFBA` wired its `substrates` port as
+    `{mol_id: path}`, one entry per substrate. **This was the third layer of one pit**:
+    first "one wiring table is enough", then splitting it into separate read and write
+    tables, and finally discovering that the *values* in the table are not of one shape
+    either.
     """
     if isinstance(value, Mapping):
         return {k: list(v) for k, v in value.items()}
@@ -130,7 +141,10 @@ def _wire(value: Any) -> Any:
 
 
 def resolve_foreign(dotted: str) -> type[Process]:
-    """按点分路径取第三方类。**字符串是数据**——声明侧因此不必 import vendor。"""
+    """Resolve a third-party class from a dotted path.
+
+    **The string is data** — which keeps the declaring side free of vendor imports.
+    """
     module_path, attr = dotted.split(":")
     return getattr(importlib.import_module(module_path), attr)
 
@@ -149,27 +163,31 @@ def build_composite(
     register_types: Any = None,
     interval: float = 1.0,
 ) -> Composite:
-    """搭一个跑第三方 process 的 composite。
+    """Build a composite running a third-party process.
 
-    `contract=False` 时**用裸的第三方类**、不经契约——元负控要的正是这条路径。
+    With `contract=False` the **bare third-party class** is used, bypassing the contract —
+    that path is exactly what a meta-negative-control needs.
 
-    **读写分开两张接线表**：第十六个里程碑发现单表不够——`MonodKinetics` 的
-    `substrates` 端口**读 `local`、写 `exchange`**，而第十五个里程碑接的 `Grow`
-    读写同路径，单表看着够用。**一个 provider 时看着对，两个时就塌**（第九世界的教训）。
+    **Reads and writes are two separate wiring tables**: one table proved insufficient
+    once a process read its `substrates` port from `local` and wrote it to `exchange`. The
+    first process admitted read and wrote the same path, so a single table looked adequate.
+    **It looks right with one provider and collapses with two.**
     """
     foreign_cls = resolve_foreign(foreign_dotted)
     cls = admit(foreign_cls, bindings, lowering) if contract else foreign_cls
     core = allocate_core()
     if register_types is not None:
-        # 第三方交付的类型词表（对照本体文献：词表即独立组件间的接口契约）。
-        # **这一半不是我们代写的**——第十五个里程碑接的 Grow 连这个都没有。
+        # A type vocabulary delivered by the third party (in the ontology literature, a
+        # vocabulary is the interface contract between independent components).
+        # **This half is not written on their behalf** — the first process admitted here
+        # did not provide even this.
         register_types(core)
     core.register_link(identity, cls)
     node_config = dict(config)
     if contract:
         node_config["mechanism_id"] = identity
     state: dict[str, Any] = {
-        # 顶层值不一定是映射——MonodKinetics 的 mass 是标量（第十六个里程碑撞到）
+        # A top-level value need not be a mapping — one process had a scalar `mass`
         **copy.deepcopy(dict(state_roots)),
         "node": {
             "_type": "process",
@@ -177,23 +195,28 @@ def build_composite(
             "config": node_config,
             "inputs": {k: _wire(v) for k, v in in_wiring.items()},
             "outputs": {k: _wire(v) for k, v in out_wiring.items()},
-            # **这是 process 自己的步长**，不是调用方传给 `run_composite` 的时长。
-            # 两者对不上时 pb 会把请求攒着、少跑很多步，**且不出任何声音**——
-            # 第一个真实用户问题正是栽在这里：按 0.02 推进而这里写死 1.0，
-            # 251 个采样点只有 5 个不同取值，而数字看起来完全合理（0.98 vs 0.99）。
+            # **This is the process's own timestep**, not the duration the caller passes
+            # to `run_composite`. When the two disagree, pb accumulates the requests and
+            # fires far fewer times, **making no sound at all** — the first real user
+            # question was caught by exactly this: advancing by 0.02 against a hardcoded
+            # 1.0 gave 251 sample points carrying 5 distinct values, and the numbers still
+            # looked entirely plausible (0.98 against an analytic 0.99).
             "interval": interval,
         },
     }
     composite = Composite({"state": state}, core=core)
-    composite.newlife_interval = float(interval)   # 供 run_composite 核对
+    composite.newlife_interval = float(interval)   # for run_composite to check against
     return composite
 
 
 def third_party_types(dotted: str):
-    """取第三方交付的类型注册入口。**点分路径是数据**——判定侧因此不 import vendor。
+    """Resolve a type-registration entry point delivered by a third party.
 
-    对照本体文献：**词表是独立组件之间的接口契约**，而这个入口由第三方提供
-    （`spatio_flux:register_types`）。第十五个里程碑接的 `Grow` 连这一半都没有。
+    **The dotted path is data** — which keeps the judging side free of vendor imports.
+
+    In the ontology literature a **vocabulary is the interface contract between
+    independent components**, and here that entry point comes from the third party itself
+    (`spatio_flux:register_types`). The first process admitted did not provide even this.
     """
     module_path, attr = dotted.split(":")
     return getattr(importlib.import_module(module_path), attr)
