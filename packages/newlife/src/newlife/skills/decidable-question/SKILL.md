@@ -1,15 +1,16 @@
+---
+name: decidable-question
+description: 把一个模糊的想法磨成「应该且能够用模拟回答」的真问题。当用户说「我想弄清楚…」「这个能不能模拟」「帮我想个课题」，或在动手写预注册之前使用。产出是一份带锚的 goal 草稿，交给 newlife 的下一步。不触发：已经有明确判据、只差实现的时候（那是 preregister-verdict）。
+---
+
 # decidable-question —— 把一个问题变成可解的真问题
 
-> **这份文件是母本。** `~/.claude/skills/decidable-question/SKILL.md` 是部署副本
-> （多一段 Claude Code 用的 frontmatter），改动以本文件为准。
+> **这份文件随 `newlife` 的 wheel 发布，`newlife skills install` 逐字拷贝到你的 AI 配置目录。**
+> **不做任何变换**——母本与部署副本是同一份，因为「两份会漂移」是这个项目反复付过学费的形状。
 >
-> 它是这个产品的**步骤一**：纯方法，不碰本仓库任何代码。步骤二（执行与判定）
-> 才是 `packages/newlife/` 里的东西。两步之间的边界物就是本文件 §五 那份带锚的
-> goal 草稿——`exloop` 的 `verification/check_goal_ready.py` 会检查那些锚。
->
-> **零工具依赖**：全部动作在对话里完成，产出是一份文本。
-> ChatGPT、Claude 或任何地方都能用——**整份贴进去即可**。
-
+> 它是**步骤一**：纯方法，零工具依赖，全部动作在对话里完成，产出是一份文本。
+> ChatGPT、Claude 或任何地方都能用。步骤二（写判据）见 `preregister-verdict`；
+> 步骤三（执行与判定）是 `newlife init / freeze / run / check / audit`。
 
 # 把一个问题变成可解的真问题
 

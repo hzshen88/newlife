@@ -26,7 +26,8 @@ proofroot = { workspace = true }
 packages = ["src/newlife"]
 # 模板与 vendored 的 prereg.sh 不是 .py，必须显式带进 wheel——
 # 「冻结工具不随库发布」是用户拿不到时间证明的直接原因。
-artifacts = ["src/newlife/scaffold/prereg.sh", "src/newlife/scaffold/templates/*"]
+artifacts = ["src/newlife/scaffold/prereg.sh", "src/newlife/scaffold/templates/*",
+             "src/newlife/skills/*/SKILL.md"]
 
 [dependency-groups]
 dev = ["pytest>=8"]
