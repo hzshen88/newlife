@@ -1,0 +1,41 @@
+{
+  "schema": "newlife.verification.checks.v1",
+  "script": "example_check.py",
+  "script_sha256": "436acb80d89e398fc03e2733d1977b7bf68b402a3f5b3e903ecb95c52d195934",
+  "all_passed": true,
+  "failed": [],
+  "checks": [
+    {
+      "id": "check-1",
+      "passed": true,
+      "detail": "轨迹长度 13",
+      "facts": {
+        "path_len": "13"
+      },
+      "covers": [
+        "drift"
+      ]
+    },
+    {
+      "id": "check-2",
+      "passed": true,
+      "detail": "末态 24",
+      "facts": {
+        "endpoint": "24"
+      },
+      "covers": [
+        "drift",
+        "endpoint"
+      ]
+    },
+    {
+      "id": "check-3",
+      "passed": true,
+      "detail": "步长集合 [2]",
+      "facts": {
+        "distinct_gaps": "1"
+      },
+      "covers": []
+    }
+  ]
+}
