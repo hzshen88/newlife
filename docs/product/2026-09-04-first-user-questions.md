@@ -76,7 +76,12 @@ v3 的八格里六格的数起草前都已看过，预注册逐条标注了。**
 
 - **`env.lock` 只记 `name==version`**，第三方依赖无内容哈希；newlife 自己那格已用
   源码摘要钉死（`newlife_source_sha256`）。
-- **第①阶段（提出问题）在用户那边仍无机械检查**：`check_goal_ready` 认的是
-  exloop 的 goal 锚点格式，对 `prereg.md` 用不上。
+- ~~**第①阶段（提出问题）在用户那边仍无机械检查**~~ **（2026-09-05 已闭合）**。
+  当时的记载是「`check_goal_ready` 认的是 exloop 的 goal 锚点格式，对 `prereg.md`
+  用不上」——**复核后这句话是错的**：问题不是格式不认，是**用户仓库里根本没有 goal
+  文档**，`prereg.md` 是下一个阶段的东西（实测四份的锚数：0 · 0 · 0 · 0）。
+  已落地：`newlife init` 生成 `goal.md`（**故意是红的**），`newlife freeze` 在冻结前
+  挡一道，`newlife check` 一并报告；`scripts/gates/check_goal_ready.py` 降为
+  `newlife.gates.goal_ready` 的入口，**逻辑只有一处**。
 - **判定层仍只有生成、没有抽象**。现在有了四个真实问题的样本——
   **可以第一次真正测量「多少能抽」了**，而不是靠猜。

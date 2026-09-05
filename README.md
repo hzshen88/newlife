@@ -36,16 +36,28 @@ first commit, and the natural habit — `git add -A` right after creating a fold
 — destroys that irreversibly.
 
 ```bash
+$EDITOR questions/2026-09-05-my-question/goal.md      # is this worth asking? six anchors
 $EDITOR questions/2026-09-05-my-question/prereg.md    # the criteria
 newlife freeze questions/2026-09-05-my-question       # ← this commit is the proof
 $EDITOR questions/2026-09-05-my-question/verdict.py   # your world
 newlife run   questions/2026-09-05-my-question
-newlife check questions/2026-09-05-my-question       # three gates, see below
+newlife check questions/2026-09-05-my-question       # four gates, see below
 git add questions/2026-09-05-my-question/results && git commit -m "verdict"
 newlife audit questions/2026-09-05-my-question
 ```
 
-`check` runs three gates against **your own files**: a scan for criteria that are
+`goal.md` is scaffolded **deliberately red**, and `newlife freeze` refuses until you
+fill in its six anchors — did you search the literature, who would bet the other way,
+is the counterparty attacking the conclusion or the premise, is the answer settled by
+the design or by the run, who changes their behaviour, how big is this. Every one of
+them covers a step that **leaves no trace when skipped**: skip the runner and there is
+no `summary.json`, but skip the literature search and nothing is missing at all. If the
+stage genuinely does not apply, one anchor waives it — explicitly, on the record. The
+freeze is where this is enforced rather than `check`, because `check` also needs
+`results/` and so cannot run until the work is already done.
+
+`check` runs four gates against **your own files**: the same goal-readiness check,
+reported here for completeness; a scan for criteria that are
 true by construction (a comprehension that iterates a named constant while
 discarding the loop variable — that is a repetition, not a sweep); a scan for
 parse-failures that silently fall back to a convenient default; and an alignment
@@ -55,9 +67,9 @@ question folder: the registration said `verdict = S0 ∧ S1 ∧ S2 ∧ S3` while
 runner had folded S3 into a sub-field of S2, so the conjunction was one unit weaker
 than it looked.
 
-The other gates in this repository — `check_goal_ready`, `verify_doc_claims`,
-`mutation_scan`, `run_gates` — are **not** shipped: they assume a separate document
-pipeline (goal anchors, a verification-script ledger). That is attribution, not
+The other gates in this repository — `verify_doc_claims`, `mutation_scan`,
+`run_gates` — are **not** shipped: they assume a separate document pipeline (a
+verification-script ledger, a goal/question/ledger triple). That is attribution, not
 omission.
 
 `audit` proves four things from git alone: the registration has a freeze commit,

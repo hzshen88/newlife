@@ -36,13 +36,22 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 from newlife import provenance
+from newlife.gates import goal_ready
 
 TEMPLATES = Path(__file__).resolve().parent / "templates"
 PREREG_SH = Path(__file__).resolve().parent / "prereg.sh"
-SCAFFOLD_FILES = ("verdict.py", "env.lock")     # **prereg.md excluded** — see module docstring
+SCAFFOLD_FILES = ("goal.md", "verdict.py", "env.lock")
+"""**`prereg.md` excluded** — see the module docstring; the freeze must be its first commit.
+
+`goal.md` is committed with the rest: it is not frozen, and it precedes the registration.
+**It is written deliberately red** — `newlife freeze` refuses until its six anchors are
+filled in. A scaffold that satisfied its own gate would make that gate true by
+construction, and it would never once ask the user a question.
+"""
 SAFE_SLUG = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\Z")
 
 
@@ -87,6 +96,8 @@ def init(slug: str, *, cwd: Path, commit: bool = True) -> Path:
     (folder / "results").mkdir(parents=True)
 
     title = slug.split("-", 3)[-1].replace("-", " ") or slug
+    (folder / "goal.md").write_text(
+        (TEMPLATES / "goal.md").read_text().replace("{title}", title), encoding="utf-8")
     (folder / "prereg.md").write_text(
         (TEMPLATES / "prereg.md").read_text().format(title=title), encoding="utf-8")
     (folder / "verdict.py").write_text(
@@ -115,7 +126,15 @@ def init(slug: str, *, cwd: Path, commit: bool = True) -> Path:
 
 
 def freeze(folder: Path, *, cwd: Path) -> int:
-    """Freeze this question's criteria. **The freeze must be `prereg.md`'s first commit.**"""
+    """Freeze this question's criteria. **The freeze must be `prereg.md`'s first commit.**
+
+    **A red `goal.md` blocks the freeze.** This is the last moment at which the answer
+    still costs nothing: after it comes the implementation, and a question nobody would
+    bet against is otherwise something you find out about only when the verdict turns out
+    to carry no information. `newlife check` reports the same gate but cannot stand in
+    for this one — it also runs unit alignment, which reads `results/`, so it is not
+    runnable until the work is already done.
+    """
     root = repo_root(cwd)
     prereg = (folder / "prereg.md").resolve()
     rel = prereg.relative_to(root)
@@ -127,6 +146,19 @@ def freeze(folder: Path, *, cwd: Path) -> int:
             f"Recovery: `git mv {rel} {rel.with_name('prereg-v2.md')}`, then freeze the\n"
             f"new file. Leave the old one in history — it is the record of this very change."
         )
+    # **After the history check, not before.** That one reports an already-irreversible
+    # state and its recovery must not be masked by a gate about a file you can still edit.
+    ready = goal_ready.main([str(folder)])
+    # **Flush before anything else writes.** The gate prints to stdout; SystemExit goes to
+    # stderr and `prereg.sh` writes from a subprocess. Piped, stdout is block-buffered, so
+    # without this the gate's output lands after the text that refers to it.
+    sys.stdout.flush()
+    if ready != 0:
+        raise SystemExit(
+            "The goal is not ready (above), so the freeze is refused.\n"
+            "Fill in the six anchors in goal.md — or, if this question genuinely has no\n"
+            "goal stage, record that instead of leaving the file half-filled:\n"
+            "    <!--@goal_gate: not_applicable ... your reason ...-->")
     return _run_prereg(root, "freeze", str(rel))
 
 

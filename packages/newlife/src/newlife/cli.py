@@ -2,8 +2,10 @@
 
     newlife init <slug>      scaffold and commit it (prereg.md deliberately excluded)
     newlife freeze <folder>  freeze the criteria — this commit IS the timestamp
+                             (refused while goal.md is still unfilled)
     newlife run <folder>     compute the verdict
-    newlife check <folder>   three gates: vacuous criteria, silent degradation, unit alignment
+    newlife check <folder>   four gates: goal readiness, vacuous criteria, silent
+                             degradation, registration <-> runner unit alignment
     newlife blocks           list the third-party building blocks in this environment
     newlife skills install   put the question-shaping skills where your AI reads them
     newlife audit <folder>   the criteria were never edited, and the outputs post-date the freeze
@@ -22,7 +24,7 @@ from pathlib import Path
 
 from newlife import scaffold
 from newlife.gates import (
-    silent_degradation_scan, unit_alignment, vacuous_criterion_scan,
+    goal_ready, silent_degradation_scan, unit_alignment, vacuous_criterion_scan,
 )
 
 SKILLS = Path(__file__).resolve().parent / "skills"
@@ -92,15 +94,20 @@ def _skills(args) -> int:
 
 
 def _check(folder: Path) -> int:
-    """The three gates that apply to **the user's own files**.
+    """The four gates that apply to **the user's own files**.
 
-    The rest stay in the newlife repository: `check_goal_ready` reads a different goal
-    anchor format, `verify_doc_claims` needs a verification-script ledger, and `run_gates`
-    takes a goal/question/ledger triple — **they assume a separate document pipeline**.
-    That is attribution, not omission.
+    The rest stay in the newlife repository: `verify_doc_claims` needs a
+    verification-script ledger and `run_gates` takes a goal/question/ledger triple —
+    **they assume a separate document pipeline**. That is attribution, not omission.
+
+    **The goal gate is reported here but enforced at `newlife freeze`.** It has to be:
+    unit alignment reads `results/`, so `check` is not runnable until the work is already
+    done — and "this question was never worth asking", delivered after the
+    implementation, is information that arrives too late to act on.
     """
     runner = folder / "verdict.py"
     checks = [
+        ("goal ready (enforced at freeze)", lambda: goal_ready.main([str(folder)])),
         ("vacuous criteria", lambda: vacuous_criterion_scan.main([str(runner)])),
         ("silent degradation", lambda: silent_degradation_scan.main([str(runner)])),
         ("registration <-> runner unit alignment", lambda: unit_alignment.main([str(folder)])),
@@ -157,6 +164,8 @@ def main(argv: list[str] | None = None) -> int:
               f"{'committed' if not args.no_commit else 'NOT committed'}, "
               f"prereg.md deliberately left uncommitted.\n"
               f"Next:\n"
+              f"  0. edit {rel}/goal.md — six anchors. **It is red on purpose**: the "
+              f"freeze is refused until it is filled in, or the stage waived.\n"
               f"  1. edit {rel}/prereg.md and write the criteria. "
               f"Each one must be able to go red.\n"
               f"  2. newlife freeze {rel}      <- do not commit it before this\n"

@@ -15,8 +15,9 @@ description: Turn any question into one that the later steps can actually settle
 > (writing the criteria) is `preregister-verdict`; step three (execution and judgement) is
 > `newlife init / freeze / run / check / audit`.
 
-**Its output is the next step's input**: an anchored goal draft. Downstream, machine gates
-check those anchors — **whatever you cannot state, downstream rejects.**
+**Its output is the next step's input**: an anchored goal draft. It belongs in
+`goal.md` inside the question folder, where a machine gate reads it — **whatever you
+cannot state, `newlife freeze` refuses.**
 
 ---
 
@@ -191,8 +192,14 @@ criteria before changing the model, every single round.**
 
 ## 5. Output: an anchored goal draft
 
-Downstream machine gates check these anchors. **Whatever you cannot state, downstream
-rejects.**
+**Write it to `questions/<slug>/goal.md`.** `newlife init` scaffolds that file already,
+**deliberately red**: `newlife freeze` refuses until these six anchors are filled in, and
+`newlife check` reports the same gate. **Whatever you cannot state, the freeze rejects.**
+
+If the stage genuinely does not apply — a toolchain smoke test with no claim about the
+world — waive it on the record rather than leaving the file half-filled:
+`<!--@goal_gate: not_applicable ... reason ...-->`. An anchor body must not contain `>`;
+the parser stops at the first one and the anchor then silently does not exist.
 
 ```markdown
 # Goal — <one sentence, phrased as a question>

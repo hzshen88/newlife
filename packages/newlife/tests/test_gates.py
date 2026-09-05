@@ -1,4 +1,4 @@
-"""随包发布的三条门 —— 每条自己的负控必须真的红。
+"""随包发布的门 —— 每条自己的负控必须真的红。
 
 **门用来替代人工核对，所以「门对不对」成了新的关键。** 这里只做一件事：
 把每条门的 `--selftest` 拉进日常测试里跑。**「能抓住」和「会被跑」是两件事**——
@@ -12,11 +12,41 @@ import sys
 
 import pytest
 
-from newlife.gates import (
-    silent_degradation_scan, unit_alignment, vacuous_criterion_scan,
-)
+import newlife.gates
+from newlife.gates import unit_alignment
 
-GATES = (vacuous_criterion_scan, silent_degradation_scan, unit_alignment)
+
+EXEMPT: frozenset[str] = frozenset()
+"""`newlife.gates` 下**不**要求带 `--selftest` 的模块。例外写在这里，留在 diff 里。"""
+
+
+def _gates() -> list:
+    """`newlife.gates` 下的每一个模块。**排除式，不是手写清单，也不是属性嗅探。**
+
+    原来这里是一条手写元组，加第四条门（`goal_ready`）时它一声不响地漏掉了——
+    与 `test_public_english.py` 的 `PUBLIC_MODULES` 同一个形状（`e8c53a1`）。
+
+    **第一版的修法自己犯了同一个错**：按 `hasattr(module, "_selftest")` 发现，
+    而 `silent_degradation_scan` 的那个函数叫 `run_selftest`，于是它被静默漏掉：
+    测试数是 8，**本该是 10**，而屏幕上全是绿点、看不出任何异常。
+    **属性嗅探是伪装成发现式的白名单。**
+
+    所以按目录枚举，例外显式声明：没有 `--selftest` 的模块会让 argparse 报错
+    而变红，逼出一次明确的决定——**不会被悄悄跳过**。
+    """
+    import importlib
+    import pkgutil
+
+    found = [
+        importlib.import_module(f"newlife.gates.{info.name}")
+        for info in pkgutil.iter_modules(newlife.gates.__path__)
+        if info.name not in EXEMPT
+    ]
+    assert len(found) >= 4, f"只发现 {len(found)} 个门——发现逻辑坏掉的样子恰好是「全绿」"
+    return found
+
+
+GATES = _gates()
 
 
 @pytest.mark.parametrize("module", GATES, ids=lambda m: m.__name__.rsplit(".", 1)[-1])

@@ -17,6 +17,17 @@ from newlife import provenance, scaffold
 TEMPLATES = Path(scaffold.TEMPLATES)
 
 
+def _waive_goal(folder: Path) -> None:
+    """把 goal 阶段显式豁免掉。
+
+    **不是绕过门，是走门自己的那条出口**——本文件测的是冻结/审计的机制，
+    不是选题是否值得。豁免要留痕，正是门要求的形状。
+    """
+    (folder / "goal.md").write_text(
+        "<!--@goal_gate: not_applicable —— 这是脚手架机制的测试，不是一个问题-->\n",
+        encoding="utf-8")
+
+
 def _repo(tmp_path: Path) -> Path:
     subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
     for k, v in (("user.email", "t@t"), ("user.name", "t")):
@@ -73,9 +84,11 @@ def test_init_commits_the_scaffold_but_not_the_prereg(tmp_path: Path) -> None:
     repo = _repo(tmp_path)
     folder = scaffold.init("2026-09-05-x", cwd=repo)
     assert (folder / "prereg.md").exists() and (folder / "verdict.py").exists()
+    assert (folder / "goal.md").exists()
     tracked = subprocess.run(["git", "-C", str(repo), "ls-files"],
                              capture_output=True, text=True, check=True).stdout
     assert "verdict.py" in tracked and "env.lock" in tracked
+    assert "goal.md" in tracked
     assert ".gitignore" in tracked
     assert "prereg.md" not in tracked
 
@@ -99,6 +112,7 @@ def test_init_does_not_commit_unrelated_staged_or_gitignore_changes(tmp_path: Pa
     ).stdout.splitlines()
     assert set(committed) == {
         "questions/2026-09-05-x/env.lock",
+        "questions/2026-09-05-x/goal.md",
         "questions/2026-09-05-x/verdict.py",
     }
     staged = subprocess.run(
@@ -122,6 +136,7 @@ def test_symlinked_repo_path_freezes_and_audits(tmp_path: Path) -> None:
     subprocess.run(["git", "-C", str(real), "commit", "-qm", "baseline"], check=True)
 
     folder = scaffold.init("2026-09-05-linked", cwd=alias)
+    _waive_goal(folder)
     assert scaffold.freeze(folder, cwd=alias) == 0
     (folder / "results" / "summary.json").write_text("{}\n")
     subprocess.run(["git", "-C", str(real), "add", "questions/2026-09-05-linked/results"], check=True)
@@ -136,6 +151,7 @@ def test_audit_partial_is_nonzero(tmp_path: Path) -> None:
     subprocess.run(["git", "-C", str(repo), "add", "baseline.txt"], check=True)
     subprocess.run(["git", "-C", str(repo), "commit", "-qm", "baseline"], check=True)
     folder = scaffold.init("2026-09-05-no-results", cwd=repo)
+    _waive_goal(folder)
     assert scaffold.freeze(folder, cwd=repo) == 0
 
     assert scaffold.audit(folder, cwd=repo) == 3

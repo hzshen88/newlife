@@ -49,6 +49,7 @@ def check_wheels(dist: pathlib.Path) -> None:
         _require_suffix(names, ".dist-info/licenses/LICENSE", newlife.name)
         for suffix in (
             "newlife/scaffold/prereg.sh",
+            "newlife/scaffold/templates/goal.md",
             "newlife/scaffold/templates/prereg.md",
             "newlife/scaffold/templates/verdict.py.template",
         ):

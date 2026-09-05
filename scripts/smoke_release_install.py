@@ -98,13 +98,26 @@ def main() -> int:
                 cwd=repo,
             ).splitlines()
         )
-        expected_commit = {str(question / "env.lock"), str(question / "verdict.py")}
+        expected_commit = {
+            str(question / "env.lock"),
+            str(question / "goal.md"),
+            str(question / "verdict.py"),
+        }
         if committed != expected_commit:
             raise SystemExit(f"init committed unexpected paths: {committed}")
         if _run("git", "diff", "--cached", "--name-only", cwd=repo).splitlines() != [
             "staged.txt"
         ]:
             raise SystemExit("init did not preserve unrelated staged work")
+
+        # **The freeze must be refused while goal.md is untouched.** Asserting this from
+        # a freshly installed wheel is the only place that proves the gate ships and
+        # bites — a gate that is green in the source tree and absent from the wheel is
+        # the exact shape this release check exists to catch.
+        _run(newlife, "freeze", question, cwd=repo, expected=1)
+        (repo / question / "goal.md").write_text(
+            "<!--@goal_gate: not_applicable ... release smoke test, not a question ...-->\n",
+            encoding="utf-8")
 
         _run(newlife, "freeze", question, cwd=repo)
         _run(newlife, "audit", question, cwd=repo, expected=3)
