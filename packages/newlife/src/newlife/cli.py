@@ -180,15 +180,26 @@ def _start(args) -> int:
             shutil.copyfile(scaffold.TEMPLATES / template, target)
             print(f"  wrote         {target}")
     rc = _skills(argparse.Namespace(action="install", dest=args.skills_dest, force=args.force))
-    print(f"\nOpen {root} in your AI tool (Claude Code, Codex, ...) and say:\n"
-          f'    "Explore this with me: <your curiosity>"\n'
-          f"The rest is conversation. NEXT.md in the repository says what happens from here.")
+    has_exloop = any(provider == "exloop" for provider, _ in _skill_sources())
+    if has_exloop:
+        print(f"\nOpen {root} in your AI tool (Claude Code, Codex, ...) and say:\n"
+              f'    "Explore this with me: <your curiosity>"\n'
+              f"The rest is conversation. NEXT.md in the repository says what happens from here.")
+    else:
+        # **Do not promise the exploration stage when it is not there.** The first review of
+        # this command found it reporting success, noting the skill was missing, and then
+        # telling the person to start exploring anyway.
+        print(f"\nThe exploration stage is not available on this machine: the `exloop` package "
+              f"is not installed, so only newlife's own skills were installed.\n"
+              f"    pip install exloop        # then run `newlife start .` again\n"
+              f"Until then, open {root} in your AI tool and frame a question directly with the "
+              f"`newlife-goal` skill; NEXT.md says what happens from there.")
     if missing:
         print("\nBefore anything can be committed, git needs an identity — it is a signature, "
               "so it is not guessed:\n"
               + "".join(f'    git -C {root} config {key} "..."\n' for key in missing))
         return 1
-    return rc
+    return 1 if not has_exloop else rc
 
 
 def _pilot(folder: Path) -> int:

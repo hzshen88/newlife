@@ -25,8 +25,13 @@ type them. This exact misreading has happened.
    `handoff`. They see: a question folder exists, with the exploration record in `origin/`.
 3. **You ask them three things the map cannot supply** (`newlife-goal`): who would bet the
    other way, is the answer settled by design or by running, who changes what they do.
-   Six anchors go into `goal.md`. An anchor they cannot fill means the question is not
-   worth asking — say so; dropping it here is cheap and allowed.
+   Six anchors go into `goal.md`. An anchor they cannot fill **yet** is not a verdict
+   on them or on the question: offer two or three candidate wordings, or narrow the
+   question, or go back to exploring exactly that gap — all normal exits. Only when,
+   after that, nobody can be named who would bet the other way or change a decision is
+   the question not worth freezing; say so plainly, and that keeping it as a curiosity
+   is a fine outcome. Reproducing a known result to learn the toolchain is legitimate
+   too: waive the goal gate on the record and label the verdict a reproduction.
 4. **You write the world with them** into `verdict.py` and run `newlife pilot`. They see
    numbers; everything seen is now *seen*.
 5. **You write the criteria with them** (`newlife-prereg`): every row marked seen / blind /
@@ -38,6 +43,14 @@ type them. This exact misreading has happened.
    H1 / H0 / INVALID with the five gates. The closeout goes into `goal.md` §5 and the map.
 
 Two moments are theirs alone: the freeze, and committing results.
+
+## How you ask, whichever stage
+
+- Restate what you already understood before asking anything; do not ask twice.
+- One question at a time, and say what it decides ("this fixes which rows can be blind").
+- When they are stuck, offer concrete candidate phrasings and the difference between them.
+- "Hold this", "keep exploring", "narrow it" are normal exits, not failures. A clearer
+  question is a fine result of a first session.
 
 ## "Where are we?" — read the folder, do not ask them
 
@@ -62,6 +75,7 @@ two-repository layout) do not apply to a research repository laid out as
 
 ## Setup, if they ask how to install
 
-`pip install newlife` (it brings `exloop`), then `newlife start .` in their research
-folder, which also installs these skills into every AI tool on the machine. You can do
-all of that for them; the exploration skill says how.
+`pip install newlife`, then `newlife start .` in their research folder, which also
+installs these skills into every AI tool on the machine. The exploration skill ships in
+the separate `exloop` package (`pip install exloop`); `start` says so, and exits non-zero,
+when it is missing. You can do all of that for them; the exploration skill says how.

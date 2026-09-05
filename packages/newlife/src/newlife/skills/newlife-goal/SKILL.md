@@ -41,6 +41,8 @@ So the entire value of this step is in **refusal**, not in production.
 innovations that open no new intersection, a ratio of 22:1. It is the easiest move to think
 of and the least productive.
 
+These percentages are priors from a 258-paper corpus — §8 says which of them have been validated and which have not — not verdicts on a candidate. A specific A+B with a specific anomaly behind it beats the base rate; a generic one does not.
+
 **Eight framing moves** (complete over 258 papers; there is no ninth):
 
 | | Move | | Move |
@@ -113,6 +115,14 @@ Pick another.**
 If you cannot name **a specific person** and **a specific decision**, this is the
 "unimportant but decidable" tier — **it will pass every gate downstream and it is not worth
 asking.**
+
+**"Cannot name one yet" is different from "cannot name one".** First offer candidates —
+who reads results in this field, what they do today, what would change for them — or narrow
+the question until someone appears; going back to exploration for exactly that gap is a
+normal exit. The tier verdict above is for the case where, after that, nobody appears. And
+a reproduction of a known result done to learn the toolchain is legitimate on its own terms:
+waive the goal gate on the record (`<!--@goal_gate: not_applicable — reproduction to learn
+the toolchain-->`) and label the verdict a reproduction, not a finding.
 
 ---
 

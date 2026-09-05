@@ -7,9 +7,15 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 from pathlib import Path
 
 from newlife import cli, scaffold
+
+EXLOOP_PRESENT = importlib.util.find_spec("exloop") is not None
+COMPLETE = 0 if EXLOOP_PRESENT else 1
+"""`start` 只有在探索 skill 也装上了才算完成；exloop 不在时退出码 1 并说清怎么补。
+测试环境两种情况都可能出现（`--with-editable ~/Projects/exloop` 与否），期望值随之而变。"""
 
 
 def _git_identity(tmp_path: Path, monkeypatch, present: bool) -> None:
@@ -36,7 +42,7 @@ def test_start_creates_the_repo_next_md_and_installs_every_skill(
     dest.mkdir()
     root = tmp_path / "my-research"
 
-    assert cli._start(_args(root, dest)) == 0
+    assert cli._start(_args(root, dest)) == COMPLETE
 
     assert (root / ".git").is_dir()
     assert (root / "NEXT.md").exists() and (root / ".gitignore").exists()
@@ -55,8 +61,8 @@ def test_start_is_idempotent_and_init_works_inside(tmp_path: Path, monkeypatch) 
     dest = tmp_path / "skills"
     dest.mkdir()
     root = tmp_path / "my-research"
-    assert cli._start(_args(root, dest)) == 0
-    assert cli._start(_args(root, dest)) == 0
+    assert cli._start(_args(root, dest)) == COMPLETE
+    assert cli._start(_args(root, dest)) == COMPLETE
 
     folder = scaffold.init("2026-09-05-first", cwd=root)
     assert (folder / "goal.md").exists() and (folder / "origin" / "README.md").exists()
@@ -91,3 +97,19 @@ def test_start_with_no_ai_skills_dir_on_the_machine_says_so(
 
     assert cli._start(_args(root, None)) == 1
     assert "No AI skills directory found" in capsys.readouterr().out
+
+
+def test_start_does_not_promise_exploration_when_exloop_is_missing(tmp_path: Path, monkeypatch, capsys) -> None:
+    """第一次评审抓到的：报成功、顺带说探索 skill 没装、然后让用户去探索。三句话互相矛盾。"""
+    _git_identity(tmp_path, monkeypatch, present=True)
+    monkeypatch.setattr(cli, "_skill_sources",
+                        lambda: [("newlife", p) for p in sorted(cli.SKILLS.iterdir()) if (p / "SKILL.md").is_file()])
+    dest = tmp_path / "skills"
+    dest.mkdir()
+    root = tmp_path / "my-research"
+
+    assert cli._start(_args(root, dest)) == 1
+    out = capsys.readouterr().out
+    assert "pip install exloop" in out
+    assert "Explore this with me" not in out
+    assert (dest / "newlife-goal" / "SKILL.md").exists()          # 其余照做
