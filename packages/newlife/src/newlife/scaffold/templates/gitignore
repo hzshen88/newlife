@@ -3,3 +3,7 @@ __pycache__/
 .venv/
 questions/*/results/.reproduction-probe.json
 questions/*/pilot/*/.reproduction-probe.json
+# External inputs a question downloads (a compendium, a reference network) live in its data/
+# and stay out of git. Pin them instead: `newlife freeze <folder> --data <files>` writes their
+# hashes into the registration and `newlife audit` re-checks them.
+questions/*/data/
