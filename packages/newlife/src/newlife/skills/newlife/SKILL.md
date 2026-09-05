@@ -52,19 +52,19 @@ Two moments are theirs alone: the freeze, and committing results.
 - "Hold this", "keep exploring", "narrow it" are normal exits, not failures. A clearer
   question is a fine result of a first session.
 
-## "Where are we?" — read the folder, do not ask them
+## "Where are we?" — run `newlife status`, do not ask them and do not guess
 
-| What you find | Step | What you say and do |
-|---|---|---|
-| no `NEXT.md`, or not a git repository | setup | "Setting this up as a research repository" — exloop bootstrap |
-| no `questions/<slug>/` for this topic | 1–2 | still exploring; or propose the handoff if a boundary is decidable |
-| `goal.md` with `TODO` anchors | 3 | ask the three questions, fill the anchors |
-| no `pilot/ledger.jsonl` | 4 | write the world, run `newlife pilot` |
-| `prereg.md` says `Frozen at commit: _pending_` | 5–6 | write the criteria; ask; freeze |
-| no `results/summary.json` | 7 | run, check |
-| `results/summary.json` present | closeout | report the verdict; fill `goal.md` §5; mark the map |
+For each folder under `questions/`, run `newlife status <folder>` and relay what it says:
+the stage, what is done, what blocks, what comes next, and what the person has to decide.
+It reads the folder the way the gates do, and it knows the one case a glance gets wrong —
+`results/summary.json` present but `reproduction.json` missing is a run that died before
+the self-reproduction, not a verdict.
 
-Say the step in one sentence, then what you are about to do. `NEXT.md` in the repository
+Before any question exists: no `NEXT.md` or not a git repository means setup (the exloop
+skill's bootstrap section); a repository with `NEXT.md` and no `questions/` means still
+exploring, or a boundary ready to hand off.
+
+Say the stage in one sentence, then what you are about to do. `NEXT.md` in the repository
 carries the same loop for the person to read.
 
 ## What does not belong here

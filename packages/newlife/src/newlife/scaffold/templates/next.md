@@ -8,7 +8,8 @@ Begin with one sentence:
     "Explore this with me: <your curiosity>"
 
 Lost at any point? Ask your AI "how does this work" or "which step are we at": the
-`newlife` skill answers in your terms and reads the answer off this repository.
+`newlife` skill answers in your terms, and `newlife status <folder>` is how it reads the
+answer off this repository — stage, what is done, what blocks, what you have to decide.
 
 ## The loop
 
@@ -41,9 +42,9 @@ Lost at any point? Ask your AI "how does this work" or "which step are we at": t
 
 ## If you would rather type
 
-    newlife init <slug>        newlife pilot <folder>       newlife freeze <folder>
-    newlife run <folder>       newlife check <folder>       newlife audit <folder>
-    newlife skills install     newlife skills path          newlife blocks
+    newlife init <slug>        newlife pilot <folder>       newlife freeze <folder> [--data FILE...]
+    newlife run <folder>       newlife status <folder>      newlife check <folder>
+    newlife audit <folder>     newlife skills install       newlife blocks
 
 Never `git add -A` before the freeze: `prereg.md` must be committed by the freeze itself,
 and `newlife init` leaves exactly that file uncommitted for that reason.

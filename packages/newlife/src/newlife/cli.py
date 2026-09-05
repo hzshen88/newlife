@@ -11,6 +11,8 @@
                              `seen` has no pilot run behind it, or nothing is blind);
                              --data FILE... pins external inputs by hash, re-checked by audit
     newlife run <folder>     compute the verdict
+    newlife status <folder>  where is this question: stage, what is done, what blocks, what is
+                             next, what the person has to decide — read from the folder
     newlife check <folder>   five gates: goal readiness, pilot coverage, vacuous criteria,
                              silent degradation, registration <-> runner unit alignment
     newlife blocks           list the third-party building blocks in this environment
@@ -33,7 +35,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from newlife import scaffold
+from newlife import scaffold, status
 from newlife.gates import (
     goal_ready, pilot_coverage, silent_degradation_scan, unit_alignment,
     vacuous_criterion_scan,
@@ -282,6 +284,7 @@ def main(argv: list[str] | None = None) -> int:
                              "the freeze impossible")
     for name, help_ in (("pilot", "run the runner into pilot/, before the freeze"),
                         ("freeze", "freeze the criteria"), ("run", "compute the verdict"),
+                        ("status", "where is this question: stage, blockers, next step"),
                         ("check", "run the gates"), ("audit", "audit the freeze")):
         p = sub.add_parser(name, help=help_)
         p.add_argument("folder", type=Path, help="question folder")
@@ -348,6 +351,8 @@ def main(argv: list[str] | None = None) -> int:
         return scaffold.freeze(folder, cwd=cwd, data=tuple(args.data))
     if args.cmd == "audit":
         return scaffold.audit(folder, cwd=cwd)
+    if args.cmd == "status":
+        return status.main([str(folder)])
     if args.cmd == "check":
         return _check(folder)
     return subprocess.run([sys.executable, str(folder / "verdict.py")]).returncode

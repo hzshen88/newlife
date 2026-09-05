@@ -64,7 +64,8 @@ reached, not a failure to tidy away.
 
 ```
 newlife init <slug>       newlife pilot <folder>      newlife freeze <folder> [--data FILE...]
-newlife run <folder>      newlife check <folder>      newlife audit <folder>
+newlife run <folder>      newlife status <folder>     newlife check <folder>
+newlife audit <folder>
 newlife skills install    newlife skills path         newlife blocks
 ```
 

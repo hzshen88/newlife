@@ -56,6 +56,7 @@ $EDITOR questions/2026-09-05-my-question/prereg.md    # the criteria; every row 
 newlife freeze questions/2026-09-05-my-question       # ← this commit is the proof
 #   … --data questions/2026-09-05-my-question/data/*.csv   # reading downloaded data? pin it; audit re-checks
 newlife run   questions/2026-09-05-my-question
+newlife status questions/2026-09-05-my-question      # where am I: stage, blockers, next, decisions
 newlife check questions/2026-09-05-my-question       # five gates, see below
 git add questions/2026-09-05-my-question/results && git commit -m "verdict"
 newlife audit questions/2026-09-05-my-question
