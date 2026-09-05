@@ -7,6 +7,9 @@ Begin with one sentence:
 
     "Explore this with me: <your curiosity>"
 
+Lost at any point? Ask your AI "how does this work" or "which step are we at": the
+`newlife` skill answers in your terms and reads the answer off this repository.
+
 ## The loop
 
 1. **Explore** (skill: exloop). The AI asks one or two honing questions, then

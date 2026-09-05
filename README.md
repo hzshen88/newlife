@@ -30,8 +30,9 @@ AI tool, the `exloop` skill installs `newlife` and runs `start` itself when it f
 missing. Open `my-research` in your AI tool — Claude Code, Codex, anything that reads
 `SKILL.md` files — and say *"Explore this with me: …"*. The installed
 skills tell the AI when to run which command, and `NEXT.md` in the repository says what
-happens from here: explore, hand off, triage, pilot, criteria, freeze, verdict. Three skills
-are installed: `exloop` (from the `exloop` package, when it is installed),
+happens from here: explore, hand off, triage, pilot, criteria, freeze, verdict. Four skills
+are installed: `newlife` (answers "how does this work" and "which step am I at" in your
+terms — ask it any time), `exloop` (from the `exloop` package, when it is installed),
 `newlife-goal` and `newlife-prereg`. git needs an identity before anything is
 committed; `start` tells you if it is missing rather than guessing one.
 

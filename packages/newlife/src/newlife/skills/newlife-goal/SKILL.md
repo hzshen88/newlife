@@ -5,6 +5,9 @@ description: Turn any question into one that the later steps can actually settle
 
 # newlife-goal — turning a question into a solvable, real one
 
+> **Commands in this file are for you, the assistant, to run; the person decides.**
+> Asked how this works or where they are, describe what *they* do — see the `newlife` skill.
+
 > **This file ships with the `newlife` wheel; `newlife skills install` copies it verbatim
 > into your AI's config directory. No transformation** — the master and the deployed copy
 > are one file, because "two copies drift apart" is a shape this project has paid for

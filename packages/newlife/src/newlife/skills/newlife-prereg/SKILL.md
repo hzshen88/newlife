@@ -5,6 +5,9 @@ description: Help the user write a preregistration whose criteria will not sabot
 
 # newlife-prereg — writing criteria that will not sabotage themselves
 
+> **Commands in this file are for you, the assistant, to run; the person decides.**
+> Asked how this works or where they are, describe what *they* do — see the `newlife` skill.
+
 Once frozen, criteria cannot be changed. **Something unchangeable that is wrong costs you
 the whole round.**
 
