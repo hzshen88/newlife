@@ -25,8 +25,10 @@ python -m pip install "newlife[spatio-flux]"
 newlife start my-research             # git init, .gitignore, NEXT.md, skills into every AI tool found
 ```
 
-`start` is the whole setup. Open `my-research` in your AI tool — Claude Code, Codex,
-anything that reads `SKILL.md` files — and say *"Explore this with me: …"*. The installed
+`start` is the whole setup, and even it is optional to type: once the skills are in your
+AI tool, the `exloop` skill installs `newlife` and runs `start` itself when it finds them
+missing. Open `my-research` in your AI tool — Claude Code, Codex, anything that reads
+`SKILL.md` files — and say *"Explore this with me: …"*. The installed
 skills tell the AI when to run which command, and `NEXT.md` in the repository says what
 happens from here: explore, hand off, triage, pilot, criteria, freeze, verdict. Three skills
 are installed: `exloop` (from the `exloop` package, when it is installed),
