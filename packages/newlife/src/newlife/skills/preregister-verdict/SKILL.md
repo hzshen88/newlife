@@ -130,7 +130,9 @@ first time it ran.**
       stand in for "B also holds"
 - [ ] `git log -- <prereg path>` is empty — **the freeze must be its first commit**
 
-Then:
+**Ask the person before running it.** The freeze is the one irreversible step in the whole
+flow: a wrong criterion afterwards means a new registration, never an edit. Say in one
+sentence what is about to be frozen, and wait for a yes. Then:
 
 ```bash
 newlife freeze questions/<slug>      # this commit IS the timestamp

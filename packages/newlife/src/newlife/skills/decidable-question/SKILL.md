@@ -238,6 +238,10 @@ worse. Add a margin only to the one component that is obviously of a kind never 
 
 ---
 
+**Next, once the anchors are in**: the world goes into `verdict.py` (exploratory for now),
+`newlife pilot` runs it so that every quantity a criterion will name has been looked at, and
+the criteria are written with the `preregister-verdict` skill. Nothing is frozen yet.
+
 ## 6. Self-check: would this draft pass every gate and still not be worth asking
 
 In order; any "no" sends it back:

@@ -18,7 +18,7 @@ SKILL_DIRS = sorted(p.name for p in cli.SKILLS.iterdir() if (p / "SKILL.md").is_
 
 
 def _args(dest: Path, action: str = "install", force: bool = False):
-    return argparse.Namespace(action=action, dest=dest, force=force)
+    return argparse.Namespace(action=action, dest=[dest], force=force)
 
 
 def test_every_skill_declares_a_name_that_matches_its_directory() -> None:
@@ -37,10 +37,16 @@ def test_every_skill_declares_a_name_that_matches_its_directory() -> None:
 
 
 def test_install_is_verbatim_and_idempotent(tmp_path: Path) -> None:
+    """**整个目录，不只 SKILL.md。** 第一版只拷一个文件，装不了带 references/ 与 scripts/
+    的探索 skill；这里按 `_skill_sources()` 逐文件比对，exloop 装了就一并覆盖到。"""
     assert cli._skills(_args(tmp_path)) == 0
-    for name in SKILL_DIRS:
-        assert ((tmp_path / name / "SKILL.md").read_bytes()
-                == (cli.SKILLS / name / "SKILL.md").read_bytes())
+    sources = cli._skill_sources()
+    assert {name for _, p in sources for name in [p.name]} >= set(SKILL_DIRS)
+    for _provider, skill in sources:
+        files = cli._skill_files(skill)
+        assert files, f"{skill.name} 一个文件都没有"
+        for src in files:
+            assert (tmp_path / skill.name / src.relative_to(skill)).read_bytes() == src.read_bytes()
     assert cli._skills(_args(tmp_path)) == 0          # 再装一次仍然干净
 
 
@@ -58,8 +64,15 @@ def test_install_refuses_to_clobber_an_edited_skill(tmp_path: Path) -> None:
 def test_path_prints_masters_without_touching_anything(tmp_path: Path, capsys) -> None:
     assert cli._skills(_args(tmp_path, action="path")) == 0
     printed = capsys.readouterr().out.strip().splitlines()
-    assert len(printed) == len(SKILL_DIRS)
+    assert len(printed) == len(cli._skill_sources())
+    assert all("SKILL.md" in line and line.rstrip().endswith("]") for line in printed)
     assert not list(tmp_path.iterdir())               # path 不写任何东西
+
+
+def test_install_with_no_dest_and_no_ai_dir_is_not_a_silent_success(tmp_path: Path, monkeypatch, capsys) -> None:
+    monkeypatch.setattr(cli, "KNOWN_SKILL_DIRS", (str(tmp_path / "no-such-ai"),))
+    assert cli._skills(argparse.Namespace(action="install", dest=None, force=False)) == 1
+    assert "No AI skills directory found" in capsys.readouterr().out
 
 
 def test_blocks_reports_a_broken_package_instead_of_hiding_it() -> None:

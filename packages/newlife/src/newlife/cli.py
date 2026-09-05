@@ -1,5 +1,7 @@
 """The newlife command line: one folder per question, from scaffold to audit.
 
+    newlife start <dir>      one command from pip install to talking to your AI: git init,
+                             NEXT.md, and the skills installed into every AI tool found
     newlife init <slug>      scaffold and commit it (prereg.md deliberately excluded)
     newlife pilot <folder>   run the runner BEFORE the freeze: outputs land in pilot/<stamp>/,
                              never in results/, and the units it produced are recorded in
@@ -24,6 +26,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -70,35 +73,121 @@ def _blocks() -> int:
     return 0
 
 
-def _skills(args) -> int:
-    """Copy the skills into the AI's config directory. **Verbatim, with no transformation.**
+KNOWN_SKILL_DIRS = ("~/.claude/skills", "~/.codex/skills", "~/.workbuddy/skills")
+"""Where the AI tools this project knows about read skills from. `skills install` with no
+`--dest` installs into every one of these that exists on the machine."""
+SKIP_PARTS = frozenset({"__pycache__", ".ruff_cache", ".pytest_cache"})
 
-    The master and the deployed copy are the same file. "two copies drift apart" is a
-    shape this project has paid for repeatedly: a skill telling the user to run a command
-    the library does not have yet, with no mechanical defence that would notice.
+
+def _skill_sources() -> list[tuple[str, Path]]:
+    """Every skill this install can offer: newlife's own, plus exloop's when that package is present.
+
+    exloop is the exploration stage upstream of newlife and a separate package on purpose —
+    one master, in its own repository. newlife never imports its code; it only finds its
+    files, and the interface between the two stays files (`handoff` writes into a question's
+    `origin/`).
     """
-    sources = sorted(p for p in SKILLS.iterdir() if (p / "SKILL.md").is_file())
+    found = [("newlife", p) for p in sorted(SKILLS.iterdir()) if (p / "SKILL.md").is_file()]
+    try:
+        import exloop  # optional: the exploration skill ships in its own package
+    except ImportError:
+        return found
+    found += [("exloop", p) for p in sorted(exloop.skills_dir().iterdir())
+              if (p / "SKILL.md").is_file()]
+    return found
+
+
+def _skill_files(skill: Path) -> list[Path]:
+    """Every file of one skill: SKILL.md, references, scripts — caches excluded."""
+    return sorted(p for p in skill.rglob("*")
+                  if p.is_file() and not (SKIP_PARTS & set(p.relative_to(skill).parts)))
+
+
+def _skills(args) -> int:
+    """Copy the skills into the AI's config directories. **Verbatim, with no transformation.**
+
+    The master and the deployed copy are the same bytes. "two copies drift apart" is a
+    shape this project has paid for repeatedly: a skill telling the user to run a command
+    the library does not have yet, with no mechanical defence that would notice. Whole
+    directories are copied, not just `SKILL.md` — the exploration skill carries references
+    and a helper script, and the first version of this command could not install it.
+    """
+    sources = _skill_sources()
+    has_exloop = any(provider == "exloop" for provider, _ in sources)
     if args.action == "path":
-        for s in sources:
-            print(s / "SKILL.md")
+        for provider, skill in sources:
+            print(f"{skill / 'SKILL.md'}  [{provider}]")
+        if not has_exloop:
+            print("(the exploration skill is not listed: the exloop package is not installed)",
+                  file=sys.stderr)
         return 0
 
-    args.dest.mkdir(parents=True, exist_ok=True)
-    skipped = []
-    for src in sources:
-        target = args.dest / src.name / "SKILL.md"
-        body = (src / "SKILL.md").read_bytes()
-        if target.exists() and target.read_bytes() != body and not args.force:
-            skipped.append(target)
-            continue
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(body)
-        print(f"  installed {target}")
+    dests = [Path(d).expanduser() for d in (args.dest or [])]
+    if not dests:
+        dests = [d for d in (Path(s).expanduser() for s in KNOWN_SKILL_DIRS) if d.is_dir()]
+    if not dests:
+        print("No AI skills directory found (looked for " + ", ".join(KNOWN_SKILL_DIRS) + ").\n"
+              "Pass --dest <dir>, or run `newlife skills path` and paste a master into your AI "
+              "by hand.")
+        return 1
+
+    skipped: list[Path] = []
+    for dest in dests:
+        for _provider, skill in sources:
+            for src in _skill_files(skill):
+                target = dest / skill.name / src.relative_to(skill)
+                body = src.read_bytes()
+                if target.exists():
+                    if target.read_bytes() == body:
+                        continue
+                    if not args.force:
+                        skipped.append(target)
+                        continue
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(body)
+                print(f"  installed {target}")
     for t in skipped:
         print(f"  skipped {t} — already present with different content. "
               f"Your edits are not overwritten; pass --force if you meant to.")
-    print(f"\nFor another AI: `newlife skills path` prints the masters — paste one in whole.")
+    if not has_exloop:
+        print("\nThe exploration skill was not installed: the exloop package is not present "
+              "(pip install exloop). newlife's own two skills were.")
+    print("\nFor another AI: `newlife skills path` prints the masters — paste one in whole.")
     return 1 if skipped else 0
+
+
+def _start(args) -> int:
+    """From `pip install` to "now talk to your AI" in one command.
+
+    Creates the research repository (git is required: the freeze commit is the timestamp),
+    checks that git has an identity to sign with, writes `NEXT.md` (what happens from here
+    and the one sentence to say to the AI) and a `.gitignore`, and installs the skills into
+    every AI configuration directory found on this machine. Running it again is harmless.
+    The only thing it will not do is invent a git identity — that is a signature.
+    """
+    root = Path(args.dir).expanduser().resolve()
+    root.mkdir(parents=True, exist_ok=True)
+    if not (root / ".git").exists():
+        subprocess.run(["git", "init", "-q", str(root)], check=True)
+        print(f"  git init      {root}")
+    missing = [key for key in ("user.name", "user.email")
+               if subprocess.run(["git", "-C", str(root), "config", "--get", key],
+                                 capture_output=True, text=True).returncode != 0]
+    for name, template in ((".gitignore", "gitignore"), ("NEXT.md", "next.md")):
+        target = root / name
+        if not target.exists():
+            shutil.copyfile(scaffold.TEMPLATES / template, target)
+            print(f"  wrote         {target}")
+    rc = _skills(argparse.Namespace(action="install", dest=args.skills_dest, force=args.force))
+    print(f"\nOpen {root} in your AI tool (Claude Code, Codex, ...) and say:\n"
+          f'    "Explore this with me: <your curiosity>"\n'
+          f"The rest is conversation. NEXT.md in the repository says what happens from here.")
+    if missing:
+        print("\nBefore anything can be committed, git needs an identity — it is a signature, "
+              "so it is not guessed:\n"
+              + "".join(f'    git -C {root} config {key} "..."\n' for key in missing))
+        return 1
+    return rc
 
 
 def _pilot(folder: Path) -> int:
@@ -185,13 +274,23 @@ def main(argv: list[str] | None = None) -> int:
         p = sub.add_parser(name, help=help_)
         p.add_argument("folder", type=Path, help="question folder")
     sub.add_parser("blocks", help="list admissible third-party building blocks")
-    p_sk = sub.add_parser("skills", help="install the skills into your AI config directory")
+    p_sk = sub.add_parser("skills", help="install the skills into your AI config directories")
     p_sk.add_argument("action", choices=("install", "path"))
-    p_sk.add_argument("--dest", type=Path, default=Path.home() / ".claude/skills",
-                      help="where to install (default ~/.claude/skills)")
+    p_sk.add_argument("--dest", action="append", type=Path, default=None,
+                      help="where to install (repeatable); default: every AI skills "
+                           "directory found on this machine")
     p_sk.add_argument("--force", action="store_true",
                       help="only needed when the target exists with different content; "
                            "your edits are not overwritten by default")
+    p_start = sub.add_parser("start", help="create a research repository and install the "
+                                           "skills: one command from pip install to talking "
+                                           "to your AI")
+    p_start.add_argument("dir", type=Path, help="the research repository to create or reuse")
+    p_start.add_argument("--skills-dest", action="append", type=Path, default=None,
+                         help="where to install the skills (repeatable); default: every AI "
+                              "skills directory found on this machine")
+    p_start.add_argument("--force", action="store_true",
+                         help="overwrite installed skills that differ from the masters")
 
     args = ap.parse_args(argv)
     cwd = Path.cwd()
@@ -200,6 +299,8 @@ def main(argv: list[str] | None = None) -> int:
         return _blocks()
     if args.cmd == "skills":
         return _skills(args)
+    if args.cmd == "start":
+        return _start(args)
     if args.cmd == "init":
         folder = scaffold.init(args.slug, cwd=cwd, commit=not args.no_commit)
         rel = folder.relative_to(scaffold.repo_root(cwd))
