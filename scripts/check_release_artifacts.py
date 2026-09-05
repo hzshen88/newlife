@@ -58,14 +58,15 @@ def check_wheels(dist: pathlib.Path) -> None:
             _require_suffix(names, suffix, newlife.name)
         metadata = _metadata(archive)
         requirements = metadata.get_all("Requires-Dist", [])
-        if not any(
-            requirement.replace(" ", "").lower() == "proofroot<0.2,>=0.1"
-            for requirement in requirements
-        ):
-            raise SystemExit(
-                f"{newlife.name} does not declare the bounded proofroot dependency: "
-                f"{requirements}"
-            )
+        for dependency in ("proofroot<0.2,>=0.1", "exloop<0.2,>=0.1"):
+            if not any(
+                requirement.replace(" ", "").lower() == dependency
+                for requirement in requirements
+            ):
+                raise SystemExit(
+                    f"{newlife.name} does not declare the bounded dependency "
+                    f"{dependency}: {requirements}"
+                )
         entries = [
             name for name in names if name.endswith(".dist-info/entry_points.txt")
         ]

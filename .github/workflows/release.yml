@@ -30,6 +30,7 @@ jobs:
           uv run --package newlife pytest packages/newlife/tests -q
       - name: Check architecture imports
         run: python scripts/check_imports.py
+      # 冒烟安装从 PyPI 解析 exloop：newlife 依赖的 exloop 版本必须已经在 PyPI 上（docs/releasing.md）。
       - name: Build and inspect both distributions
         run: |
           uv build --all-packages --out-dir dist

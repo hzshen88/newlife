@@ -45,6 +45,21 @@ references on first use) and only necessary to add **required reviewers**, which
 each upload until approved. On a private repository those protection rules need a paid
 GitHub plan; without them the tag push itself is the only gate.
 
+## exloop goes first
+
+`newlife` depends on `exloop>=0.1,<0.2`, a separate package released **by hand from the
+exloop repository**, not by this workflow. The build job's smoke test installs the built
+wheels with PyPI enabled precisely so that it proves `pip install newlife` brings the
+exploration skill along — which means the exloop version that satisfies the range must
+already be on PyPI when the tag is pushed. Releasing exloop:
+
+    uv build --out-dir dist && python scripts/check_release_artifacts.py dist && uv publish
+
+The check refuses any file outside the skill, the helper, `README.pypi.md` and `LICENSE`;
+that repository also holds sealed explorations that must never ship. Once exloop is on
+PyPI, run `uv lock` here and commit the lock together with the version bump — until then
+the lock cannot resolve the dependency and `uv run` needs `--frozen`.
+
 ## Release
 
 1. Bump the version in **both** `packages/proofroot/pyproject.toml` and
@@ -57,8 +72,9 @@ GitHub plan; without them the tag push itself is the only gate.
    wasted CI run.
 
 2. If `proofroot` crosses a minor version, update the constraint `proofroot<0.2,>=0.1`
-   in `packages/newlife/pyproject.toml` in the same commit. **Nothing checks this pairing
-   automatically.**
+   in `packages/newlife/pyproject.toml` in the same commit; the same goes for
+   `exloop<0.2,>=0.1`. `check_release_artifacts.py` checks that the wheel declares both
+   bounded constraints, but **nothing checks that the pairing is right.**
 
 3. Commit, merge to `main`, then create and push a matching tag:
 

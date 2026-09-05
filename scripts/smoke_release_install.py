@@ -1,4 +1,11 @@
-"""Install built wheels offline and exercise the external user-repository flow."""
+"""Install the built wheels into a fresh environment and exercise the external user-repository flow.
+
+Both built wheels are installed by path, so the test cannot pick up an older release of
+either from PyPI. Their one third-party dependency, `exloop`, is resolved from PyPI —
+which is why the install is no longer `--no-index`: the release must prove that
+`pip install newlife` brings the exploration skill along. Before an exloop release is on
+PyPI, pass `--find-links <dir holding its wheel>` to run this locally.
+"""
 
 from __future__ import annotations
 
@@ -35,8 +42,22 @@ def _run(
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("dist", type=pathlib.Path)
+    parser.add_argument(
+        "--find-links",
+        action="append",
+        default=[],
+        type=pathlib.Path,
+        help="extra wheel directory, for running this before a dependency reaches PyPI",
+    )
     args = parser.parse_args()
     dist = args.dist.resolve()
+    wheels = []
+    for package in ("proofroot", "newlife"):
+        matches = sorted(dist.glob(f"{package}-*.whl"))
+        if len(matches) != 1:
+            raise SystemExit(f"expected exactly one {package} wheel in {dist}, found {matches}")
+        wheels.append(matches[0])
+    find_links = [dist, *(p.resolve() for p in args.find_links)]
     uv = shutil.which("uv")
     if uv is None:
         raise SystemExit("uv is required for the release installation smoke test")
@@ -53,22 +74,25 @@ def main() -> int:
             "install",
             "--python",
             python,
-            "--no-index",
-            "--find-links",
-            dist,
-            "newlife",
+            *(arg for directory in find_links for arg in ("--find-links", directory)),
+            *wheels,
         )
         _run(
             python,
             "-c",
-            "import importlib.resources as r, random, newlife, proofroot; "
+            "import importlib.resources as r, random, newlife, proofroot, exloop; "
             "assert r.files('proofroot').joinpath('vectors/evidencecore_rng_v1.json').is_file(); "
             "assert r.files('newlife').joinpath('scaffold/prereg.sh').is_file(); "
+            "assert exloop.skills_dir().joinpath('exloop/SKILL.md').is_file(); "
             "bank=proofroot.RngBank(42, ['mutation', 'selection'], "
             "stream_factory=random.Random); "
             "assert bank.rng_stream('mutation') is bank.rng_stream('MUTATION'); "
             "assert isinstance(proofroot.canonical_bytes({'answer': 42}), bytes)",
         )
+
+        listed = _run(newlife, "skills", "path")
+        if "[exloop]" not in listed or "[newlife]" not in listed:
+            raise SystemExit(f"`newlife skills path` does not list both providers:\n{listed}")
 
         repo = root / "user-repository"
         repo.mkdir()
