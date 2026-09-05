@@ -1,9 +1,9 @@
 ---
-name: preregister-verdict
-description: Help the user write a preregistration whose criteria will not sabotage themselves, then freeze it. Use when the question is already clear and they are writing prereg.md, fixing H1/H0 and the judgement units, or about to run `newlife freeze`. The core rule is "pilot before freezing, covering every quantity that appears in a criterion". Not for a question that has not taken shape yet (that is decidable-question), and not for ordinary code changes.
+name: newlife-prereg
+description: Help the user write a preregistration whose criteria will not sabotage themselves, then freeze it. Use when the question is already clear and they are writing prereg.md, fixing H1/H0 and the judgement units, or about to run `newlife freeze`. The core rule is "pilot before freezing, covering every quantity that appears in a criterion". Not for a question that has not taken shape yet (that is newlife-goal), and not for ordinary code changes.
 ---
 
-# preregister-verdict — writing criteria that will not sabotage themselves
+# newlife-prereg — writing criteria that will not sabotage themselves
 
 Once frozen, criteria cannot be changed. **Something unchangeable that is wrong costs you
 the whole round.**

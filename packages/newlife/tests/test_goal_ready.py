@@ -1,6 +1,6 @@
 """goal 就绪门 —— 第 ① 阶段（提出问题）在用户侧的机械检查。
 
-洞是这么来的：`decidable-question` skill 随 wheel 发布、会让 AI 写出六个锚，
+洞是这么来的：`newlife-goal` skill 随 wheel 发布、会让 AI 写出六个锚，
 **而验锚的门不发布**。实测四份真实 `prereg.md`，锚数是 **0 · 0 · 0 · 0**。
 用户拿到了写锚的东西，没拿到验锚的东西。
 

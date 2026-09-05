@@ -6,7 +6,7 @@ this one here, whatever tool it happened in:
 - an exloop exploration: run its `handoff --to <this folder>` — it writes `events.jsonl`,
   `map.md` and a `goal-draft.md` shaped like `../goal.md` with §1 / §3 / §4 pre-filled
   (where the question came from, what was abandoned, what is still open); the six
-  anchors stay TODO for the `decidable-question` skill;
+  anchors stay TODO for the `newlife-goal` skill;
 - a chat transcript, a notebook, a page of notes: copy it in as it is.
 
 Two rules, both about the preregistration that follows:

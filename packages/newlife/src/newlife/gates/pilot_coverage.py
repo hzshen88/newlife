@@ -11,7 +11,7 @@ scientific** — both were defects in the criteria that a pilot would have expos
 - a pilot that looked at one trajectory's distinct-value count, then froze a criterion
   about *every* trajectory (the other model's increments underflowed to zero).
 
-The `preregister-verdict` skill states the rules — cover every quantity, keep one unit
+The `newlife-prereg` skill states the rules — cover every quantity, keep one unit
 blind — in prose. **Prose does not stop a freeze.** This gate does.
 
 ## What is mechanical here

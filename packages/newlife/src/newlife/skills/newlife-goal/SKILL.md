@@ -1,9 +1,9 @@
 ---
-name: decidable-question
-description: Turn any question into one that the later steps can actually settle — first triage whether simulation should answer it at all and whether it can be judged, then reshape an unjudgeable one until it can be. Produces an anchored goal draft for the execution system. Use when asked how to frame a question, whether something is worth simulating, how to make it decidable, or to start a goal. Not for a question whose criteria are already clear and only need writing up (that is preregister-verdict), nor for implementing and judging an already-decidable question (that is newlife init / freeze / run).
+name: newlife-goal
+description: Turn any question into one that the later steps can actually settle — first triage whether simulation should answer it at all and whether it can be judged, then reshape an unjudgeable one until it can be. Produces an anchored goal draft for the execution system. Use when asked how to frame a question, whether something is worth simulating, how to make it decidable, or to start a goal. Not for a question whose criteria are already clear and only need writing up (that is newlife-prereg), nor for implementing and judging an already-decidable question (that is newlife init / freeze / run).
 ---
 
-# decidable-question — turning a question into a solvable, real one
+# newlife-goal — turning a question into a solvable, real one
 
 > **This file ships with the `newlife` wheel; `newlife skills install` copies it verbatim
 > into your AI's config directory. No transformation** — the master and the deployed copy
@@ -12,7 +12,7 @@ description: Turn any question into one that the later steps can actually settle
 >
 > This is **step one**: pure method, zero tool dependencies, entirely conducted in
 > conversation, producing a text. Works in ChatGPT, Claude or anywhere else. Step two
-> (writing the criteria) is `preregister-verdict`; step three (execution and judgement) is
+> (writing the criteria) is `newlife-prereg`; step three (execution and judgement) is
 > `newlife init / freeze / run / check / audit`.
 
 **Its output is the next step's input**: an anchored goal draft. It belongs in
@@ -240,7 +240,7 @@ worse. Add a margin only to the one component that is obviously of a kind never 
 
 **Next, once the anchors are in**: the world goes into `verdict.py` (exploratory for now),
 `newlife pilot` runs it so that every quantity a criterion will name has been looked at, and
-the criteria are written with the `preregister-verdict` skill. Nothing is frozen yet.
+the criteria are written with the `newlife-prereg` skill. Nothing is frozen yet.
 
 ## 6. Self-check: would this draft pass every gate and still not be worth asking
 

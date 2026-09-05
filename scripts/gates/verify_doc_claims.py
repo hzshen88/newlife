@@ -61,7 +61,7 @@ TRACE_ANCHORS = {"criterion", "goal", "question", "plan", "prereg"}
 VOCAB_ANCHORS = {"vocabulary", "outcome"}
 # goal 冻结前的门用的锚，由 check_goal_ready.py 检查，不是 check 台账的条目。
 GOAL_GATE_ANCHORS = {"goal_gate", "evidence", "counterparty", "size_estimate",
-                     # 2026-09-04 decidable-question 加的三个。**漏登记会让对账器
+                     # 2026-09-04 newlife-goal 加的三个。**漏登记会让对账器
                      # 把它们当成 check 锚去台账里找**——门自检当场报出来的。
                      "decides", "attack_layer", "who_changes_behavior"}
 

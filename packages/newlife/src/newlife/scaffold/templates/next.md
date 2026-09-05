@@ -9,20 +9,20 @@ Begin with one sentence:
 
 ## The loop
 
-1. **Explore** (skill: exploration-loop). The AI asks one or two honing questions, then
+1. **Explore** (skill: exloop). The AI asks one or two honing questions, then
    walks one edge at a time, keeps a map silently, and offers reachable directions at the
    end of each turn. You only answer and decide. The record lives in
    `~/.exloop/explorations/<slug>/` and follows you across tools.
 2. **Hand off.** When a boundary can be stated as "what measurement would make the answer
    different", the AI says so once and asks. If you agree, it runs `newlife init <slug>`
    and `handoff`; `questions/<slug>/origin/` then holds the map and a pre-filled goal draft.
-3. **Triage** (skill: decidable-question). The AI asks only what the map cannot supply: who
+3. **Triage** (skill: newlife-goal). The AI asks only what the map cannot supply: who
    would bet the other way, is the answer settled by the design or by the run, who changes
    what they do. Six anchors go into `goal.md`. An anchor you cannot fill is the signal to
    drop the question — that is allowed, and cheap here.
 4. **World and pilot.** Your simulator goes into `verdict.py`. `newlife pilot` runs it into
    `pilot/`, never `results/`. Everything a pilot produces counts as seen.
-5. **Criteria** (skill: preregister-verdict). Every row of `prereg.md` §2 is marked seen /
+5. **Criteria** (skill: newlife-prereg). Every row of `prereg.md` §2 is marked seen /
    blind / mechanical, and at least one row is blind.
 6. **Freeze.** The one irreversible step. The AI must ask you first, then runs
    `newlife freeze`. Two gates (goal, pilot) refuse on their own if something is missing.

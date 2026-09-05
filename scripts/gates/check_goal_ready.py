@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """goal 冻结前的门 —— **实现已搬进 newlife 包，本文件只是入口。**
 
-搬家原因（2026-09-05）：这道门检查的六个锚正是 `decidable-question` skill 产出的，
+搬家原因（2026-09-05）：这道门检查的六个锚正是 `newlife-goal` skill 产出的，
 而 skill 随 wheel 发布、门不发布——**用户拿到了会写锚的 skill，却拿不到验锚的门**，
 四份真实 `prereg.md` 里锚数是 0。现在 `newlife init` 生成 `goal.md`，
 `newlife freeze` 在冻结前挡一道，`newlife check` 一并报告。

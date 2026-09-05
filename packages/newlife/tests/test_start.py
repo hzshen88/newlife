@@ -78,7 +78,7 @@ def test_start_reports_a_missing_git_identity_but_still_does_the_rest(
     out = capsys.readouterr().out
     assert "config user.name" in out and "config user.email" in out
     assert (root / ".git").is_dir() and (root / "NEXT.md").exists()
-    assert (dest / "decidable-question" / "SKILL.md").exists()
+    assert (dest / "newlife-goal" / "SKILL.md").exists()
 
 
 def test_start_with_no_ai_skills_dir_on_the_machine_says_so(

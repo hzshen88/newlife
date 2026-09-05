@@ -29,8 +29,8 @@ newlife start my-research             # git init, .gitignore, NEXT.md, skills in
 anything that reads `SKILL.md` files — and say *"Explore this with me: …"*. The installed
 skills tell the AI when to run which command, and `NEXT.md` in the repository says what
 happens from here: explore, hand off, triage, pilot, criteria, freeze, verdict. Three skills
-are installed: `exploration-loop` (from the `exloop` package, when it is installed),
-`decidable-question` and `preregister-verdict`. git needs an identity before anything is
+are installed: `exloop` (from the `exloop` package, when it is installed),
+`newlife-goal` and `newlife-prereg`. git needs an identity before anything is
 committed; `start` tells you if it is missing rather than guessing one.
 
 If you would rather drive it yourself, the commands are:

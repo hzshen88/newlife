@@ -15,7 +15,7 @@ covered by `silent_degradation_scan`; this is the process side.
 when skipped.** Skipping the verdict runner leaves no `summary.json` — visible, no gate
 needed. Skipping the literature search removes nothing at all — it needs one.
 
-Six required anchors, exactly what the `decidable-question` skill emits:
+Six required anchors, exactly what the `newlife-goal` skill emits:
 
     <!--@evidence: literature_searched=yes, sources=3, verdict=unknown-->
     <!--@counterparty: who would bet the other way, and on what grounds-->
