@@ -54,6 +54,7 @@ $EDITOR questions/2026-09-05-my-question/verdict.py   # your world — explorato
 newlife pilot questions/2026-09-05-my-question        # look at every quantity a criterion will name
 $EDITOR questions/2026-09-05-my-question/prereg.md    # the criteria; every row seen / blind / mechanical
 newlife freeze questions/2026-09-05-my-question       # ← this commit is the proof
+#   … --data questions/2026-09-05-my-question/data/*.csv   # reading downloaded data? pin it; audit re-checks
 newlife run   questions/2026-09-05-my-question
 newlife check questions/2026-09-05-my-question       # five gates, see below
 git add questions/2026-09-05-my-question/results && git commit -m "verdict"
@@ -102,7 +103,9 @@ omission.
 
 `audit` proves four things from git alone: the registration has a freeze commit,
 the stamped hash matches it, the content was never edited afterwards, and **every
-committed output post-dates the freeze**. That last one needs the registration and
+committed output post-dates the freeze**. A fifth, when the freeze was given `--data`:
+every pinned input file still hashes to what was frozen — a downloaded compendium that
+changed under the verdict is caught, even though the files themselves are not tracked. That last one needs the registration and
 the results to share a git ancestry, which is why they live in one repository, one
 folder per question. Questions are siblings, not a chain: **a question's verdict
 never runs another question's runner.**

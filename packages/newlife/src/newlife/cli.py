@@ -8,7 +8,8 @@
                              pilot/ledger.jsonl — everything a pilot produces counts as seen
     newlife freeze <folder>  freeze the criteria — this commit IS the timestamp
                              (refused while goal.md is unfilled, or while a criterion marked
-                             `seen` has no pilot run behind it, or nothing is blind)
+                             `seen` has no pilot run behind it, or nothing is blind);
+                             --data FILE... pins external inputs by hash, re-checked by audit
     newlife run <folder>     compute the verdict
     newlife check <folder>   five gates: goal readiness, pilot coverage, vacuous criteria,
                              silent degradation, registration <-> runner unit alignment
@@ -273,6 +274,11 @@ def main(argv: list[str] | None = None) -> int:
                         ("check", "run the gates"), ("audit", "audit the freeze")):
         p = sub.add_parser(name, help=help_)
         p.add_argument("folder", type=Path, help="question folder")
+        if name == "freeze":
+            p.add_argument("--data", nargs="+", type=Path, default=(), metavar="FILE",
+                           help="external input files the verdict reads (downloaded data, "
+                                "reference tables); their hashes are frozen with the criteria "
+                                "and re-checked by audit")
     sub.add_parser("blocks", help="list admissible third-party building blocks")
     p_sk = sub.add_parser("skills", help="install the skills into your AI config directories")
     p_sk.add_argument("action", choices=("install", "path"))
@@ -328,7 +334,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "pilot":
         return _pilot(folder)
     if args.cmd == "freeze":
-        return scaffold.freeze(folder, cwd=cwd)
+        return scaffold.freeze(folder, cwd=cwd, data=tuple(args.data))
     if args.cmd == "audit":
         return scaffold.audit(folder, cwd=cwd)
     if args.cmd == "check":

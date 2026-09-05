@@ -132,6 +132,11 @@ first time it ran.**
 - [ ] §5 states **what this round does not establish**; at closeout "we showed A" must never
       stand in for "B also holds"
 - [ ] `git log -- <prereg path>` is empty — **the freeze must be its first commit**
+- [ ] the question reads files it did not generate (a downloaded dataset, a reference
+      network)? Then freeze with `--data <those files>`: their hashes go into the
+      registration and `newlife audit` re-checks them. Record where each came from
+      (URL, commit or version, date) in a small manifest next to the data — a raw URL on a
+      moving branch is not a source, and `env.lock` knows nothing about data
 
 **Ask the person before running it.** The freeze is the one irreversible step in the whole
 flow: a wrong criterion afterwards means a new registration, never an edit. Say in one

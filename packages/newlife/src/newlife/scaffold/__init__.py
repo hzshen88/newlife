@@ -133,8 +133,16 @@ def init(slug: str, *, cwd: Path, commit: bool = True) -> Path:
     return folder
 
 
-def freeze(folder: Path, *, cwd: Path) -> int:
+def freeze(folder: Path, *, cwd: Path, data: tuple[Path, ...] = ()) -> int:
     """Freeze this question's criteria. **The freeze must be `prereg.md`'s first commit.**
+
+    `data` names external input files the question reads but did not generate — a
+    downloaded expression compendium, a reference network. Their git blob hashes are
+    written into the registration under "## Frozen data checksums" before the freeze
+    commit, and `newlife audit` fails if any of them changes afterwards. The first four
+    real questions read only simulated data; the first one to download a dataset had no
+    way to pin it — this is that way. The files themselves need not be tracked by git
+    (they usually are not): `git hash-object` hashes what is on disk.
 
     **A red `goal.md` blocks the freeze.** This is the last moment at which the answer
     still costs nothing: after it comes the implementation, and a question nobody would
@@ -179,7 +187,18 @@ def freeze(folder: Path, *, cwd: Path) -> int:
             "seen / blind / mechanical — or waive on the record, inside prereg.md:\n"
             "    <!--@pilot_gate: no_blind_waived ... why nothing is blind ...-->\n"
             "    <!--@pilot_gate: not_applicable ... why the stage does not apply ...-->")
-    return _run_prereg(root, "freeze", str(rel))
+    pinned = []
+    for path in data:
+        resolved = Path(path).resolve()
+        if not resolved.is_file():
+            raise SystemExit(f"--data {path}: no such file. Pin only files that exist now — "
+                             f"the freeze records what the verdict will read.")
+        try:
+            pinned.append(str(resolved.relative_to(root)))
+        except ValueError as exc:
+            raise SystemExit(f"--data {path} is outside the repository {root}; the audit "
+                             f"can only re-hash files it can find from the repository root.") from exc
+    return _run_prereg(root, "freeze", str(rel), *pinned)
 
 
 def audit(folder: Path, *, cwd: Path) -> int:
