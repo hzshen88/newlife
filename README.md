@@ -32,7 +32,7 @@ missing. Open `my-research` in your AI tool — Claude Code, Codex, anything tha
 skills tell the AI when to run which command, and `NEXT.md` in the repository says what
 happens from here: explore, hand off, triage, pilot, criteria, freeze, verdict. Four skills
 are installed: `newlife` (answers "how does this work" and "which step am I at" in your
-terms — ask it any time), `exloop` (from the `exloop` package, when it is installed),
+terms — ask it any time), `exloop` (from the `exloop` package, a dependency of newlife),
 `newlife-goal` and `newlife-prereg`. git needs an identity before anything is
 committed; `start` tells you if it is missing rather than guessing one.
 
@@ -236,8 +236,8 @@ Expected: `"passed": true`, `"verdict": "ms_minimal_coalescent_reproducible"`,
 The first world (Resource Foraging) is the one reproduction that **cannot** be
 run from this repository alone: its L2 recorded-draw comparison replays draws
 recorded by the Julia reference implementation, so it additionally needs Julia
-and a local [ParaLife](https://github.com/hzshen88/paralife) `parworlds`
-checkout. See [`examples/first-world/README.md`](examples/first-world/) for the
+and a local ParaLife `parworlds`
+checkout (a private repository, not published). See [`examples/first-world/README.md`](examples/first-world/) for the
 commands and `--parworlds` path.
 
 Release maintainers should follow [`docs/releasing.md`](docs/releasing.md). A tagged
@@ -269,9 +269,9 @@ goal → question → plan → preregistration (frozen) → implementation → v
   list in `proposal.md` §1.5, *before* the question narrows. It is checked
   again at the end, and it is allowed — and has already happened — for a
   milestone to reach a supported hypothesis while its goal went backwards.
-- **question / plan / preregistration** live in the
-  [exloop](https://github.com/hzshen88/exloop) exploration archive under
-  `docs/science-superpowers/`, and are frozen with `prereg.sh freeze` before
+- **question / plan / preregistration** live in the author's exloop
+  exploration archive under `docs/science-superpowers/` (a private repository;
+  the exloop skill itself is the public `exloop` package), and are frozen with `prereg.sh freeze` before
   any implementation code is written.
 - **verdict runner** computes the verdict mechanically from the frozen
   criteria. `results/*/summary.json` is its output, never an edited file.
@@ -328,9 +328,8 @@ composition is not clean. Both costs were pre-declared before execution. See
 what the goal step exists to surface.
 
 **The discipline is that criteria freeze first and code follows.** See
-`docs/design/proposal.md` (§7 schedule) and
-[the originating exploration](https://github.com/hzshen88/exloop) for the full
-evidence chain: a frozen, pre-registered dual-implementation pressure test
+`docs/design/proposal.md` (§7 schedule) and the originating exploration (in the
+author's private exloop archive) for the full evidence chain: a frozen, pre-registered dual-implementation pressure test
 (66/66 checks, 0-warning audit) established that Process-Bigraph is a viable
 composition runtime *only with* a mandatory, independently versioned
 biological profile — which is what this repository builds.

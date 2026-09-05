@@ -83,16 +83,17 @@ SKIP_PARTS = frozenset({"__pycache__", ".ruff_cache", ".pytest_cache"})
 
 
 def _skill_sources() -> list[tuple[str, Path]]:
-    """Every skill this install can offer: newlife's own, plus exloop's when that package is present.
+    """Every skill this install can offer: newlife's own, plus exloop's.
 
     exloop is the exploration stage upstream of newlife and a separate package on purpose —
-    one master, in its own repository. newlife never imports its code; it only finds its
+    one master, in its own repository — and a declared dependency, so it is normally present;
+    the ImportError branch is a broken or partial install. newlife never imports its code; it only finds its
     files, and the interface between the two stays files (`handoff` writes into a question's
     `origin/`).
     """
     found = [("newlife", p) for p in sorted(SKILLS.iterdir()) if (p / "SKILL.md").is_file()]
     try:
-        import exloop  # optional: the exploration skill ships in its own package
+        import exloop  # a dependency; missing only in a broken install
     except ImportError:
         return found
     found += [("exloop", p) for p in sorted(exloop.skills_dir().iterdir())
@@ -192,7 +193,8 @@ def _start(args) -> int:
         # this command found it reporting success, noting the skill was missing, and then
         # telling the person to start exploring anyway.
         print(f"\nThe exploration stage is not available on this machine: the `exloop` package "
-              f"is not installed, so only newlife's own skills were installed.\n"
+              f"is not installed (it is a dependency of newlife, so this install is incomplete); "
+              f"only newlife's own skills were installed.\n"
               f"    pip install exloop        # then run `newlife start .` again\n"
               f"Until then, open {root} in your AI tool and frame a question directly with the "
               f"`newlife-goal` skill; NEXT.md says what happens from there.")

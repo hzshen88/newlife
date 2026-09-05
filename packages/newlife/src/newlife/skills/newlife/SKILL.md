@@ -77,5 +77,5 @@ two-repository layout) do not apply to a research repository laid out as
 
 `pip install newlife`, then `newlife start .` in their research folder, which also
 installs these skills into every AI tool on the machine. The exploration skill ships in
-the separate `exloop` package (`pip install exloop`); `start` says so, and exits non-zero,
-when it is missing. You can do all of that for them; the exploration skill says how.
+the `exloop` package, a dependency of newlife, so the same install brings it; if it is
+somehow missing, `start` says so and exits non-zero, and `pip install exloop` repairs it. You can do all of that for them; the exploration skill says how.
