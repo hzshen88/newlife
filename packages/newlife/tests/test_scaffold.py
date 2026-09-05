@@ -174,7 +174,7 @@ def test_freeze_refuses_and_says_how_to_recover(tmp_path: Path) -> None:
     subprocess.run(["git", "-C", str(repo), "commit", "-qm", "全提交了"], check=True)
     with pytest.raises(SystemExit) as excinfo:
         scaffold.freeze(folder, cwd=repo)
-    assert "git mv" in str(excinfo.value)
+    assert "newlife init" in str(excinfo.value)
 
 
 def test_init_refuses_outside_a_git_repo(tmp_path: Path) -> None:

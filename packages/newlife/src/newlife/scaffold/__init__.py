@@ -136,6 +136,13 @@ def init(slug: str, *, cwd: Path, commit: bool = True) -> Path:
 def freeze(folder: Path, *, cwd: Path, data: tuple[Path, ...] = ()) -> int:
     """Freeze this question's criteria. **The freeze must be `prereg.md`'s first commit.**
 
+    `env.lock` is rewritten from the live environment and pinned together with the
+    criteria. From here on "the environment" means that file: the runner's S1 compares the
+    packages installed at run time against it, and `audit` proves it never changed after
+    the freeze. Before this, the scaffolded S1 compared the file's digest with a digest of
+    the same file taken a moment earlier — true by construction — and it shipped in every
+    early question.
+
     `data` names external input files the question reads but did not generate — a
     downloaded expression compendium, a reference network. Their git blob hashes are
     written into the registration under "## Frozen data checksums" before the freeze
@@ -159,8 +166,10 @@ def freeze(folder: Path, *, cwd: Path, data: tuple[Path, ...] = ()) -> int:
         raise SystemExit(
             f"{rel} already has git history, and the freeze must be its first commit —\n"
             f"otherwise that commit cannot prove the criteria predate the results.\n"
-            f"Recovery: `git mv {rel} {rel.with_name('prereg-v2.md')}`, then freeze the\n"
-            f"new file. Leave the old one in history — it is the record of this very change."
+            f"Recovery: start a new question folder — `newlife init {folder.name}-v2` — move\n"
+            f"your criteria into its prereg.md and freeze there. Leave this folder as it is:\n"
+            f"it is the record of this very mistake. Renaming the file does not work (every\n"
+            f"command reads prereg.md), and re-freezing is never allowed."
         )
     # **After the history check, not before.** That one reports an already-irreversible
     # state and its recovery must not be masked by a gate about a file you can still edit.
@@ -187,7 +196,19 @@ def freeze(folder: Path, *, cwd: Path, data: tuple[Path, ...] = ()) -> int:
             "seen / blind / mechanical — or waive on the record, inside prereg.md:\n"
             "    <!--@pilot_gate: no_blind_waived ... why nothing is blind ...-->\n"
             "    <!--@pilot_gate: not_applicable ... why the stage does not apply ...-->")
-    pinned = []
+    # env.lock: rewrite from the live environment, commit if that changed anything, and pin
+    # it first — the runner's S1 and the audit's DATA arm both hang off this file.
+    env_lock = folder / "env.lock"
+    live = "\n".join(provenance.env_lock_lines()) + "\n"
+    if not env_lock.exists() or env_lock.read_text(encoding="utf-8") != live:
+        env_lock.write_text(live, encoding="utf-8")
+    env_rel = str(env_lock.resolve().relative_to(root))
+    if _git(root, "status", "--porcelain", "--", env_rel).stdout.strip():
+        _git(root, "add", "--", env_rel)
+        _git(root, "commit", "-q", "-m",
+             f"question({folder.name}): env.lock refreshed at the freeze", "--", env_rel)
+        print("  env.lock rewritten from the live environment and committed")
+    pinned = [env_rel]
     for path in data:
         resolved = Path(path).resolve()
         if not resolved.is_file():

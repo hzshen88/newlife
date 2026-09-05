@@ -90,5 +90,12 @@ v3 的八格里六格的数起草前都已看过，预注册逐条标注了。**
   `pilot_coverage` 查 §2 表：每行有标注、`seen` 有真跑、至少一格 `blind` 或 `<!--@pilot_gate: …-->`
   显式豁免。模板的 S2 行故意留空，脚手架自己过不了这道门。`newlife init` 另建 `origin/`，接收探索记录
   （exloop `handoff` 写入 events/map/goal-draft.md）——四份真实问题没有一份记了自己从哪来。
+- **模板里的 S1 是恒真的**（2026-09-06 由一次外部评审发现，当日修复）。`s1 = prov["env_lock_sha256"] ==
+  file_digest(env.lock)` 两边是同一时刻对同一个文件算的哈希，永远相等；四份真实问题的 runner 全是这个
+  写法，nar_v3 的 `S1_env_unchanged: True` 没有任何含义。**这正是 Z5 那一类缺陷——恒真判据——出在我们自己
+  随包发出去的模板里**，而 `vacuous_criterion_scan` 只认 `for _ in CONST` 那个形状，抓不到它。四份判定的
+  实质不受影响（S1 从未真正挡过任何东西），但它们 §2 表里「S1 mechanical」那一格是假的，如实记在此。
+  修法：`newlife freeze` 按当下环境重写 `env.lock`、提交、自动钉进预注册；runner 的 S1 改为「运行时安装的
+  包清单 == env.lock」；`audit` 的 DATA 段证明文件冻结后没动。三件合起来才是「运行发生在冻结时的环境里」。
 - **判定层仍只有生成、没有抽象**。现在有了四个真实问题的样本——
   **可以第一次真正测量「多少能抽」了**，而不是靠猜。

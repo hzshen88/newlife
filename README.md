@@ -103,9 +103,14 @@ omission.
 
 `audit` proves four things from git alone: the registration has a freeze commit,
 the stamped hash matches it, the content was never edited afterwards, and **every
-committed output post-dates the freeze**. A fifth, when the freeze was given `--data`:
-every pinned input file still hashes to what was frozen — a downloaded compendium that
-changed under the verdict is caught, even though the files themselves are not tracked. That last one needs the registration and
+committed output post-dates the freeze**. A fifth: `env.lock` is rewritten from the live
+environment and pinned at the freeze, and so is every file given to `--data`; the audit
+re-hashes them, so a compendium that changed under the verdict, or an environment that
+drifted after the freeze, is caught even though the files themselves are not tracked. The
+runner's S1 closes the other half — the packages installed at run time must be exactly
+those `env.lock` recorded. (The first scaffolded S1 compared the file with itself and was
+true by construction; it shipped in the first four real questions. Recorded in
+[`docs/product/2026-09-04-first-user-questions.md`](docs/product/2026-09-04-first-user-questions.md).) That last one needs the registration and
 the results to share a git ancestry, which is why they live in one repository, one
 folder per question. Questions are siblings, not a chain: **a question's verdict
 never runs another question's runner.**

@@ -75,7 +75,14 @@ def main() -> int:
     observed = [model(x) for x in SWEEP]
 
     can_fail = criteria_can_fail()
-    s1 = prov["env_lock_sha256"] == provenance.file_digest(HERE / "env.lock")
+    # S1: the packages installed *now* are exactly the ones `env.lock` recorded at the
+    # freeze. **The first version of this line compared the file's digest with a digest of
+    # the same file taken a moment earlier — true by construction, and it shipped in every
+    # early question.** `newlife freeze` rewrites env.lock from the live environment and
+    # pins its hash into the registration; `newlife audit` proves the file never changed
+    # afterwards; this line proves the run happened in that environment.
+    s1 = ("\n".join(provenance.env_lock_lines()) + "\n"
+          == (HERE / "env.lock").read_text(encoding="utf-8"))
     s2 = strictly_increasing(observed)
     # **"the criteria can fail" is its own visible slot in the conjunction, not a
     # detail nested inside another unit.** The first version folded it into a sub-field
@@ -125,7 +132,10 @@ def main() -> int:
     for name, unit in units.items():
         print(f"  {name:34s} {unit['passed']}")
     print(f"  {'S0_byte_identical_on_rerun':34s} {s0}")
-    print(f"\nverdict: {final}"
+    # A pilot prints the same conjunction, but must never look like a verdict on screen.
+    label = ("PILOT (exploratory, no evidential weight)" if os.environ.get("NEWLIFE_PILOT")
+             else "verdict")
+    print(f"\n{label}: {final}"
           + ("" if s0 else "   <- the two runs disagreed; this run has no power"))
     return exit_code(final)
 

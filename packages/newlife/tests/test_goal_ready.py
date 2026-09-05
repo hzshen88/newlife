@@ -103,7 +103,7 @@ def test_freeze_proceeds_once_the_goal_is_filled_in(tmp_path: Path) -> None:
 def test_freeze_reports_prereg_history_before_the_goal_gate(tmp_path: Path) -> None:
     """两条都会拒绝时，**先报不可逆的那条**。
 
-    `prereg.md` 已有历史是已经发生、撤不掉的，它的补救（`git mv`）必须先被看到；
+    `prereg.md` 已有历史是已经发生、撤不掉的，它的补救（开新文件夹）必须先被看到；
     goal 还没填是随时能改的。goal 门排在前面就会把那条补救遮掉。
     """
     repo = _repo(tmp_path)
@@ -113,4 +113,4 @@ def test_freeze_reports_prereg_history_before_the_goal_gate(tmp_path: Path) -> N
 
     with pytest.raises(SystemExit) as excinfo:
         scaffold.freeze(folder, cwd=repo)
-    assert "git mv" in str(excinfo.value)
+    assert "newlife init" in str(excinfo.value)

@@ -13,7 +13,7 @@
 | Unit | What | Passes when | Piloted? |
 |---|---|---|---|
 | **S0** | Self-reproduction | two independent runs produce byte-identical artifacts | mechanical |
-| **S1** | Environment unchanged | sha256 of `env.lock` matches the one in the artifact | mechanical |
+| **S1** | Environment unchanged | the packages installed at run time are exactly those `env.lock` recorded at the freeze | mechanical |
 | **S2** | (your positive control) | | |
 | **S3** | every criterion proves it can fail | each predicate returns false on a synthetic counterexample, computed at runtime | mechanical |
 

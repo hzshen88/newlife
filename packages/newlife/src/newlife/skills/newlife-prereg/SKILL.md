@@ -33,6 +33,13 @@ themselves — while the science underneath was right both times.**
 every measurable quantity in it. For each one ask: **have I actually run this and looked at
 the number?** If not, either measure it now or delete that criterion.
 
+**Where the line between this rule and rule three runs.** The pilot exercises the
+*measurement*: the method, its numerical stability, the run conditions, the order of
+magnitude of every quantity a criterion names. What stays unrun until after the freeze is
+the *test*: the parameter values, seeds or data subsets the confirmatory claim will be
+judged on. Piloting the measurement on other values is looking; piloting it on the values
+you are about to freeze is peeking.
+
 `newlife pilot <folder>` is how you look: it runs the runner into `pilot/<stamp>/` (never
 `results/`) and appends the units it produced to `pilot/ledger.jsonl`. **The freeze reads
 that ledger** — a row marked `seen` with no run behind it is refused. Anything that came in
@@ -54,9 +61,14 @@ run.**
   conjunction and the invalidation set. It failed on perfectly legitimate data (the model
   had converged), **vetoing a round in which every scientific unit held.**
 
-**The test**: ask "could this criterion fail on **completely normal** data?"
-- yes → it is a hygiene check; move it to IC, or drop it
+**The test**: ask "could this go red on a run in which **the hypothesis is true and the
+measurement is sound**?"
+- yes → it is measuring the run, not the hypothesis: a hygiene check; move it to IC, or drop it
 - no → it is a scientific criterion and may enter the conjunction
+
+A scientific criterion also fails on perfectly normal data — when the hypothesis is false.
+That is H0, not hygiene. The question is never *whether* it can fail but what a failure
+would **mean**: "the claim is wrong" or "this run cannot be interpreted".
 
 **Corollary**: **do not write a question-level criterion for something the library already
 hard-fails on.** Adding your own check for a bug you just fixed is handing yourself a veto.
