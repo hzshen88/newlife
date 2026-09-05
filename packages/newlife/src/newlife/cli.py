@@ -1,11 +1,15 @@
 """The newlife command line: one folder per question, from scaffold to audit.
 
     newlife init <slug>      scaffold and commit it (prereg.md deliberately excluded)
+    newlife pilot <folder>   run the runner BEFORE the freeze: outputs land in pilot/<stamp>/,
+                             never in results/, and the units it produced are recorded in
+                             pilot/ledger.jsonl — everything a pilot produces counts as seen
     newlife freeze <folder>  freeze the criteria — this commit IS the timestamp
-                             (refused while goal.md is still unfilled)
+                             (refused while goal.md is unfilled, or while a criterion marked
+                             `seen` has no pilot run behind it, or nothing is blind)
     newlife run <folder>     compute the verdict
-    newlife check <folder>   four gates: goal readiness, vacuous criteria, silent
-                             degradation, registration <-> runner unit alignment
+    newlife check <folder>   five gates: goal readiness, pilot coverage, vacuous criteria,
+                             silent degradation, registration <-> runner unit alignment
     newlife blocks           list the third-party building blocks in this environment
     newlife skills install   put the question-shaping skills where your AI reads them
     newlife audit <folder>   the criteria were never edited, and the outputs post-date the freeze
@@ -18,13 +22,17 @@ and after the fact nobody can tell it happened.
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 from newlife import scaffold
 from newlife.gates import (
-    goal_ready, silent_degradation_scan, unit_alignment, vacuous_criterion_scan,
+    goal_ready, pilot_coverage, silent_degradation_scan, unit_alignment,
+    vacuous_criterion_scan,
 )
 
 SKILLS = Path(__file__).resolve().parent / "skills"
@@ -93,14 +101,47 @@ def _skills(args) -> int:
     return 1 if skipped else 0
 
 
+def _pilot(folder: Path) -> int:
+    """Run the runner before the freeze, into `pilot/<stamp>/`, and record what it produced.
+
+    Two of the first four real registrations were INVALID because a criterion named a
+    quantity nobody had looked at. **This is the looking.** Outputs never touch `results/`;
+    the child process gets `NEWLIFE_PILOT=1`, which is the only condition under which
+    `provenance.frozen_at` tolerates an unfrozen registration; and the units the run
+    produced are appended to `pilot/ledger.jsonl`, which the freeze reads
+    (`pilot_coverage`). Everything a pilot produces counts as seen.
+    """
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    out_dir = folder / "pilot" / stamp
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / "summary.json"
+    proc = subprocess.run([sys.executable, str(folder / "verdict.py"), "--out", str(out)],
+                          env={**os.environ, "NEWLIFE_PILOT": "1"})
+    if not out.exists():
+        print(f"\nThe runner exited {proc.returncode} and wrote nothing to "
+              f"{out.relative_to(folder)}. Nothing was recorded. The runner must honour "
+              f"--out (the scaffolded one does).")
+        return 1
+    units = sorted(pilot_coverage.produced(out_dir))
+    entry = {"at": stamp, "out": str(out.relative_to(folder)),
+             "returncode": proc.returncode, "units": units}
+    with (folder / "pilot" / "ledger.jsonl").open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(entry) + "\n")
+    print(f"\nPilot recorded in pilot/ledger.jsonl: {' '.join(units) or 'no unit recognised'} "
+          f"(runner exit {proc.returncode}; here H0 is information, not failure).\n"
+          f"Everything this run produced now counts as seen: mark those rows `seen` in "
+          f"prereg.md section 2,\nand keep at least one row you have never run as `blind`.")
+    return 0
+
+
 def _check(folder: Path) -> int:
-    """The four gates that apply to **the user's own files**.
+    """The five gates that apply to **the user's own files**.
 
     The rest stay in the newlife repository: `verify_doc_claims` needs a
     verification-script ledger and `run_gates` takes a goal/question/ledger triple —
     **they assume a separate document pipeline**. That is attribution, not omission.
 
-    **The goal gate is reported here but enforced at `newlife freeze`.** It has to be:
+    **The goal and pilot gates are reported here but enforced at `newlife freeze`.** They have to be:
     unit alignment reads `results/`, so `check` is not runnable until the work is already
     done — and "this question was never worth asking", delivered after the
     implementation, is information that arrives too late to act on.
@@ -108,6 +149,7 @@ def _check(folder: Path) -> int:
     runner = folder / "verdict.py"
     checks = [
         ("goal ready (enforced at freeze)", lambda: goal_ready.main([str(folder)])),
+        ("pilot coverage (enforced at freeze)", lambda: pilot_coverage.main([str(folder)])),
         ("vacuous criteria", lambda: vacuous_criterion_scan.main([str(runner)])),
         ("silent degradation", lambda: silent_degradation_scan.main([str(runner)])),
         ("registration <-> runner unit alignment", lambda: unit_alignment.main([str(folder)])),
@@ -137,7 +179,8 @@ def main(argv: list[str] | None = None) -> int:
     p_init.add_argument("--no-commit", action="store_true",
                         help="do not commit the scaffold; a later 'git add -A' then makes "
                              "the freeze impossible")
-    for name, help_ in (("freeze", "freeze the criteria"), ("run", "compute the verdict"),
+    for name, help_ in (("pilot", "run the runner into pilot/, before the freeze"),
+                        ("freeze", "freeze the criteria"), ("run", "compute the verdict"),
                         ("check", "run the gates"), ("audit", "audit the freeze")):
         p = sub.add_parser(name, help=help_)
         p.add_argument("folder", type=Path, help="question folder")
@@ -165,18 +208,24 @@ def main(argv: list[str] | None = None) -> int:
               f"prereg.md deliberately left uncommitted.\n"
               f"Next:\n"
               f"  0. edit {rel}/goal.md — six anchors. **It is red on purpose**: the "
-              f"freeze is refused until it is filled in, or the stage waived.\n"
-              f"  1. edit {rel}/prereg.md and write the criteria. "
-              f"Each one must be able to go red.\n"
-              f"  2. newlife freeze {rel}      <- do not commit it before this\n"
-              f"  3. edit {rel}/verdict.py and put your world in it\n"
-              f"  4. newlife run {rel} && git add {rel}/results && git commit\n"
-              f"  5. newlife check {rel} && newlife audit {rel}")
+              f"freeze is refused until it is filled in, or the stage waived. "
+              f"If this question came out of an exploration, its record goes in {rel}/origin/.\n"
+              f"  1. edit {rel}/verdict.py and put your world in it (exploratory for now)\n"
+              f"  2. newlife pilot {rel}       <- look at every quantity a criterion will name; "
+              f"everything it produces counts as seen\n"
+              f"  3. edit {rel}/prereg.md and write the criteria; mark every row "
+              f"seen / blind / mechanical. Each one must be able to go red.\n"
+              f"  4. newlife freeze {rel}      <- do not commit prereg.md before this "
+              f"(never `git add -A` here)\n"
+              f"  5. newlife run {rel} && git add {rel}/results && git commit\n"
+              f"  6. newlife check {rel} && newlife audit {rel}")
         return 0
 
     folder = args.folder.resolve()
     if not folder.is_dir():
         raise SystemExit(f"{args.folder} is not a directory.")
+    if args.cmd == "pilot":
+        return _pilot(folder)
     if args.cmd == "freeze":
         return scaffold.freeze(folder, cwd=cwd)
     if args.cmd == "audit":

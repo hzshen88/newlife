@@ -101,6 +101,7 @@ def main() -> int:
         expected_commit = {
             str(question / "env.lock"),
             str(question / "goal.md"),
+            str(question / "origin" / "README.md"),
             str(question / "verdict.py"),
         }
         if committed != expected_commit:
@@ -117,6 +118,26 @@ def main() -> int:
         _run(newlife, "freeze", question, cwd=repo, expected=1)
         (repo / question / "goal.md").write_text(
             "<!--@goal_gate: not_applicable ... release smoke test, not a question ...-->\n",
+            encoding="utf-8")
+
+        # **Second gate, same proof.** With the goal waived the freeze must still be
+        # refused: the scaffolded criteria table leaves S2's `Piloted?` cell empty and has
+        # no blind row. Then walk the real path — `newlife pilot` records a run into
+        # pilot/ledger.jsonl, S2 is marked seen, the missing blind row is waived on the
+        # record — and the freeze goes through. A pilot that wrote into results/ would
+        # break the chronology audit below, so that is asserted too.
+        _run(newlife, "freeze", question, cwd=repo, expected=1)
+        _run(newlife, "pilot", question, cwd=repo)
+        if any((repo / question / "results").iterdir()):
+            raise SystemExit("pilot wrote into results/; it must only write pilot/")
+        prereg = repo / question / "prereg.md"
+        row = "| **S2** | (your positive control) | | |"
+        text = prereg.read_text(encoding="utf-8")
+        if row not in text:
+            raise SystemExit("the scaffolded prereg.md no longer has the empty S2 row this smoke test edits")
+        prereg.write_text(
+            text.replace(row, "| **S2** | (your positive control) | increases | seen |")
+            + "\n<!--@pilot_gate: no_blind_waived ... release smoke test, no claim about the world ...-->\n",
             encoding="utf-8")
 
         _run(newlife, "freeze", question, cwd=repo)

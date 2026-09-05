@@ -83,5 +83,12 @@ v3 的八格里六格的数起草前都已看过，预注册逐条标注了。**
   已落地：`newlife init` 生成 `goal.md`（**故意是红的**），`newlife freeze` 在冻结前
   挡一道，`newlife check` 一并报告；`scripts/gates/check_goal_ready.py` 降为
   `newlife.gates.goal_ready` 的入口，**逻辑只有一处**。
+- ~~**第②阶段（写判据）的试探没有工具**~~ **（2026-09-05 已闭合）**。两份 INVALID 的根因都是
+  判据写了自己没量过的量，而「试探必须覆盖判据里每一个量」「留一格真盲」此前只是 skill 里的散文。
+  已落地：`newlife pilot` 把 runner 跑进 `pilot/<stamp>/`（不碰 `results/`，未冻结的 prereg 在
+  `NEWLIFE_PILOT=1` 下不硬失败），产出的单元名记进 `pilot/ledger.jsonl`；`newlife freeze` 第二道门
+  `pilot_coverage` 查 §2 表：每行有标注、`seen` 有真跑、至少一格 `blind` 或 `<!--@pilot_gate: …-->`
+  显式豁免。模板的 S2 行故意留空，脚手架自己过不了这道门。`newlife init` 另建 `origin/`，接收探索记录
+  （exloop `handoff` 写入 events/map/goal-draft.md）——四份真实问题没有一份记了自己从哪来。
 - **判定层仍只有生成、没有抽象**。现在有了四个真实问题的样本——
   **可以第一次真正测量「多少能抽」了**，而不是靠猜。

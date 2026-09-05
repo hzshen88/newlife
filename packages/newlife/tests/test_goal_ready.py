@@ -94,6 +94,8 @@ def test_freeze_proceeds_once_the_goal_is_filled_in(tmp_path: Path) -> None:
     repo = _repo(tmp_path)
     folder = scaffold.init("2026-09-05-y", cwd=repo)
     (folder / "goal.md").write_text(goal_ready.READY, encoding="utf-8")
+    with (folder / "prereg.md").open("a", encoding="utf-8") as fh:   # 第二道门另有测试，这里豁免
+        fh.write("\n<!--@pilot_gate: not_applicable —— 测的是 goal 门-->\n")
 
     assert scaffold.freeze(folder, cwd=repo) == 0
 

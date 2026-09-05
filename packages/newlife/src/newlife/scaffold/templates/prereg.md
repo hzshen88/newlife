@@ -29,6 +29,19 @@ pass itself off as the real one.
 **Fill in the "Piloted?" column for every unit** — `seen` / `blind` / `mechanical`.
 A confirmatory round in which nothing is blind carries no information.
 
+`newlife pilot` runs the runner into `pilot/<stamp>/` (never `results/`) and appends the
+units it produced to `pilot/ledger.jsonl`. **The freeze reads that ledger against this
+table**: every row must say how it was piloted, every `seen` row must have a run behind
+it, and at least one row must be `blind`. If this round genuinely has nothing blind (a
+toolchain smoke test, say), waive it on the record rather than inventing one:
+
+    <!--@pilot_gate: no_blind_waived — <why>-->
+
+`<!--@pilot_gate: not_applicable — <why>-->` waives the whole gate. **An anchor body must
+not contain `>`** — the parser stops at the first one and the anchor then silently does
+not exist. That is also why the two lines above are examples rather than working anchors:
+replace `<why>`, angle brackets included.
+
 ## 3. Frozen implementation constraints
 
 - **F1**: **Every criterion must be able to go red.** Prove it in the runner at runtime

@@ -110,13 +110,13 @@ def main() -> int:
     # **The record goes in a different file.** Written into summary.json itself, the two
     # runs would necessarily differ and "byte-identical" could never hold — the record of
     # a reproduction cannot live inside the artifact being reproduced.
-    probe = HERE / "results/.reproduction-probe.json"
+    probe = args.out.parent / ".reproduction-probe.json"   # beside --out: a pilot never touches results/
     subprocess.run([sys.executable, __file__, "--out", str(probe)],
                    env={**os.environ, INNER: "1"}, capture_output=True, check=False)
     s0 = probe.exists() and probe.read_bytes() == args.out.read_bytes()
     probe.unlink(missing_ok=True)
     final = verdict if s0 else "INVALID"     # S0 false = this run had no discriminating power
-    (HERE / "results/reproduction.json").write_text(json.dumps(
+    (args.out.parent / "reproduction.json").write_text(json.dumps(
         {"schema": "self-reproduction.v1", "S0_byte_identical_on_rerun": s0,
          "verdict": final, "verdict_before_reproduction": verdict,
          "of": args.out.name, "sha256": provenance.file_digest(args.out)},

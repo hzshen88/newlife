@@ -30,6 +30,12 @@ themselves — while the science underneath was right both times.**
 every measurable quantity in it. For each one ask: **have I actually run this and looked at
 the number?** If not, either measure it now or delete that criterion.
 
+`newlife pilot <folder>` is how you look: it runs the runner into `pilot/<stamp>/` (never
+`results/`) and appends the units it produced to `pilot/ledger.jsonl`. **The freeze reads
+that ledger** — a row marked `seen` with no run behind it is refused. Anything that came in
+through `origin/` (the exploration's record) is seen as well, even though no ledger line
+says so.
+
 > **"I derived it, so I know" does not count as having looked.** Numerical integration,
 > floating point and discrete timesteps all get a vote.
 
@@ -61,6 +67,8 @@ seen — and then the round carries no information.
 
 **How**: add a "Piloted?" column to the criteria table and mark every row
 `seen` / `blind` / `mechanical`. **Keep at least one dimension you have never run.**
+The freeze refuses a table with no `blind` row; if this round genuinely has nothing blind,
+waive it on the record with `<!--@pilot_gate: no_blind_waived — why-->` inside `prereg.md`.
 Common blind dimensions: change a parameter, change a scale, extrapolate one step out
 rather than interpolate.
 
@@ -112,7 +120,7 @@ first time it ran.**
 
 ## Before freezing
 
-- [ ] **run a pilot** covering every quantity that appears in a criterion (rule one)
+- [ ] **run a pilot** covering every quantity that appears in a criterion (rule one) — `newlife pilot`; the freeze checks `pilot/ledger.jsonl`
 - [ ] add the "Piloted?" column and mark every row; **confirm at least one is blind** (rule three)
 - [ ] ask of each criterion "could it fail on normal data?"; move those that could into IC (rule two)
 - [ ] ask of each criterion "what would make it go red?"; no answer means it is vacuous (rule four)

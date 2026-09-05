@@ -53,6 +53,12 @@ A/B/C/D/G/H.
 
 > **The first source is an anomaly already on the record, and the move is E.**
 
+If the question grew out of an exploration, that record is already in the question folder:
+exloop's `handoff` writes the map into `questions/<slug>/origin/` together with a
+`goal-draft.md`. Its **surprises** are exactly "anomalies already on the record"; its
+**stuck** boundaries are where the question is still ill-posed. Start from those two lists,
+not from the frameworks — a framework is what you already believe.
+
 **But watch where E's raw material points.** A measured lesson: across nineteen milestones
 of one project, E was used several times and **everything promoted was an engineering
 anomaly** ("this change broke last time's artifact") — so everything produced was a tool
@@ -195,6 +201,10 @@ criteria before changing the model, every single round.**
 **Write it to `questions/<slug>/goal.md`.** `newlife init` scaffolds that file already,
 **deliberately red**: `newlife freeze` refuses until these six anchors are filled in, and
 `newlife check` reports the same gate. **Whatever you cannot state, the freeze rejects.**
+
+If `questions/<slug>/origin/goal-draft.md` exists, start from it: §1, §3 and §4 are
+pre-filled from the exploration map; the six anchors are not, because no map can supply a
+counterparty. Everything in `origin/` counts as *seen* for the preregistration that follows.
 
 If the stage genuinely does not apply — a toolchain smoke test with no claim about the
 world — waive it on the record rather than leaving the file half-filled:

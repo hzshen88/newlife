@@ -6,9 +6,12 @@
     |-- .gitignore
     `-- questions/
         |-- 2026-09-05-<slug>/
+        |   |-- goal.md              <- is this worth asking? red until its six anchors are filled
+        |   |-- origin/              <- where the question came from (an exploration's record)
         |   |-- prereg.md            <- the criteria, frozen here
         |   |-- verdict.py           <- the verdict runner
         |   |-- env.lock             <- what was installed for this run
+        |   |-- pilot/               <- `newlife pilot` runs + ledger.jsonl; read by the freeze
         |   `-- results/
         `-- 2026-09-12-<another>/    <- **a sibling, not a child**
 
@@ -40,12 +43,15 @@ import sys
 from pathlib import Path
 
 from newlife import provenance
-from newlife.gates import goal_ready
+from newlife.gates import goal_ready, pilot_coverage
 
 TEMPLATES = Path(__file__).resolve().parent / "templates"
 PREREG_SH = Path(__file__).resolve().parent / "prereg.sh"
-SCAFFOLD_FILES = ("goal.md", "verdict.py", "env.lock")
+SCAFFOLD_FILES = ("goal.md", "verdict.py", "env.lock", "origin/README.md")
 """**`prereg.md` excluded** — see the module docstring; the freeze must be its first commit.
+
+`origin/README.md` says what belongs in `origin/`: the record of the exploration this
+question came from. None of the first four real questions recorded that.
 
 `goal.md` is committed with the rest: it is not frozen, and it precedes the registration.
 **It is written deliberately red** — `newlife freeze` refuses until its six anchors are
@@ -105,6 +111,8 @@ def init(slug: str, *, cwd: Path, commit: bool = True) -> Path:
         .replace("{title}", title).replace("{slug}", slug), encoding="utf-8")
     (folder / "env.lock").write_text(
         "\n".join(provenance.env_lock_lines()) + "\n", encoding="utf-8")
+    (folder / "origin").mkdir()
+    shutil.copyfile(TEMPLATES / "origin-README.md", folder / "origin" / "README.md")
 
     gitignore = root / ".gitignore"
     created_gitignore = not gitignore.exists()
@@ -159,6 +167,18 @@ def freeze(folder: Path, *, cwd: Path) -> int:
             "Fill in the six anchors in goal.md — or, if this question genuinely has no\n"
             "goal stage, record that instead of leaving the file half-filled:\n"
             "    <!--@goal_gate: not_applicable ... your reason ...-->")
+    # **Second gate, same moment.** Two of the first four real registrations were INVALID
+    # because a criterion named a quantity nobody had looked at; the rule lived in a skill's
+    # prose and stopped nothing. `newlife pilot` records the looking, this reads the record.
+    covered = pilot_coverage.main([str(folder)])
+    sys.stdout.flush()
+    if covered != 0:
+        raise SystemExit(
+            "The criteria are not covered by a pilot (above), so the freeze is refused.\n"
+            "Run `newlife pilot` on the folder and mark every row of prereg.md section 2\n"
+            "seen / blind / mechanical — or waive on the record, inside prereg.md:\n"
+            "    <!--@pilot_gate: no_blind_waived ... why nothing is blind ...-->\n"
+            "    <!--@pilot_gate: not_applicable ... why the stage does not apply ...-->")
     return _run_prereg(root, "freeze", str(rel))
 
 

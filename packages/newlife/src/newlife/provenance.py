@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.metadata
+import os
 import platform
 import sys
 from pathlib import Path
@@ -99,6 +100,11 @@ def frozen_at(prereg: Path) -> str:
             sha = line.split(":**", 1)[1].strip().strip("`_")
             if sha and sha != "pending":
                 return sha
+            if os.environ.get("NEWLIFE_PILOT"):
+                # `newlife pilot` runs the runner **before** the freeze on purpose — that is
+                # what a pilot is. The artifact must say so in words nobody could mistake
+                # for a commit, and only `newlife pilot` sets this variable.
+                return "UNFROZEN: pilot run before the freeze, carries no evidential weight"
             raise SystemExit(f"{prereg} is not frozen yet — run `newlife freeze` first.")
     raise SystemExit(f"{prereg} has no `**Frozen at commit:**` line; it is not a registration.")
 

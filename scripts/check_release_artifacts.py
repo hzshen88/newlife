@@ -50,6 +50,7 @@ def check_wheels(dist: pathlib.Path) -> None:
         for suffix in (
             "newlife/scaffold/prereg.sh",
             "newlife/scaffold/templates/goal.md",
+            "newlife/scaffold/templates/origin-README.md",
             "newlife/scaffold/templates/prereg.md",
             "newlife/scaffold/templates/verdict.py.template",
         ):

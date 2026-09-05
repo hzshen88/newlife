@@ -28,6 +28,12 @@ def _waive_goal(folder: Path) -> None:
         encoding="utf-8")
 
 
+def _waive_pilot(folder: Path) -> None:
+    """同上，把试探门显式豁免掉——本文件测的是冻结/审计机制，不是判据有没有试探过。"""
+    with (folder / "prereg.md").open("a", encoding="utf-8") as fh:
+        fh.write("\n<!--@pilot_gate: not_applicable —— 这是脚手架机制的测试，不是一个问题-->\n")
+
+
 def _repo(tmp_path: Path) -> Path:
     subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
     for k, v in (("user.email", "t@t"), ("user.name", "t")):
@@ -113,6 +119,7 @@ def test_init_does_not_commit_unrelated_staged_or_gitignore_changes(tmp_path: Pa
     assert set(committed) == {
         "questions/2026-09-05-x/env.lock",
         "questions/2026-09-05-x/goal.md",
+        "questions/2026-09-05-x/origin/README.md",
         "questions/2026-09-05-x/verdict.py",
     }
     staged = subprocess.run(
@@ -137,6 +144,7 @@ def test_symlinked_repo_path_freezes_and_audits(tmp_path: Path) -> None:
 
     folder = scaffold.init("2026-09-05-linked", cwd=alias)
     _waive_goal(folder)
+    _waive_pilot(folder)
     assert scaffold.freeze(folder, cwd=alias) == 0
     (folder / "results" / "summary.json").write_text("{}\n")
     subprocess.run(["git", "-C", str(real), "add", "questions/2026-09-05-linked/results"], check=True)
@@ -152,6 +160,7 @@ def test_audit_partial_is_nonzero(tmp_path: Path) -> None:
     subprocess.run(["git", "-C", str(repo), "commit", "-qm", "baseline"], check=True)
     folder = scaffold.init("2026-09-05-no-results", cwd=repo)
     _waive_goal(folder)
+    _waive_pilot(folder)
     assert scaffold.freeze(folder, cwd=repo) == 0
 
     assert scaffold.audit(folder, cwd=repo) == 3

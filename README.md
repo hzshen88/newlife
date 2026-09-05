@@ -37,11 +37,12 @@ first commit, and the natural habit — `git add -A` right after creating a fold
 
 ```bash
 $EDITOR questions/2026-09-05-my-question/goal.md      # is this worth asking? six anchors
-$EDITOR questions/2026-09-05-my-question/prereg.md    # the criteria
+$EDITOR questions/2026-09-05-my-question/verdict.py   # your world — exploratory for now
+newlife pilot questions/2026-09-05-my-question        # look at every quantity a criterion will name
+$EDITOR questions/2026-09-05-my-question/prereg.md    # the criteria; every row seen / blind / mechanical
 newlife freeze questions/2026-09-05-my-question       # ← this commit is the proof
-$EDITOR questions/2026-09-05-my-question/verdict.py   # your world
 newlife run   questions/2026-09-05-my-question
-newlife check questions/2026-09-05-my-question       # four gates, see below
+newlife check questions/2026-09-05-my-question       # five gates, see below
 git add questions/2026-09-05-my-question/results && git commit -m "verdict"
 newlife audit questions/2026-09-05-my-question
 ```
@@ -56,8 +57,22 @@ stage genuinely does not apply, one anchor waives it — explicitly, on the reco
 freeze is where this is enforced rather than `check`, because `check` also needs
 `results/` and so cannot run until the work is already done.
 
-`check` runs four gates against **your own files**: the same goal-readiness check,
-reported here for completeness; a scan for criteria that are
+The freeze has a second gate. Of the first four real registrations two came back
+`INVALID`, and neither failure was scientific: both criteria named a quantity nobody had
+looked at before freezing. So `newlife pilot` runs your runner **before** the freeze, into
+`pilot/<stamp>/` (never `results/`), and appends the units it produced to
+`pilot/ledger.jsonl`. `newlife freeze` then reads that ledger against `prereg.md` §2: every
+row says how it was piloted (`seen` / `blind` / `mechanical`), every `seen` row has a run
+behind it, and at least one row is `blind` — a confirmatory round in which every number
+was already seen carries no information. Nothing blind in this round? Waive it on the
+record with `<!--@pilot_gate: no_blind_waived — why-->`; the gate does not cross-check
+`blind` against the ledger, that judgement stays yours. `origin/` is the other half of the
+same idea: the folder where the record of the exploration this question came from goes
+(exloop's `handoff` writes it there, `goal-draft.md` included), and everything in it counts
+as seen. None of the first four real questions recorded where they came from.
+
+`check` runs five gates against **your own files**: the same goal-readiness and
+pilot-coverage checks, reported here for completeness; a scan for criteria that are
 true by construction (a comprehension that iterates a named constant while
 discarding the loop variable — that is a repetition, not a sweep); a scan for
 parse-failures that silently fall back to a convenient default; and an alignment
