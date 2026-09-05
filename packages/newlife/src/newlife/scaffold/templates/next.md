@@ -11,8 +11,9 @@ Begin with one sentence:
 
 1. **Explore** (skill: exloop). The AI asks one or two honing questions, then
    walks one edge at a time, keeps a map silently, and offers reachable directions at the
-   end of each turn. You only answer and decide. The record lives in
-   `~/.exloop/explorations/<slug>/` and follows you across tools.
+   end of each turn. You only answer and decide. While it runs, the record lives in
+   `~/.exloop/explorations/<slug>/` and follows you across tools; when it closes, the AI
+   archives it into `explorations/<slug>/` in this repository, next to `questions/`.
 2. **Hand off.** When a boundary can be stated as "what measurement would make the answer
    different", the AI says so once and asks. If you agree, it runs `newlife init <slug>`
    and `handoff`; `questions/<slug>/origin/` then holds the map and a pre-filled goal draft.
