@@ -18,6 +18,16 @@
 | **S3** | every criterion proves it can fail | each predicate returns false on a synthetic counterexample, computed at runtime | mechanical |
 
 **verdict = S0 ∧ S1 ∧ S2 ∧ S3.** Any one false → H0; **S0 false → INVALID**
+
+**Reproduction class** (state one; the gate below is what each one obliges you to add):
+
+| | Your world | What S0 buys, and what you must add |
+|---|---|---|
+| `deterministic` | same inputs, same bytes | S0 as written. Nothing to add. |
+| `seeded` | random, but the seed is a recorded input | S0 still holds. **Add a unit: the verdict is unchanged across a frozen set of seeds.** Byte-identity with one seed says the seed was fixed, not that the conclusion survives another one. |
+| `stochastic` | outcome varies run to run and no seed controls it (GPU reductions, concurrency, a remote service or model) | **S0 cannot hold.** Waive it on the record with a reason, and add units over a *distribution*: N repetitions, N frozen here. |
+
+<!--@reproduction_class: deterministic | seeded | stochastic — one word, plus why-->
 (two runs disagreeing means this run had no discriminating power — that is not
 "the hypothesis failed").
 

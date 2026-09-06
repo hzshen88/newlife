@@ -175,6 +175,37 @@ environment and pins it.
 
 ---
 
+## Rule seven: say which kind of reproduction your world can offer, before S0 decides for you
+
+S0 asks for a byte-identical rerun, and `verdict.py` turns a false S0 into `INVALID` — not
+a weaker conclusion, **no conclusion**. That is right for a deterministic world and wrong
+for two other kinds, so state which one you are in.
+
+| Class | Your world | What S0 buys, and what you owe |
+|---|---|---|
+| `deterministic` | same inputs, same bytes | S0 as written; nothing to add |
+| `seeded` | random, but the seed is a recorded input | S0 still holds — **and it is not enough**. Add a unit: **the verdict is unchanged across a frozen set of seeds** |
+| `stochastic` | varies run to run with no seed in control — GPU reductions, concurrency, a remote service or model | **S0 cannot hold.** Waive it on the record with a reason, and judge over a *distribution*: N repetitions, N frozen in the registration |
+
+> **A green S0 on a seeded world proves the seed was fixed, not that the conclusion
+> survives a different one.** Those are different claims and only one of them is science.
+
+**Why the `stochastic` row is not hypothetical.** A runner whose "simulator" is an LLM
+behind an HTTP call was measured on 2026-09-06: at `temperature=0` the model is
+byte-deterministic, so **S0 went green, S1 went green, and `newlife audit` returned PASS on
+all five arms** — while swapping the model behind the same unchanged `verdict.py` moved the
+data from `[-10.0, -1.5, -1.2, -1.25]` to `[-1.0, -1.0, -12.5, -12.5]`. Every check was
+green and nothing recorded the thing that decided the answer.
+
+**So the rule has a second half**: whatever decides your result must be *named in the
+conjunction*. `env.lock` records the distributions installed here — it knows nothing about a
+model version, an endpoint, or an environment variable, and S0's inner run inherits
+`os.environ`, so self-reproduction cannot see them either. If a remote service, a model
+identity, or an env var can change your numbers, **put it in a unit**, or you have a
+registration that passes every gate and rests on something nobody wrote down.
+
+---
+
 ## Before freezing
 
 - [ ] **run a pilot** covering every quantity that appears in a criterion (rule one) — `newlife pilot`; the freeze checks `pilot/ledger.jsonl`
@@ -186,6 +217,8 @@ environment and pins it.
 - [ ] §5 states **what this round does not establish**; at closeout "we showed A" must never
       stand in for "B also holds"
 - [ ] `git log -- <prereg path>` is empty — **the freeze must be its first commit**
+- [ ] **the reproduction class is stated** (rule seven), and if it is `seeded` or
+      `stochastic`, the unit that class obliges you to add is actually in the conjunction
 - [ ] **everything the question needs is installed now** — S1 compares the live environment
       against `env.lock` character by character, so a package installed after the freeze
       turns it red (rule six)
