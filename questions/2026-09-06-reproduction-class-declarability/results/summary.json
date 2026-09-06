@@ -1,0 +1,213 @@
+{
+  "schema": "2026-09-06-reproduction-class-declarability.v1",
+  "provenance": {
+    "newlife_version": "0.1.1",
+    "newlife_source_sha256": "e81509b0e98d03d23745fc2d2976973c1c75e7dfb2b6e338c8c714cd1aa7a272",
+    "newlife_location": "/Users/hzshen/Projects/newlife/packages/newlife/src/newlife",
+    "python": "3.12.8",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "preregistration_freeze": "876ed29205e44535cadaf0d93db827bcd736116d",
+    "env_lock_sha256": "5c99799f5bd56956fd6d21a2cb5e65f44b6d43eac6ea6ddd80a78d83a89a626c"
+  },
+  "units": {
+    "S1_env_unchanged": {
+      "passed": true
+    },
+    "S2_classifier_correct_on_synthetic": {
+      "passed": true,
+      "per_sample": {
+        "plain arithmetic": true,
+        "config file only": true,
+        "random with literal seed": true,
+        "proofroot named stream": true,
+        "remote service call": true,
+        "thread pool": true,
+        "rng, no seed anywhere": true,
+        "seeded AND networked": true
+      }
+    },
+    "S3_criteria_can_fail": {
+      "passed": true,
+      "demonstrations": {
+        "classify is false on a wrong label": true,
+        "mixed really lands unclassified": true,
+        "unseeded rng really lands unclassified": true,
+        "scanner is false on inert source": true,
+        "scanner really sees a network import": true
+      }
+    },
+    "S4_existing_judgements_intact": {
+      "passed": true,
+      "reproduced": 7,
+      "broken": 0,
+      "unrunnable": 0
+    },
+    "S5_l2_covers_every_bundle": {
+      "passed": false,
+      "unclassified": [
+        "eighteenth",
+        "eleventh",
+        "fifteenth",
+        "fourteenth",
+        "nineteenth",
+        "seventeenth",
+        "sixteenth",
+        "thirteenth",
+        "twelfth",
+        "v0.1a",
+        "v0.1b",
+        "v0.3"
+      ],
+      "per_bundle": {
+        "eighteenth": {
+          "L1": "deterministic",
+          "L1_reason": null,
+          "L2": "unclassified",
+          "L2_reason": "no_runner_found",
+          "runner": null
+        },
+        "eighth-world": {
+          "L1": "deterministic",
+          "L1_reason": null,
+          "L2": "deterministic",
+          "L2_reason": null,
+          "runner": "eighth_world_verdict.py"
+        },
+        "eleventh": {
+          "L1": "deterministic",
+          "L1_reason": null,
+          "L2": "unclassified",
+          "L2_reason": "no_runner_found",
+          "runner": null
+        },
+        "fifteenth": {
+          "L1": "deterministic",
+          "L1_reason": null,
+          "L2": "unclassified",
+          "L2_reason": "no_runner_found",
+          "runner": null
+        },
+        "fifth-world": {
+          "L1": "deterministic",
+          "L1_reason": null,
+          "L2": "deterministic",
+          "L2_reason": null,
+          "runner": "fifth_world_verdict.py"
+        },
+        "fourteenth": {
+          "L1": "deterministic",
+          "L1_reason": null,
+          "L2": "unclassified",
+          "L2_reason": "no_runner_found",
+          "runner": null
+        },
+        "fourth-world": {
+          "L1": "seeded",
+          "L1_reason": null,
+          "L2": "seeded",
+          "L2_reason": null,
+          "runner": "fourth_world_verdict.py"
+        },
+        "nineteenth": {
+          "L1": "seeded",
+          "L1_reason": null,
+          "L2": "unclassified",
+          "L2_reason": "no_runner_found",
+          "runner": null
+        },
+        "ninth-world": {
+          "L1": "deterministic",
+          "L1_reason": null,
+          "L2": "deterministic",
+          "L2_reason": null,
+          "runner": "ninth_world_verdict.py"
+        },
+        "second-world": {
+          "L1": "deterministic",
+          "L1_reason": null,
+          "L2": "seeded",
+          "L2_reason": null,
+          "runner": "second_world_verdict.py"
+        },
+        "seventeenth": {
+          "L1": "deterministic",
+          "L1_reason": null,
+          "L2": "unclassified",
+          "L2_reason": "no_runner_found",
+          "runner": null
+        },
+        "seventh-world": {
+          "L1": "seeded",
+          "L1_reason": null,
+          "L2": "seeded",
+          "L2_reason": null,
+          "runner": "seventh_world_verdict.py"
+        },
+        "sixteenth": {
+          "L1": "deterministic",
+          "L1_reason": null,
+          "L2": "unclassified",
+          "L2_reason": "no_runner_found",
+          "runner": null
+        },
+        "sixth-world": {
+          "L1": "deterministic",
+          "L1_reason": null,
+          "L2": "deterministic",
+          "L2_reason": null,
+          "runner": "sixth_world_verdict.py"
+        },
+        "tenth": {
+          "L1": "deterministic",
+          "L1_reason": null,
+          "L2": "deterministic",
+          "L2_reason": null,
+          "runner": "tenth_verdict.py"
+        },
+        "third-world": {
+          "L1": "seeded",
+          "L1_reason": null,
+          "L2": "seeded",
+          "L2_reason": null,
+          "runner": "third_world_verdict.py"
+        },
+        "thirteenth": {
+          "L1": "deterministic",
+          "L1_reason": null,
+          "L2": "unclassified",
+          "L2_reason": "no_runner_found",
+          "runner": null
+        },
+        "twelfth": {
+          "L1": "deterministic",
+          "L1_reason": null,
+          "L2": "unclassified",
+          "L2_reason": "no_runner_found",
+          "runner": null
+        },
+        "v0.1a": {
+          "L1": "deterministic",
+          "L1_reason": null,
+          "L2": "unclassified",
+          "L2_reason": "no_runner_found",
+          "runner": null
+        },
+        "v0.1b": {
+          "L1": "deterministic",
+          "L1_reason": null,
+          "L2": "unclassified",
+          "L2_reason": "no_runner_found",
+          "runner": null
+        },
+        "v0.3": {
+          "L1": "deterministic",
+          "L1_reason": null,
+          "L2": "unclassified",
+          "L2_reason": "no_runner_found",
+          "runner": null
+        }
+      }
+    }
+  },
+  "verdict_before_reproduction": "H0"
+}
