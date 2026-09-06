@@ -1,0 +1,151 @@
+{
+  "schema": "newlife.judgement-design.v1",
+  "pilot": "results/pilot-samples.json",
+  "sampling": {
+    "shared": false,
+    "n_effective": null
+  },
+  "applicability": {
+    "comparison_form": "two_group_location_shift",
+    "why": "each world is judged by comparing two configurations on the location of one observed quantity; no trend or slope is claimed"
+  },
+  "quantities": [
+    {
+      "name": "log10_tof",
+      "points": [
+        "-1.0",
+        "-4.0"
+      ],
+      "unit": "log10(1/s)",
+      "effect": {
+        "value": 1.0,
+        "rationale": "one order of magnitude in TOF changes whether the route is worth pursuing"
+      },
+      "location": {
+        "statistic": "trimmed",
+        "trim": 0.2,
+        "why": "tail ratio above threshold; the bootstrap of a mean is unreliable on heavy-tailed samples"
+      },
+      "spread": {
+        "statistic": "MAD",
+        "value": null
+      },
+      "errors": {
+        "alpha": 0.05,
+        "beta": 0.2
+      },
+      "derivation": {
+        "method": "bootstrap_power",
+        "resamples": 300,
+        "trials": 60,
+        "seed": 20260906
+      },
+      "budget": {
+        "max_n": 64,
+        "seconds_per_sample": 2.0
+      },
+      "heavy_tail": {
+        "detected": true,
+        "evidence": "sd/(1.4826*MAD) = 3.77 (threshold 1.5)",
+        "consequence": "location statistic set to trimmed"
+      },
+      "independence": {
+        "assumed": "iid",
+        "evidence": "world A: each call issued separately with no shared state; world B: each replicate uses its own draw stream"
+      },
+      "pilot_adequacy": {
+        "min_per_point": 12,
+        "why": "world A costs ~2s per call and the pilot is capped at 12 per point by budget"
+      },
+      "result": {
+        "n": null,
+        "power_curve": [
+          [
+            4,
+            0.13333333333333333
+          ],
+          [
+            8,
+            0.11666666666666667
+          ],
+          [
+            16,
+            0.08333333333333333
+          ],
+          [
+            32,
+            0.1
+          ],
+          [
+            64,
+            0.15
+          ]
+        ]
+      }
+    },
+    {
+      "name": "segsites",
+      "points": [
+        "segsites"
+      ],
+      "unit": "count",
+      "effect": {
+        "value": 2.0,
+        "rationale": "coalescent theory gives E[segsites] = theta * 2.59 at n=8, so doubling theta shifts it by about 2.59; 2.0 is deliberately a little smaller"
+      },
+      "location": {
+        "statistic": "mean",
+        "trim": null,
+        "why": "tail ratio near 1; the mean is the efficient choice here"
+      },
+      "spread": {
+        "statistic": "MAD",
+        "value": null
+      },
+      "errors": {
+        "alpha": 0.05,
+        "beta": 0.2
+      },
+      "derivation": {
+        "method": "bootstrap_power",
+        "resamples": 300,
+        "trials": 60,
+        "seed": 20260906
+      },
+      "budget": {
+        "max_n": 2000,
+        "seconds_per_sample": 0.001
+      },
+      "heavy_tail": {
+        "detected": false,
+        "evidence": "sd/(1.4826*MAD) = 1.17 (threshold 1.5)",
+        "consequence": "location statistic set to mean"
+      },
+      "independence": {
+        "assumed": "iid",
+        "evidence": "world A: each call issued separately with no shared state; world B: each replicate uses its own draw stream"
+      },
+      "pilot_adequacy": {
+        "min_per_point": 40,
+        "why": ""
+      },
+      "result": {
+        "n": 16,
+        "power_curve": [
+          [
+            4,
+            0.45
+          ],
+          [
+            8,
+            0.7333333333333333
+          ],
+          [
+            16,
+            0.9
+          ]
+        ]
+      }
+    }
+  ]
+}
