@@ -86,7 +86,7 @@ def main() -> int:
     # **"the criteria can fail" is its own visible slot in the conjunction, not a
     # detail nested inside another unit.** The first version folded it into a sub-field
     # of S2, so the registration read S0∧S1∧S2∧S3 while the code computed three —
-    # the unit-alignment gate in `newlife check` caught exactly this the first time it
+    # the unit-alignment check in `newlife run` caught exactly this the first time it
     # ran against a real question folder.
     units = {"S1_env_unchanged": {"passed": s1},
              "S2_increases_across_sweep": {"passed": s2},

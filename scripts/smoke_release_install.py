@@ -166,8 +166,7 @@ def main() -> int:
 
         _run(newlife, "freeze", question, cwd=repo)
         _run(newlife, "audit", question, cwd=repo, expected=3)
-        _run(newlife, "run", question, cwd=repo)
-        _run(newlife, "check", question, cwd=repo)
+        _run(newlife, "run", question, cwd=repo)   # also reports unit alignment
         _run("git", "add", question / "results", cwd=repo)
         _run(
             "git",

@@ -133,12 +133,6 @@ def test_freeze_reports_the_goal_gate_before_the_pilot_gate(tmp_path: Path) -> N
     assert "goal_gate" in str(excinfo.value) and "pilot_gate" not in str(excinfo.value)
 
 
-def test_check_reports_the_pilot_gate(tmp_path: Path, capsys) -> None:
-    repo = _repo(tmp_path)
-    folder = scaffold.init("2026-09-05-check", cwd=repo)
-    cli._check(folder)
-    assert "pilot coverage" in capsys.readouterr().out
-
 
 def test_init_writes_origin_readme_and_commits_it(tmp_path: Path) -> None:
     """`origin/` 是四份真实问题都没记的那件事：这个问题从哪来。脚手架必须建好这个位置。"""

@@ -210,7 +210,7 @@ def inspect(folder: Path) -> Report:
     reproduction = folder / "results" / "reproduction.json"
     if not summary.is_file():
         report.stage = "run"
-        report.next = "`newlife run`, then `newlife check`"
+        report.next = "`newlife run`"
         return report
     verdict = _verdict(summary, reproduction)
     if verdict is None:

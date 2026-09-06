@@ -43,7 +43,13 @@ import sys
 from pathlib import Path
 
 from newlife import provenance
-from newlife.gates import goal_ready, judgement_design, pilot_coverage
+from newlife.gates import (
+    goal_ready,
+    judgement_design,
+    pilot_coverage,
+    silent_degradation_scan,
+    vacuous_criterion_scan,
+)
 
 TEMPLATES = Path(__file__).resolve().parent / "templates"
 PREREG_SH = Path(__file__).resolve().parent / "prereg.sh"
@@ -209,9 +215,7 @@ def freeze(folder: Path, *, cwd: Path, data: tuple[Path, ...] = ()) -> int:
     **A red `goal.md` blocks the freeze.** This is the last moment at which the answer
     still costs nothing: after it comes the implementation, and a question nobody would
     bet against is otherwise something you find out about only when the verdict turns out
-    to carry no information. `newlife check` reports the same gate but cannot stand in
-    for this one — it also runs unit alignment, which reads `results/`, so it is not
-    runnable until the work is already done.
+    to carry no information. The freeze is where it is enforced.
     """
     root = repo_root(cwd)
     prereg = (folder / "prereg.md").resolve()
@@ -262,6 +266,18 @@ def freeze(folder: Path, *, cwd: Path, data: tuple[Path, ...] = ()) -> int:
             "The repetition count is not accounted for (above), so the freeze is refused.\n"
             f"Answer the six questions in {judgement_design.DESIGN_FILE} beside prereg.md\n"
             "(newlife-prereg rule seven); the freeze pins that file with the criteria.")
+    # Two scans of the runner that used to live in `newlife check`, advisory. A criterion
+    # that is true by construction, or a parse failure that falls back to a convenient
+    # default, costs the whole round once frozen — so they refuse here, before the one
+    # irreversible step, and nowhere else.
+    runner = folder / "verdict.py"
+    for label, scan in (("vacuous criteria", vacuous_criterion_scan),
+                        ("silent degradation", silent_degradation_scan)):
+        sys.stdout.flush()
+        if scan.main([str(runner)]) != 0:
+            raise SystemExit(
+                f"verdict.py fails the {label} scan (above), so the freeze is refused. Fix the "
+                f"runner; if a criterion changed, pilot again; then freeze.")
     # env.lock: rewrite from the live environment, commit if that changed anything, and pin
     # it first — the runner's S1 and the audit's DATA arm both hang off this file.
     env_lock = folder / "env.lock"
@@ -287,6 +303,20 @@ def freeze(folder: Path, *, cwd: Path, data: tuple[Path, ...] = ()) -> int:
         except ValueError as exc:
             raise SystemExit(f"--data {path} is outside the repository {root}; the audit "
                              f"can only re-hash files it can find from the repository root.") from exc
+    # Files under data/ that this freeze does not pin: said, not refused. The audit
+    # re-hashes only what is pinned, so a dataset the verdict reads and nobody pinned is
+    # a hole in the record that would otherwise leave no trace.
+    data_dir = folder / "data"
+    if data_dir.is_dir():
+        loose = sorted(str(f.resolve().relative_to(root)) for f in data_dir.rglob("*")
+                       if f.is_file())
+        loose = [f for f in loose if f not in set(pinned)]
+        if loose:
+            shown = ", ".join(Path(f).name for f in loose[:6]) + (" …" if len(loose) > 6 else "")
+            print(f"  data/ holds {len(loose)} file(s) this freeze does not pin: {shown}\n"
+                  f"  If the verdict reads any of them, pass it with --data — the audit "
+                  f"re-hashes only what is pinned.")
+    sys.stdout.flush()   # everything above must land before prereg.sh writes to the same tty
     return _run_prereg(root, "freeze", str(rel), *pinned)
 
 

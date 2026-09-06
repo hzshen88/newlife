@@ -31,8 +31,9 @@ answer off this repository — stage, what is done, what blocks, what you have t
    blind / mechanical, and at least one row is blind.
 6. **Freeze.** The one irreversible step. The AI must ask you first, then runs
    `newlife freeze`. Two gates (goal, pilot) refuse on their own if something is missing.
-7. **Verdict.** `newlife run`, `newlife check`, commit `results/`, `newlife audit`. H1, H0 or
-   INVALID, with five gates reported. The closeout goes back into `goal.md` §5 and the map.
+7. **Verdict.** `newlife run` (it also checks that the units the registration declares are
+   exactly the ones the runner computed), commit `results/`, `newlife audit`. H1, H0 or
+   INVALID. The closeout goes back into `goal.md` §5 and the map.
 
 ## The two moments that are yours alone
 
@@ -43,7 +44,7 @@ answer off this repository — stage, what is done, what blocks, what you have t
 ## If you would rather type
 
     newlife init <slug>        newlife pilot <folder>       newlife freeze <folder> [--data FILE...]
-    newlife run <folder>       newlife status <folder>      newlife check <folder>
+    newlife run <folder>       newlife status <folder>
     newlife audit <folder>     newlife skills install       newlife blocks
 
 Never `git add -A` before the freeze: `prereg.md` must be committed by the freeze itself,

@@ -13,8 +13,6 @@
     newlife run <folder>     compute the verdict
     newlife status <folder>  where is this question: stage, what is done, what blocks, what is
                              next, what the person has to decide — read from the folder
-    newlife check <folder>   five gates: goal readiness, pilot coverage, vacuous criteria,
-                             silent degradation, registration <-> runner unit alignment
     newlife blocks           list the third-party building blocks in this environment
     newlife skills install   put the question-shaping skills where your AI reads them
     newlife audit <folder>   the criteria were never edited, and the outputs post-date the freeze
@@ -37,10 +35,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from newlife import provenance, scaffold, status
-from newlife.gates import (
-    goal_ready, judgement_design, pilot_coverage, silent_degradation_scan,
-    unit_alignment, vacuous_criterion_scan,
-)
+from newlife.gates import pilot_coverage, unit_alignment
 
 SKILLS = Path(__file__).resolve().parent / "skills"
 
@@ -290,44 +285,6 @@ def _pilot(folder: Path) -> int:
     return 0
 
 
-def _check(folder: Path) -> int:
-    """The five gates that apply to **the user's own files**.
-
-    The rest stay in the newlife repository: `verify_doc_claims` needs a
-    verification-script ledger and `run_gates` takes a goal/question/ledger triple —
-    **they assume a separate document pipeline**. That is attribution, not omission.
-
-    **The goal and pilot gates are reported here but enforced at `newlife freeze`.** They have to be:
-    unit alignment reads `results/`, so `check` is not runnable until the work is already
-    done — and "this question was never worth asking", delivered after the
-    implementation, is information that arrives too late to act on.
-    """
-    runner = folder / "verdict.py"
-    checks = [
-        ("goal ready (enforced at freeze)", lambda: goal_ready.main([str(folder)])),
-        ("pilot coverage (enforced at freeze)", lambda: pilot_coverage.main([str(folder)])),
-        ("vacuous criteria", lambda: vacuous_criterion_scan.main([str(runner)])),
-        ("silent degradation", lambda: silent_degradation_scan.main([str(runner)])),
-        ("registration <-> runner unit alignment", lambda: unit_alignment.main([str(folder)])),
-    ]
-    # Rule seven applies only to worlds that declare they are not deterministic.
-    if judgement_design.declared_class(
-            (folder / "prereg.md").read_text(encoding="utf-8")) in ("seeded", "stochastic"):
-        checks.append(("judgement design (enforced at freeze)",
-                       lambda: judgement_design.main([str(folder)])))
-    failed = []
-    for name, run in checks:
-        print(f"-- {name} " + "-" * max(0, 46 - len(name)))
-        if run() != 0:
-            failed.append(name)
-    print()
-    if failed:
-        print(f"{len(failed)}/{len(checks)} gates red: {', '.join(failed)}")
-        return 1
-    print(f"All {len(checks)} gates passed.")
-    return 0
-
-
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="newlife", description=__doc__.split("\n")[0])
     ap.add_argument("--version", action="version",
@@ -345,7 +302,7 @@ def main(argv: list[str] | None = None) -> int:
     for name, help_ in (("pilot", "run the runner into pilot/, before the freeze"),
                         ("freeze", "freeze the criteria"), ("run", "compute the verdict"),
                         ("status", "where is this question: stage, blockers, next step"),
-                        ("check", "run the gates"), ("audit", "audit the freeze")):
+                        ("audit", "audit the freeze")):
         p = sub.add_parser(name, help=help_)
         p.add_argument("folder", type=Path, help="question folder")
         if name == "freeze":
@@ -399,7 +356,7 @@ def main(argv: list[str] | None = None) -> int:
               f"  4. newlife freeze {rel}      <- do not commit prereg.md before this "
               f"(never `git add -A` here)\n"
               f"  5. newlife run {rel} && git add {rel}/results && git commit\n"
-              f"  6. newlife check {rel} && newlife audit {rel}")
+              f"  6. newlife audit {rel}")
         return 0
 
     folder = args.folder.resolve()
@@ -413,9 +370,13 @@ def main(argv: list[str] | None = None) -> int:
         return scaffold.audit(folder, cwd=cwd)
     if args.cmd == "status":
         return status.main([str(folder)])
-    if args.cmd == "check":
-        return _check(folder)
-    return subprocess.run([sys.executable, str(folder / "verdict.py")]).returncode
+    rc = subprocess.run([sys.executable, str(folder / "verdict.py")]).returncode
+    if rc != 0:
+        return rc
+    # The registration and the runner must agree unit for unit: a conjunction one unit
+    # weaker than it reads is what this caught the first time it ran on a real question.
+    print()
+    return unit_alignment.main([str(folder)])
 
 
 if __name__ == "__main__":
