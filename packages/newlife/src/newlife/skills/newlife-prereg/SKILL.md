@@ -133,6 +133,48 @@ first time it ran.**
 
 ---
 
+## Rule six: a third-party process needs a hand-written declaration, and one half of it the pilot cannot check
+
+Admitting a third-party `process_bigraph` `Process` is **not** "install it and it runs".
+`admit()` requires a `PortBinding` table and a `lowering` map, written by hand, for every
+foreign process — there is no exception and no autodetection. Two of the things that table
+must state are things the third party **does not provide**:
+
+- **which state path a port writes to** — `outputs()` gives a type (`'float'`), never a location
+- **whether the write is `add` or `set`** — a process returning an increment cannot say so
+  in its signature
+
+The first half is safe: writing a port that was never declared **hard-fails** in `admit`.
+The second half is not.
+
+> **Getting `add`/`set` backwards never raises.** `set` where `add` was meant overwrites
+> the quantity with the increment, and the run still produces results — plausible numbers,
+> in the right units, monotone where you expected monotone. **The pilot sees those numbers
+> and reports them as covered.** Rule one does not protect you here: the quantity *was*
+> piloted; it was piloted wrong.
+
+**How to decide, every time**: read what the foreign `update` returns. Does it return the
+new absolute value, or the change since the last step? `docs/writing-a-world.md` shows
+`PortBinding("species", ("species",), "add")` — correct **there** because that Tellurium
+wrapper returns `float(self.rr[n]) - float(state["species"][n])`, a difference. **Copying
+that line to wrap a simulator that returns absolute values is the same error in reverse.**
+Say out loud which of the two the process returns, and say it before writing the binding.
+
+Nothing downstream catches this — not `admit`, not the pilot, not the five gates. What can
+catch it is a criterion you write on purpose: a conserved total that must stay conserved
+when there is no source or sink, or a unit check that an increment and a level cannot both
+be right. **If a foreign process is in the composite, one such criterion belongs in the
+conjunction.**
+
+**Install before you freeze.** `env.lock` records every distribution in the environment at
+the freeze, and S1 re-reads the live environment at run time and compares the file
+character by character. Installing anything after the freeze — including a dependency you
+discover you need while wiring a foreign process — **turns S1 red**. Get the third party
+installed, admitted and piloted first; the freeze rewrites `env.lock` from the live
+environment and pins it.
+
+---
+
 ## Before freezing
 
 - [ ] **run a pilot** covering every quantity that appears in a criterion (rule one) — `newlife pilot`; the freeze checks `pilot/ledger.jsonl`
@@ -144,6 +186,12 @@ first time it ran.**
 - [ ] §5 states **what this round does not establish**; at closeout "we showed A" must never
       stand in for "B also holds"
 - [ ] `git log -- <prereg path>` is empty — **the freeze must be its first commit**
+- [ ] **everything the question needs is installed now** — S1 compares the live environment
+      against `env.lock` character by character, so a package installed after the freeze
+      turns it red (rule six)
+- [ ] a third-party process in the composite? Then its `PortBinding` `add`/`set` was decided
+      by reading what its `update` returns, **not by copying an example**, and a conserved
+      total or unit check guards it in the conjunction (rule six)
 - [ ] the question reads files it did not generate (a downloaded dataset, a reference
       network)? Then freeze with `--data <those files>`: their hashes go into the
       registration and `newlife audit` re-checks them. Record where each came from
