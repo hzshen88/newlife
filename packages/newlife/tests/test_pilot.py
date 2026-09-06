@@ -1,6 +1,6 @@
 """试探门与 `newlife pilot` —— 第 ② 阶段（写判据）在冻结前的机械检查。
 
-四份真实问题里两份 INVALID，根因都是判据写了自己没量过的量（`docs/product/2026-09-04-first-user-questions.md` §4）。
+四份真实问题里两份 INVALID，根因都是判据写了自己没量过的量（`docs/zh/product/2026-09-04-first-user-questions.md` §4）。
 newlife-prereg 的第一条规则「试探必须覆盖判据里每一个量」和第三条「留一格真盲」此前只是散文，
 工具链里没有任何一步支持它。这里把它变成：`newlife pilot` 记账，`newlife freeze` 查账。
 

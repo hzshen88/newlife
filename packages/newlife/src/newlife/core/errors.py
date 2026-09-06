@@ -1,5 +1,5 @@
 """Typed failures of the four frozen contracts (port of the pressure-test
-error taxonomy, byte-identical class set; see docs/design/proposal.md §5.2)."""
+error taxonomy, byte-identical class set; see docs/zh/design/proposal.md §5.2)."""
 
 
 class ContractError(RuntimeError):

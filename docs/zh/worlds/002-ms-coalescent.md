@@ -9,7 +9,7 @@
 - **预注册**：exloop `docs/science-superpowers/preregistrations/2026-08-31-newlife-second-world-ms-coalescent-declarability.md`
   （冻结于 `c450072`/`fb61994`，冻结前两轮红队）。
 - **补记说明**：本文件在里程碑收尾之后补写（2026-09-01）。收尾当时漏了
-  `docs/worlds/` 这一项，遗漏由 `newlife-milestone` skill 的收尾清单发现。
+  `docs/zh/worlds/` 这一项，遗漏由 `newlife-milestone` skill 的收尾清单发现。
   补写不改动任何判定，只把已判定内容归位；本文所有数字均取自上列证据文件。
 
 ---

@@ -23,9 +23,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
-WORLDS = ROOT / "docs/worlds"
-PROPOSAL = ROOT / "docs/design/proposal.md"
-README = ROOT / "README.md"
+WORLDS = ROOT / "docs/zh/worlds"
+PROPOSAL = ROOT / "docs/zh/design/proposal.md"
+# 里程碑表 2026-09-06 从根 README 搬到 docs/milestones.md（根 README 改为面向用户）；键名 readme_row 沿用
+MILESTONES = ROOT / "docs/milestones.md"
 
 EXEMPT = {
     # 流水线之前的里程碑：没有 goal / 预注册 / worlds 文档这套形制。
@@ -94,7 +95,7 @@ def check(milestone: str, rot_keys: set[str], sources: list[Path]) -> dict[str, 
         "summary": summary.exists(),
         "worlds_doc": any(references(p) for p in WORLDS.glob("*.md")),
         "proposal_row": references(PROPOSAL),
-        "readme_row": references(README),
+        "readme_row": references(MILESTONES),
         "rot_entry": milestone in rot_keys,
         "producer": producer,
     }
@@ -103,7 +104,7 @@ def check(milestone: str, rot_keys: set[str], sources: list[Path]) -> dict[str, 
 COLUMNS = ("summary", "worlds_doc", "proposal_row", "readme_row", "rot_entry", "producer")
 LABELS = {
     "summary": "产物", "worlds_doc": "worlds文档", "proposal_row": "§7行",
-    "readme_row": "README", "rot_entry": "依赖面", "producer": "产出者",
+    "readme_row": "docs/milestones.md", "rot_entry": "依赖面", "producer": "产出者",
 }
 
 
@@ -151,7 +152,7 @@ def report() -> int:
 
 FIXTURES = (
     ("proposal_row", "从 proposal.md 抹掉某个产物的指针 —— 孤儿文档，实测发生过（twelfth）"),
-    ("readme_row", "从 README.md 抹掉某个产物的行"),
+    ("readme_row", "从 docs/milestones.md 抹掉某个产物的行"),
     ("worlds_doc", "抹掉 worlds 文档对某个产物的引用"),
     ("rot_entry", "从 verdict_rot 抹掉某个依赖面登记 —— 实测发生过（4 个产物）"),
     ("producer", "产出者不可指名 —— 实测发生过（twelfth，产物无法重跑）"),
@@ -200,7 +201,7 @@ def selftest() -> int:
 
 def _probe_without(milestone: str, column: str, rot_keys, sources) -> bool:
     """把某一格的文本证据临时抹掉，返回那一格的判定结果。**不落盘**。"""
-    files = {"proposal_row": [PROPOSAL], "readme_row": [README],
+    files = {"proposal_row": [PROPOSAL], "readme_row": [MILESTONES],
              "worlds_doc": sorted(WORLDS.glob("*.md"))}[column]
     needle = f"results/{milestone}/"
     originals = {f: f.read_text() for f in files}

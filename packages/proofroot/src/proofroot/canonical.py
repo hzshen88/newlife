@@ -2,7 +2,7 @@
 
 The 0th asset of any cross-language byte-level trace comparison is a
 canonical form that does not depend on the host language's float
-formatting. Rules (docs/design/proposal.md §5.9):
+formatting. Rules (docs/zh/design/proposal.md §5.9):
 
 - **Structural layer** — the ready-made parts of RFC 8785 (JCS): object keys
   sorted, UTF-8 output, no insignificant whitespace. Key order is Unicode

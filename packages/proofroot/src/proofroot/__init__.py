@@ -1,6 +1,6 @@
 """proofroot — language-neutral trust core for reproducible simulation.
 
-Scope (frozen charter, see docs/design/proposal.md §5.10):
+Scope (frozen charter, see docs/zh/design/proposal.md §5.10):
 - D1 current encoding (`evidencecore-rng-v1`) named RNG stream seed derivation
 - D4 bank semantics invariants (declared streams, lowercase normalization,
   name regex, forward-only, seed snapshots as provenance)

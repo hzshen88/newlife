@@ -7,7 +7,7 @@
 - verdict 从合取机械算出，**从不手填**；
 - 本模块**不判 goal 的 P1**。它读 `reuse-trace.json` 只为把事实抄进 bundle 供人
   判定，`summary.json` 的 schema 对 goal 词汇封闭（无 `p1` / `achieved` /
-  `regressed` 等键或字符串值）。P1 由人写在 goal 文档与 `docs/worlds/`。
+  `regressed` 等键或字符串值）。P1 由人写在 goal 文档与 `docs/zh/worlds/`。
 """
 
 from __future__ import annotations

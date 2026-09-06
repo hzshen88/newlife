@@ -55,7 +55,7 @@ KNOWN_BROKEN = "seventh"           # 预注册 §2.3：已知坏的不计入 H0
 （去掉已不存在的部件后重跑）仍是 H0，同样那 4 个。用 `7e3b7a5` 当时的 runner 跑
 今天的代码，结果与新 runner 逐项一致——第十个里程碑的接缝改动被排除。
 
-完整理由见 `docs/worlds/007-harness-generability.md` §6。**不要为了让它变绿而编辑
+完整理由见 `docs/zh/worlds/007-harness-generability.md` §6。**不要为了让它变绿而编辑
 `results/seventh-world/classification.json`**：预注册 §3.3 明写归类不预先冻结，
 它是那一次判定的声明快照，改它就是另做一次实验。
 """

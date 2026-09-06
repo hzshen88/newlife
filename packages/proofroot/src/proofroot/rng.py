@@ -1,7 +1,7 @@
 """D1 named RNG stream seed derivation + D4 bank semantics (port of
 EvidenceCore.jl's `derive_stream_seed` and `RngBank`, current encoding only).
 
-Discipline (docs/design/proposal.md §5.10): the `evidencecore-rng-v1` encoding
+Discipline (docs/zh/design/proposal.md §5.10): the `evidencecore-rng-v1` encoding
 is ported byte-for-byte — Python output must match the Julia oracle bit-for-bit
 (`vectors/evidencecore_rng_v1.json`). The three legacy encodings
 (`parcells-rng-v1`, `parreact-rng-v1`, `parworlds-rng-v1`) are deliberately NOT

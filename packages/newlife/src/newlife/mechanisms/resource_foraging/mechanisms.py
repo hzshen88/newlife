@@ -7,7 +7,7 @@ context). State paths are cell-keyed ("x,y", 1-based Julia order) so every
 effect path is pre-bindable with exact-path claims — the profile authorizes
 every write at runtime (pain point P2).
 
-Faithfulness notes (docs/worlds/001-resource-foraging.md §5):
+Faithfulness notes (docs/zh/worlds/001-resource-foraging.md §5):
 - movement cost is charged by the harvest-metabolism stage (Julia
   harvest_and_metabolize!), which reads the attempted-movers set the movement
   stage published into declared tick state — the constitution's stage dataflow

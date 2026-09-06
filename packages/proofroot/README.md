@@ -46,4 +46,4 @@ monorepo is the frozen oracle generating this package's cross-language test
 vectors. ParaLife's legacy compatibility layers (legacy encodings, UPPER-CASE
 phase spellings) are deliberately **not** ported here.
 
-Design rationale: [proposal §5.10](https://github.com/hzshen88/newlife/blob/main/docs/design/proposal.md).
+Design rationale: [proposal §5.10](https://github.com/hzshen88/newlife/blob/main/docs/zh/design/proposal.md).

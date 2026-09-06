@@ -17,7 +17,7 @@
 这是 goal 指定的收益所在，收尾时必须写下来而不是留作隐含（goal §3 的判据）。
 
 **claim (i) 不是 L1/L2/L3 的任何一级，而是与它们正交的一类：analytic /
-specification-conformance。** `docs/worlds/001-resource-foraging.md:43-56` 定义的三级
+specification-conformance。** `docs/zh/worlds/001-resource-foraging.md:43-56` 定义的三级
 里，L2 假设存在一个真实外部程序的 draw 可以重放，L3 是统计比较且明确不得声称逐值
 复现。而 claim (i) 检验的是「实现是否符合它自己的冻结数学规格」——不依赖任何外部
 oracle，也不是统计的。它**不是第四级**，把它排进那把尺子会误导。

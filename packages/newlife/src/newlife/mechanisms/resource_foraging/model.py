@@ -5,7 +5,7 @@ Line-by-line port of the frozen `resource-foraging-v1` protocol's model layer
 vocabularies, configuration schema and validation, and the state layout used
 by the newlife mechanism registry. Protocol semantics are copied verbatim —
 any deviation is a criterion issue, not a modeling choice (see
-docs/worlds/001-resource-foraging.md).
+docs/zh/worlds/001-resource-foraging.md).
 """
 
 from __future__ import annotations

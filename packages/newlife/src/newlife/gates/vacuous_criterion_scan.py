@@ -106,7 +106,7 @@ so it is unaffected — but it is printed alongside the oxygen column in the art
 it reads like a sweep. The conclusion does not depend on Z5: Z3 (dFBA's yield varies with
 oxygen by 56%) and Z4 (Monod's is constant) already entail it arithmetically.
 
-Full disposition: `docs/worlds/019-yield-input-or-outcome.md`.
+Full disposition: `docs/zh/worlds/019-yield-input-or-outcome.md`.
 **The registered figure is an exact count**: one more fake sweep on the same constant in
 the same file, or these two disappearing, both turn this red — an exemption neither
 accumulates silently nor becomes a zombie.
