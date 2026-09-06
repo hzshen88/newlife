@@ -1,16 +1,22 @@
 # Generate cross-language test vectors for proofroot from the EvidenceCore.jl
-# oracle (frozen in place in ParaLife; see newlife docs/design/proposal.md §5.10).
+# oracle (frozen in place in ParaLife; see newlife docs/zh/design/proposal.md §5.10).
 #
 # Scope (proofroot schedule step 1, per §5.10 discipline 1): D1 current encoding
 # (`evidencecore-rng-v1` ONLY — legacy encodings are deliberately not ported and
 # get no vectors here), D4 bank seed derivation incl. lowercase normalization,
 # D2 phase terminality. D5 is a constant vocabulary; nothing to vectorize.
 #
-# Regenerate:  julia generate_vectors.jl > evidencecore_rng_v1.json
-# (run from this directory; adjust ORACLE_PATH if ParaLife moves).
+# Regenerate:  EVIDENCECORE_JL=/path/to/paralife/packages/EvidenceCore/src/EvidenceCore.jl \
+#              julia generate_vectors.jl > evidencecore_rng_v1.json
+# (run from this directory). The oracle lives in ParaLife, a private repository, so its
+# location is not written here; the script refuses to run without the variable.
+
+const ORACLE_PATH = get(ENV, "EVIDENCECORE_JL", "")
+isempty(ORACLE_PATH) && error("set EVIDENCECORE_JL to the path of ParaLife's EvidenceCore.jl")
+isfile(ORACLE_PATH) || error("EVIDENCECORE_JL points at a file that does not exist: $ORACLE_PATH")
 
 module Oracle
-include("/Users/hzshen/Projects/paralife/packages/EvidenceCore/src/EvidenceCore.jl")
+include(Main.ORACLE_PATH)
 end
 
 using .Oracle
