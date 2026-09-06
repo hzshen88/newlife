@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -83,3 +84,29 @@ def test_alignment_distinguishes_empty_parse_from_missing_units() -> None:
     declared = {"S0", "S1", "S2"}
     problems = unit_alignment.check(declared, declared, set())
     assert len(problems) == 1 and "no judgement unit parsed" in problems[0]
+
+
+def test_repository_gate_selftest_passes() -> None:
+    """仓库级的**元自检**也必须在日常路径里跑——它坏过，而且没人发现。
+
+    `scripts/gates/gate_selftest.py` 把门拷进临时工作区、注入变异、要求每条变异
+    都让门变红。它先建立基线：未变异时必须全绿。**2026-09-06 查出这条基线自
+    `4d10686` 起就是红的**——那次 skill 改名重构改了自检语料 `corpus/goals/example.md`
+    的正文，却没有重算它的 `@frozen` 哈希。
+
+    `@frozen` 机制本身没有失灵，它正是设计来抓这个的、也确实抓住了。塌的是别处：
+    基线红被报成「前提不成立」，读起来像环境问题而不是「有东西真的变了」；
+    而这个脚本不在 pytest、不在 CI（`workflow_dispatch`），于是**十四条 fixture
+    一条都没在守什么，持续了整整一次重构到现在**。
+
+    与本文件开头那条教训同形，只是这次塌的是自检自己：**「门能抓住」和「门会被跑」
+    是两件事。** 这个测试就是让第二件也有人守。
+    """
+    script = Path(__file__).resolve().parents[3] / "scripts/gates/gate_selftest.py"
+    if not script.exists():
+        pytest.skip("仓库工具不随 wheel 发布；只有在源码树里才跑得到")
+    proc = subprocess.run([sys.executable, str(script)], capture_output=True, text=True,
+                          cwd=script.parents[2])
+    assert proc.returncode == 0, (
+        "仓库级 gate_selftest 未通过——门的变异检测本身失效了：\n"
+        + (proc.stdout or "") + (proc.stderr or ""))

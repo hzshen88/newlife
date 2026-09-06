@@ -1,6 +1,6 @@
 # Goal — 示例：漂移的步长是不是恒定的
 
-- **状态**：frozen —— 冻结 commit 与内容哈希见本行末的 `@frozen` 锚。<!--@frozen: commit=EXAMPLE, sha256=0ef2b57d14d4096916abc04cc263f692a327f23605d2f326316bbc25047c6a6f-->
+- **状态**：frozen —— 冻结 commit 与内容哈希见本行末的 `@frozen` 锚。<!--@frozen: commit=EXAMPLE, sha256=301d493380688e4433e1ba298550a3ca4d8bf9bd07a952b48d6da07b768237a0-->
 
 <!--@evidence: literature_searched=yes, sources=1, verdict=已知-->
 <!--@counterparty: 会有人押 H0：步长恒定是 `drift` 的定义直接给出的，测它等于什么都没测。这条指名的是「判据与实现同源」这一条前提-->
