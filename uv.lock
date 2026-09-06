@@ -524,6 +524,15 @@ wheels = [
 ]
 
 [[package]]
+name = "exloop"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a3/6b/efecc6e81de90af5bcbfb38bd76c29afb39c46a4ae6140f9a84aac3b5be5/exloop-0.1.0.tar.gz", hash = "sha256:3edd73050a0fc5f45d03c51dbf8d67827a9f3a6944262aa76896900107be7212", size = 24214, upload-time = "2026-09-06T02:30:11.765Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/50/e4/4b1dbd7a774ee33f3d405da84641615410e4cbbeb4da6824e6b5b2a2a3b0/exloop-0.1.0-py3-none-any.whl", hash = "sha256:37102b8ab5ea2428a5772cb9ae214b23f46c237b4c419f12f24a39945347932b", size = 27391, upload-time = "2026-09-06T02:30:10.369Z" },
+]
+
+[[package]]
 name = "fastapi"
 version = "0.141.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1268,6 +1277,7 @@ name = "newlife"
 version = "0.1.1"
 source = { editable = "packages/newlife" }
 dependencies = [
+    { name = "exloop" },
     { name = "proofroot" },
 ]
 
@@ -1286,6 +1296,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "exloop", specifier = ">=0.1,<0.2" },
     { name = "process-bigraph", marker = "extra == 'process-bigraph'", specifier = "==1.8.3" },
     { name = "proofroot", editable = "packages/proofroot" },
     { name = "spatio-flux", marker = "extra == 'spatio-flux'", specifier = "==1.4.0" },
