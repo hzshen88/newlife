@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """One test, used in both directions — that is the whole idea.
 
 ## Why a single test, and why both directions

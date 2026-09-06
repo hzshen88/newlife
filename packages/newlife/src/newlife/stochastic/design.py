@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """How many repetitions — answered by the data, not by a formula.
 
 ## Why not the closed form
@@ -36,7 +35,7 @@ import argparse
 import random
 import sys
 
-from newlife.stochastic.equivalence import LOCATION, bootstrap_diff_ci
+from newlife.stochastic.equivalence import bootstrap_diff_ci
 
 
 def tail_ratio(xs: list[float]) -> float:

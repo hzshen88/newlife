@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Classify a verdict bundle by **what kind of reproduction its world can offer**.
 
 ## Why this exists

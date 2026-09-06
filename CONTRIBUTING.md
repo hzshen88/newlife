@@ -57,6 +57,9 @@ reference implementation, so it needs Julia and a checkout of ParaLife, which is
 - `scripts/check_release_artifacts.py` and `scripts/smoke_release_install.py`: what the
   release workflow runs against the built wheels before anything is uploaded.
 - `packages/newlife/tests/test_public_english.py`: docstrings of public modules are English.
+- The gates' selftests: `uv run --package newlife python -m newlife.gates.<name> --selftest`;
+  `scripts/gates/gate_selftest.py` mutates each gate's fixtures and requires red. Gates
+  import the package (`provenance`, `stochastic`), so they are not run as standalone files.
 
 ## Conventions
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """The shape of a judgement design — `newlife.judgement-design.v1`.
 
 ## Why a file, not an anchor
