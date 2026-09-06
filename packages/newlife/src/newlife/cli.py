@@ -27,6 +27,7 @@ and after the fact nobody can tell it happened.
 from __future__ import annotations
 
 import argparse
+import importlib.metadata
 import json
 import os
 import shutil
@@ -274,6 +275,8 @@ def _check(folder: Path) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="newlife", description=__doc__.split("\n")[0])
+    ap.add_argument("--version", action="version",
+                    version=f"newlife {importlib.metadata.version('newlife')}")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     p_init = sub.add_parser("init", help="scaffold a question folder")
