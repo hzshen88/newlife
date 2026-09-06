@@ -45,6 +45,16 @@ from newlife.gates import (
 SKILLS = Path(__file__).resolve().parent / "skills"
 
 
+EXTRA_FOR = {"process_bigraph": "newlife[process-bigraph]",
+             "spatio_flux": "newlife[spatio-flux]"}
+"""Which optional extra provides which top-level package. **Only what `pyproject.toml`
+actually declares** — `bsp` is scanned by discovery but is not a newlife extra, and
+printing an install command that cannot resolve is worse than printing none."""
+
+EXTRA_NOTE = {"newlife[spatio-flux]": "      # Monod, dFBA (GLPK included), diffusion, particles",
+              "newlife[process-bigraph]": "  # the runtime alone"}
+
+
 def _blocks() -> int:
     """List the admissible building blocks.
 
@@ -53,11 +63,15 @@ def _blocks() -> int:
     """
     from newlife.adapters.process_bigraph import discovery   # lazy: the extras are optional
 
-    count, unimportable = 0, []
+    count, missing, broken = 0, [], []
     for top, module, names in discovery.blocks():
         if not names:
             print(f"[{top}] {module}")            # import failed — reported, not hidden
-            unimportable.append(top)
+            # **"absent" and "installed but broken" need different advice**, and the only
+            # thing separating them is the exception type discovery renders into that line.
+            # Telling someone to install what they already have wastes the one command they
+            # were going to try.
+            (missing if "ModuleNotFoundError" in module else broken).append(top)
             continue
         count += len(names)
         print(f"  {module:52s} {', '.join(names)}")
@@ -68,12 +82,27 @@ def _blocks() -> int:
     # installed". The per-package failures above already say which import failed, but the
     # summary has to say what to do about it — **naming a cause without the remedy still
     # leaves the reader stuck**, and this is the first command a new user reaches for.
-    if not count and unimportable:
-        print("\nNothing could be imported. The simulation backends ship as optional extras:"
-              "\n    pip install 'newlife[spatio-flux]'      "
-              "# Monod, dFBA (GLPK included), diffusion, particles"
-              "\n    pip install 'newlife[process-bigraph]'  # the runtime alone"
-              "\n'spatio-flux' pulls in 'process-bigraph' as well, so the first is enough.")
+    # **Reported whenever something is absent, not only when everything is.** A user who
+    # has `process-bigraph` and not `spatio-flux` sees a listing that works and never
+    # learns the backends exist.
+    if extras := sorted({EXTRA_FOR[t] for t in missing if t in EXTRA_FOR}):
+        head = ("Nothing could be imported." if not count else
+                "Some backends are not installed.")
+        print(f"\n{head} They ship as optional extras:")
+        for extra in extras:
+            print(f"    pip install '{extra}'{EXTRA_NOTE[extra]}")
+        if len(extras) > 1:
+            print("'spatio-flux' pulls in 'process-bigraph' as well, so the first is enough.")
+        print("Install before you freeze: `env.lock` is written from the live environment "
+              "at the freeze,\nand S1 compares the run against it.")
+    if outside := sorted({t for t in missing if t not in EXTRA_FOR}):
+        print(f"\n{', '.join(outside)}: not shipped as a newlife extra. Install it "
+              f"yourself if you need it.")
+    if broken:
+        print(f"\n{', '.join(sorted(set(broken)))}: installed, but the import failed "
+              f"(above). **That is the package's own problem, not your configuration** — "
+              f"reinstalling it will not help, and nothing here can admit a class it "
+              f"cannot import.")
     return 0
 
 
