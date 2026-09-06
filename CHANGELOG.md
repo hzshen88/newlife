@@ -18,6 +18,17 @@ has its own version and its own repository. Dates are the PyPI upload dates.
 
 ### Fixed
 
+- **A registration frozen without the `**Frozen at commit:** _pending_` line could never
+  pass an audit, and nothing said so at the time.** The stamp could then only be *inserted*;
+  the audit's `strip_stamp` removes the stamp line but not the blank line inserted with it,
+  so INTEGRITY failed on every audit from then on — surfacing one pilot and one full verdict
+  later, when "never re-freeze" leaves no repair and the round has to be demoted to
+  exploratory. `newlife pilot` and `newlife freeze` now restore the line before they do
+  anything else, so the stamp is always an in-place replacement. Reported from a real
+  question that lost a round to it; an assistant drafting the registration by writing the
+  whole file drops that line without noticing, because it reads as metadata waiting to be
+  filled in rather than a functional anchor. The runner's own error message now says how to
+  put it back, for the case where `verdict.py` is invoked directly.
 - `newlife blocks` gave the install command only when **nothing** could be imported, so
   someone with `process-bigraph` but not `spatio-flux` saw a listing that worked and never
   learned the other backends existed. It now reports whenever something is absent, and
