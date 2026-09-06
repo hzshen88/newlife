@@ -126,10 +126,10 @@ simulator which is not a process-bigraph `Process`.
 ### How newlife itself was built, and what you can check here
 
 newlife was built under the discipline it ships. `results/` holds twenty-two verdict
-bundles, one per closed milestone, and the twenty-third lives under
-`questions/2026-09-06-reproduction-class-declarability/` — the first milestone run in the
-same shape this tool gives you, with the registration and the artifact in one repository,
-which is what lets `newlife audit` establish CHRONOLOGY at all; from the second world onward each was judged against a
+bundles, one per closed milestone, and the two most recent live under
+`questions/` — the first milestones run in the same shape this tool gives you, with the
+registration and the artifact in one repository, which is what lets `newlife audit`
+establish CHRONOLOGY at all; from the second world onward each was judged against a
 preregistration frozen before the implementation existed, and the table in
 [`docs/milestones.md`](docs/milestones.md) records the H0s and the one INVALID alongside the
 H1s. The four earliest milestones predate the goal stage, and one (archival replay) was run

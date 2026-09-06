@@ -1,0 +1,36 @@
+{
+  "schema": "2026-09-06-stochastic-world-judgeable.v1",
+  "provenance": {
+    "newlife_version": "0.1.1",
+    "newlife_source_sha256": "c6bd40e3618b858a77c8dbad1252d47e932d83765a144c86445b09856b4ca60a",
+    "newlife_location": "/Users/hzshen/Projects/newlife/packages/newlife/src/newlife",
+    "python": "3.12.8",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "preregistration_freeze": "UNFROZEN: pilot run before the freeze, carries no evidential weight",
+    "env_lock_sha256": "5c99799f5bd56956fd6d21a2cb5e65f44b6d43eac6ea6ddd80a78d83a89a626c"
+  },
+  "units": {
+    "S1_env_unchanged": {
+      "passed": true
+    },
+    "S2_test_correct_on_synthetic": {
+      "passed": false,
+      "per_case": {
+        "far apart -> not equivalent": true,
+        "one point differs -> not equivalent": true,
+        "same distribution -> equivalent (a)": false,
+        "same distribution -> equivalent (b)": true
+      }
+    },
+    "S3_criteria_can_fail": {
+      "passed": true,
+      "demonstrations": {
+        "equivalent() is false on far-apart centres": true,
+        "equivalent() is true on one shared distribution": true,
+        "converged() is false on too few samples": true,
+        "ci_of_difference brackets a known offset": true
+      }
+    }
+  },
+  "verdict_before_reproduction": "H0"
+}

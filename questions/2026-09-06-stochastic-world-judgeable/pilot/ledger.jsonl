@@ -1,0 +1,2 @@
+{"at": "20260906T080009Z", "out": "pilot/20260906T080009Z/summary.json", "returncode": 1, "units": ["S0", "S1", "S2", "S3"], "env_sha256": "5c99799f5bd56956fd6d21a2cb5e65f44b6d43eac6ea6ddd80a78d83a89a626c"}
+{"at": "20260906T080120Z", "out": "pilot/20260906T080120Z/summary.json", "returncode": 0, "units": ["S0", "S1", "S2", "S3"], "env_sha256": "5c99799f5bd56956fd6d21a2cb5e65f44b6d43eac6ea6ddd80a78d83a89a626c"}
