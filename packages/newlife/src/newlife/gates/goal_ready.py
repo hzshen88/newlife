@@ -46,9 +46,25 @@ import pathlib
 import re
 
 ANCHOR = re.compile(r"<!--@([A-Za-z0-9_.\-]+):\s*([^>]*?)-->")
+OPENER = re.compile(r"<!--@([A-Za-z0-9_.\-]+):")
+"""Every anchor **opening**, matched or not. `ANCHOR` stops at the first `>` in the body,
+so an anchor whose prose contains one (`temperature>0`, `n->m`, an HTML tag) simply does
+not exist as far as the gate is concerned — and the gate then reports the anchor as
+**missing**, sending the author to write one they already wrote. Comparing the two
+patterns turns that into a diagnosis. Cost of not having it: recorded twice, once in a
+skill's list of paid-for lessons and once on 2026-09-06 by the author of this comment."""
 PLACEHOLDERS = {"", "TODO", "TBD", "...", "…", "PENDING", "?"}
 DECIDES = {"design", "run"}
 LAYERS = {"conclusion", "premise", "definition"}
+
+
+def unparsed_anchors(text: str) -> list[str]:
+    """Anchor names that **open but never parse** — their body holds a `>`.
+
+    Returned so the caller can say *why* an anchor is missing instead of just that it is.
+    """
+    parsed = {m.group(1) for m in ANCHOR.finditer(text)}
+    return sorted({m.group(1) for m in OPENER.finditer(text)} - parsed)
 
 
 def parse(text: str) -> dict[str, dict[str, str]]:
@@ -71,6 +87,17 @@ def check(text: str) -> list[str]:
     """Every problem with this goal document. Empty list = ready to freeze."""
     a = parse(text)
     problems: list[str] = []
+
+    # **Diagnose before reporting anything missing.** An anchor whose body holds a `>`
+    # never parses, and every check below would then report it as absent — sending the
+    # author to write an anchor that is already there, three lines above the message.
+    for name in unparsed_anchors(text):
+        problems.append(
+            f"@{name} is written but does not parse — its body contains `>`, and the "
+            f"anchor pattern stops there. Rewrite that character (e.g. `temperature>0` "
+            f"-> `temperature is nonzero`). **Everything below reports this anchor as "
+            f"missing; it is not.**"
+        )
 
     if "goal_gate" in a and a["goal_gate"].get("_text", "").startswith(
         "not_applicable"
@@ -222,6 +249,19 @@ def _selftest() -> int:
             print(f"  [{mark}] {name}")
 
     case("a goal that is genuinely ready", READY, False)
+    # **A `>` in an anchor body makes the anchor vanish**, and every check then calls it
+    # missing. Red is correct here; what this fixture guards is that the *diagnosis* is
+    # present, so the author is not sent to rewrite an anchor that already exists.
+    with_gt = READY.replace("<!--@attack_layer: conclusion-->",
+                            "<!--@attack_layer: conclusion, note=holds when temperature>0-->")
+    # **变异必须先真的改变文本。** 上一版锚点写成了 `premise`（READY 里是 `conclusion`），
+    # replace 空转，于是 fixture 对着未变异的样本判「green」——用一个什么都没改的变异
+    # 去判定通过，本项目栽过两次，这是第三次，被这行断言拦下。
+    assert with_gt != READY, "变异没有命中锚点——fixture 会对着未变异的样本作判断"
+    case("an anchor whose body contains `>`", with_gt, True)
+    if not any("does not parse" in p for p in check(with_gt)):
+        print("  [FAIL] `>` 让锚消失时没有给出诊断——作者会被指去重写一个已经存在的锚")
+        ok = False
 
     for anchor in (
         "evidence",
