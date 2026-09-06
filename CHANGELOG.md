@@ -16,6 +16,16 @@ has its own version and its own repository. Dates are the PyPI upload dates.
   repairing the environment would itself turn S1 red. A ledger written before this existed
   carries no digest and stays green, so registrations already in flight can still freeze.
 
+- **`newlife.stochastic.equivalence`**: one equivalence test, used in both directions, for
+  worlds whose outcome differs every run. Two batches of the same configuration must come
+  back equivalent; two genuinely different configurations must not — **the same test and
+  the same threshold answer both**, because loosening it passes one end and tightening it
+  passes the other, and using two tests is how that trade-off gets dodged. How many
+  repetitions is not a constant in the code: the rule splits the batch in half and applies
+  the same yardstick, so the data decides. Percentile bootstrap, no normality assumption,
+  seeded — the judgement layer reproduces byte for byte even when the world does not.
+  Bonferroni across sweep points, because "every point contains zero" is a conjunction and
+  two points at 95% land near 90%.
 - **A world now states which kind of reproduction it can offer** (`newlife-prereg` rule
   seven, plus an `@reproduction_class` line in the `prereg.md` template). S0 asks for a
   byte-identical rerun and a false S0 becomes `INVALID` — no conclusion at all, not a
