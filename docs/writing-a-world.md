@@ -50,6 +50,16 @@ composite = build_composite(
     contract=True, interval=DT)                          # ← see the warning below
 ```
 
+> **`"add"` is a claim about this wrapper, not a default.** The binding's third field says
+> whether the value the process returns is a *change* or a *level*, and nothing in the
+> process's signature reveals which — `outputs()` gives a type, never that. It is `"add"`
+> here because this `update` returns
+> `float(self.rr[n]) - float(state["species"][n])`, a difference. **Wrapping a simulator
+> that returns absolute values and copying this line writes the level in as though it were
+> an increment.** Nothing raises: the run produces plausible numbers in the right units,
+> and the pilot records them as covered. Read what your `update` returns and say which of
+> the two it is before you write the binding.
+
 Writing anywhere you did not claim raises `newlife.core.errors.CommitAuthorityError` —
 **from the contract layer, not from your solver**. That distinction matters: "an exception
 was raised" is not the same as "the contract stopped it", and a criterion that conflates
