@@ -220,7 +220,7 @@ criteria before changing the model, every single round.**
 
 **Write it to `questions/<slug>/goal.md`.** `newlife init` scaffolds that file already,
 **deliberately red**: `newlife freeze` refuses until these six anchors are filled in, and
-`newlife check` reports the same gate. **Whatever you cannot state, the freeze rejects.**
+**Whatever you cannot state, the freeze rejects.**
 
 If `questions/<slug>/origin/goal-draft.md` exists, start from it: §1, §3 and §4 are
 pre-filled from the exploration map; the six anchors are not, because no map can supply a

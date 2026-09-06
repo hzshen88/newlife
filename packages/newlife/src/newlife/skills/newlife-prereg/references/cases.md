@@ -72,3 +72,14 @@ use: judging one LLM against another at one order of magnitude needed more than 
 two seconds each, so the method said so instead of returning a number that would have looked
 fine. That output tells you what the question would cost — which is more than a wrong N
 tells you.
+
+## Rule five (now a line in the checklist)
+
+    the registration says  verdict = S0 ∧ S1 ∧ S2 ∧ S3
+    the runner computed only three — **and nobody would notice**
+
+The conjunction is one unit weaker than it looks. Check the reverse too: **a unit in the
+artifact that the registration never declared** is a criterion added after the fact.
+
+`newlife run` checks this after the verdict. **It caught a real misalignment the
+first time it ran.**

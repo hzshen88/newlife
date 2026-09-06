@@ -177,20 +177,7 @@ simulation), then have the runner feed it synthetic counterexamples at runtime a
 it returns false. **Write each demonstration as an independent statement** — no chained
 comparisons.
 
-Run `newlife check` — its vacuous-criterion scan catches the first kind.
-
----
-
-## Rule five: the unit names must match the runner's keys, one for one
-
-    the registration says  verdict = S0 ∧ S1 ∧ S2 ∧ S3
-    the runner computed only three — **and nobody would notice**
-
-The conjunction is one unit weaker than it looks. Check the reverse too: **a unit in the
-artifact that the registration never declared** is a criterion added after the fact.
-
-The unit-alignment gate in `newlife check` checks this. **It caught a real misalignment the
-first time it ran.**
+The freeze runs a vacuous-criterion scan and refuses the first kind.
 
 ---
 
@@ -251,47 +238,14 @@ for two other kinds, so state which one you are in.
 > **A green S0 on a seeded world proves the seed was fixed, not that the conclusion
 > survives a different one.** Those are different claims and only one of them is science.
 
-### How many repetitions — and it is not a number anyone can give you
+### How many repetitions
 
-`seeded` and `stochastic` both owe a repetition count, and **there is no rule that supplies
-it**. It depends on the effect you care about, on the shape of your noise, and on what a
-sample costs you — all three differ per question. What can be given is the sequence of
-questions whose answers determine it, and a gate that refuses when they are unanswered.
-
-**Answer these before freezing** (they go in `judgement-design.json` beside the
-registration; the freeze pins it with the criteria):
-
-| | | Why it cannot be skipped |
-|---|---|---|
-| **M1** | The **effect worth detecting**, in your quantity's own units | Without a target, a convergence rule has nothing to aim at and ends up asking a proxy |
-| **M2** | Which **location statistic** is compared, and which estimates spread — **plus why it suits your data's shape** | The heaviest-consequence answer of the six; see below |
-| **M3** | The false-alarm and miss rates you accept | "It could not be detected" is uninterpretable without them |
-| **M4** | How N follows from M1–M3 | So a reader can re-derive it rather than take it |
-| **M5** | The budget past which you declare the question **undecidable for now** | Without a ceiling the method returns a number nobody can run and nobody admits to |
-| **M6** | Whether the data is heavy-tailed, and if so why M2 is still defensible | Measured, not asserted — the gate cross-checks it |
-
-**The order matters: shape first, then statistic, then N.** The regular bootstrap fails to
-estimate the distribution of a sample *mean* under heavy tails, while robust locations keep
-their power there (measured: `references/cases.md`). Choosing the
-statistic is not a matter of taste; it is the difference between decidable and not.
-
-**Derive N by bootstrap power analysis, not by a formula.** `n = 2(z+z)²σ²/δ²` assumes
-normality and equal variance and describes a t-test — three things that are typically false
-here. Instead: take the pilot as an empirical distribution, shift it by the effect, and for
-each candidate N run **the same test you will judge with**, counting how often it fires.
-Take the smallest N that reaches your power. Multiple comparisons need no extra correction
-because the real test already contains them.
-
-**"Undecidable within this budget" is a correct answer.** It tells you what the question
-would cost, which is more than a wrong N tells you (the first real use returned it:
-`references/cases.md`).
-
-**What this covers, and what it does not.** The derivation above is for **two groups
-compared on a location statistic**. It does **not** cover monotone trends, more than two
-groups, slopes, proportions, or variance itself. That boundary is not academic: the
-milestone that produced this method had, as its own scientific question, whether a quantity
-rises monotonically — **a shape this method cannot judge.** Forcing such a question into a
-two-group derivation yields a number unrelated to what is being asked.
+`seeded` and `stochastic` owe a repetition count, and **there is no rule that supplies it**:
+it depends on the effect worth detecting, the shape of the noise and what a sample costs.
+**Before writing `judgement-design.json`, read `references/design.md`** — the six questions
+(M1–M6) whose answers determine N, why the statistic is chosen before N, why N comes from a
+bootstrap power analysis and not a formula, and the scope (two groups compared on a
+location statistic; not trends, not proportions, not more than two groups).
 
 **The freeze runs this check** when the `@reproduction_class` anchor in `prereg.md` says
 `seeded` or `stochastic`: the six answers must be present with their reasons, and **the
@@ -312,6 +266,24 @@ registration that passes every gate and rests on something nobody wrote down.
 
 ---
 
+## Anchors that waive or record
+
+Every override is written down where the gate reads it. These are all of them:
+
+| Anchor | File | Meaning |
+|---|---|---|
+| `<!--@goal_gate: not_applicable — why-->` | goal.md | the goal stage does not apply (a toolchain smoke test, a reproduction to learn the tooling) |
+| `<!--@pilot_gate: not_applicable — why-->` | prereg.md | the pilot stage does not apply |
+| `<!--@pilot_gate: no_blind_waived — why-->` | prereg.md | the pilot applies, nothing is blind, and here is why that is honest |
+| `<!--@goal_changed: what moved, and why it is not a response to the pilot-->` | prereg.md | not a waiver: the record of a commitment that moved after the pilot |
+| `reason=… waived_by=…` inside `@evidence` | goal.md | the literature search was skipped, by a named person, for a stated reason |
+| `split_waived=…` inside `@size_estimate` | goal.md | two failure modes kept in one question, and why |
+
+A waiver is checked for existence, never for truth. It puts the decision on the record so
+that closeout cannot pretend it was never made.
+
+---
+
 ## Before freezing
 
 - [ ] **run a pilot** covering every quantity that appears in a criterion (rule one) — `newlife pilot`; the freeze checks `pilot/ledger.jsonl`
@@ -326,9 +298,15 @@ registration that passes every gate and rests on something nobody wrote down.
 - [ ] §5 states **what this round does not establish**; at closeout "we showed A" must never
       stand in for "B also holds"
 - [ ] `git log -- <prereg path>` is empty — **the freeze must be its first commit**
+- [ ] every unit name in §2 (`S0`, `S1`, …) is the prefix of the runner's key for it
+      (`S2_increases_across_sweep`), one for one, and the artifact carries no unit the
+      registration never declared — `newlife run` checks the alignment (`references/cases.md`:
+      it caught a conjunction one unit weaker than it read, the first time it ran)
 - [ ] `newlife pilot` and `newlife freeze` were run from the **same** newlife — two
       installations on one machine are two environments, and the freeze refuses when the
-      last pilot's differs
+      last pilot's differs; installed a package since the last pilot? A short pilot on a few
+      configurations is enough — coverage is the union of every pilot, the environment
+      check reads only the latest
 - [ ] **the reproduction class is stated** (rule seven), and if it is `seeded` or
       `stochastic`, the unit that class obliges you to add is actually in the conjunction
 - [ ] **everything the question needs is installed now** — S1 compares the live environment

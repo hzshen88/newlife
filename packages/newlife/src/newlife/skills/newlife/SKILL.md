@@ -39,8 +39,8 @@ type them. This exact misreading has happened.
 6. **You ask before freezing. They say yes. You run `newlife freeze`.** The one
    irreversible step. Two gates (goal, pilot) refuse on their own if something is missing;
    you relay the reason in their words.
-7. **You run the verdict**, `check`, commit `results/` (ask first), `audit`, and report
-   H1 / H0 / INVALID with the five gates. The closeout goes into `goal.md` §5 and the map.
+7. **You run the verdict** (it also checks that the units line up with the registration),
+   commit `results/` (ask first), `audit`, and report H1 / H0 / INVALID. The closeout goes into `goal.md` §5 and the map.
 
 Two moments are theirs alone: the freeze, and committing results.
 
