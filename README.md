@@ -4,6 +4,11 @@
 [![lint-and-test](https://github.com/hzshen88/newlife/actions/workflows/lint.yml/badge.svg)](https://github.com/hzshen88/newlife/actions/workflows/lint.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
+<p align="center">
+  <img src="docs/demo/first-question.gif" alt="newlife: one question from start to a passing audit, 75 seconds" width="900">
+</p>
+<p align="center"><sub>One question from <code>newlife start</code> to a passing audit, 75 seconds, real output. The written version is <a href="docs/first-question.md">docs/first-question.md</a>; <a href="docs/demo/first-question.mp4">MP4</a>.</sub></p>
+
 **Turn a curiosity into a question that can be settled, freeze what would count as an
 answer before running anything, and leave a verdict that can be audited from git alone.**
 
