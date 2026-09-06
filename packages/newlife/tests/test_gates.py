@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -104,6 +105,12 @@ def test_repository_gate_selftest_passes() -> None:
     """
     script = Path(__file__).resolve().parents[3] / "scripts/gates/gate_selftest.py"
     if not script.exists():
+        # **在 CI 里不许 skip。** 一条 skip 掉的测试和一条通过的测试在 `-q` 输出里
+        # 都是绿的；路径判断一旦失效，这条防线会无声消失，而那正是它被加进来要防的
+        # 事情本身。CI 置位 NEWLIFE_REPO_TESTS，那里找不到脚本就是硬失败。
+        if os.environ.get("NEWLIFE_REPO_TESTS"):
+            pytest.fail(f"NEWLIFE_REPO_TESTS 已置位但找不到 {script}——"
+                        "仓库级元自检没有真的跑，静默跳过会让整条防线消失")
         pytest.skip("仓库工具不随 wheel 发布；只有在源码树里才跑得到")
     proc = subprocess.run([sys.executable, str(script)], capture_output=True, text=True,
                           cwd=script.parents[2])

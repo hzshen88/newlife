@@ -33,5 +33,19 @@ jobs:
       # --extra process-bigraph 不是可选的：五个测试模块无条件 import bigraph_schema，
       # 缺它 pytest 在 collection 阶段就失败（ModuleNotFoundError: bigraph_schema）。
       - run: uv sync --package newlife --extra process-bigraph
+      # 门的**元自检**：把门拷进临时工作区、注入变异、要求每条都让门变红。
+      # 它自 4d10686 起坏了一天多无人知晓——那次重构改了自检语料
+      # corpus/goals/example.md 的正文却没重算 @frozen 哈希，基线一直是红的，
+      # 十四条 fixture 一条都没在守。当时发现不了是结构性的：这个脚本既不在 pytest
+      # 也不在 CI。**现在两处都在。** 必须在 uv sync 之后——`scripts/gates/` 下的
+      # 脚本并非全是 stdlib-only（纯 python 跑 goal_ready 前提即不成立）。
+      - name: gate selftest (mutations must turn each gate red)
+        run: uv run --package newlife python scripts/gates/gate_selftest.py
+
+      # NEWLIFE_REPO_TESTS：让需要源码树的测试在这里**不许 skip**。
+      # skip 掉的测试与通过的测试在 -q 输出里都是绿的——路径判断一旦失效，防线会
+      # 无声消失，而那正是它要防的事情本身。置位后找不到脚本即硬失败。
       - run: uv run --package newlife pytest packages/newlife/tests -q
         if: hashFiles('packages/newlife/tests/**') != ''
+        env:
+          NEWLIFE_REPO_TESTS: "1"
