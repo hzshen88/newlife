@@ -19,7 +19,9 @@
 
 **verdict = S0 ∧ S1 ∧ S2 ∧ S3.** Any one false → H0; **S0 false → INVALID**
 
-**Reproduction class** (state one; the gate below is what each one obliges you to add):
+**Reproduction class** (one word in the anchor below; `seeded` and `stochastic` make the freeze
+check `judgement-design.json`, rule seven; left as it is, the freeze treats the world as
+deterministic and says so):
 
 | | Your world | What S0 buys, and what you must add |
 |---|---|---|

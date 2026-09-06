@@ -43,7 +43,7 @@ import sys
 from pathlib import Path
 
 from newlife import provenance
-from newlife.gates import goal_ready, pilot_coverage
+from newlife.gates import goal_ready, judgement_design, pilot_coverage
 
 TEMPLATES = Path(__file__).resolve().parent / "templates"
 PREREG_SH = Path(__file__).resolve().parent / "prereg.sh"
@@ -165,6 +165,29 @@ def ensure_stamp_placeholder(prereg: Path) -> bool:
     return True
 
 
+def reproduction_class_gate(folder: Path) -> str | None:
+    """Rule seven at the freeze. Returns the class that applied, or None when refused.
+
+    One anchor decides everything: `seeded` and `stochastic` worlds must account for their
+    repetition count in `judgement-design.json` (the six questions, and an N that re-derives
+    from them); `deterministic` owes nothing beyond S0 as written. An absent or untouched
+    anchor is treated as deterministic and said aloud, so that the default is never silent.
+    """
+    cls = judgement_design.declared_class((folder / "prereg.md").read_text(encoding="utf-8"))
+    if cls in ("seeded", "stochastic"):
+        print(f"Reproduction class: {cls} — the repetition count must re-derive "
+              f"({judgement_design.DESIGN_FILE}).")
+        return cls if judgement_design.main([str(folder)]) == 0 else None
+    if cls == "deterministic":
+        print("Reproduction class: deterministic — S0 as written.")
+    else:
+        print("Reproduction class: not stated (prereg.md's @reproduction_class line is absent "
+              "or still the template's placeholder) — treated as deterministic, S0 as "
+              "written. Say `seeded` or `stochastic` there to have the repetition count "
+              "checked (newlife-prereg rule seven).")
+    return cls or "deterministic"
+
+
 def freeze(folder: Path, *, cwd: Path, data: tuple[Path, ...] = ()) -> int:
     """Freeze this question's criteria. **The freeze must be `prereg.md`'s first commit.**
 
@@ -232,6 +255,13 @@ def freeze(folder: Path, *, cwd: Path, data: tuple[Path, ...] = ()) -> int:
             "seen / blind / mechanical — or waive on the record, inside prereg.md:\n"
             "    <!--@pilot_gate: no_blind_waived ... why nothing is blind ...-->\n"
             "    <!--@pilot_gate: not_applicable ... why the stage does not apply ...-->")
+    reproduction_class = reproduction_class_gate(folder)
+    sys.stdout.flush()
+    if reproduction_class is None:
+        raise SystemExit(
+            "The repetition count is not accounted for (above), so the freeze is refused.\n"
+            f"Answer the six questions in {judgement_design.DESIGN_FILE} beside prereg.md\n"
+            "(newlife-prereg rule seven); the freeze pins that file with the criteria.")
     # env.lock: rewrite from the live environment, commit if that changed anything, and pin
     # it first — the runner's S1 and the audit's DATA arm both hang off this file.
     env_lock = folder / "env.lock"
@@ -245,6 +275,8 @@ def freeze(folder: Path, *, cwd: Path, data: tuple[Path, ...] = ()) -> int:
              f"question({folder.name}): env.lock refreshed at the freeze", "--", env_rel)
         print("  env.lock rewritten from the live environment and committed")
     pinned = [env_rel]
+    if reproduction_class in ("seeded", "stochastic"):
+        pinned.append(str((folder / judgement_design.DESIGN_FILE).resolve().relative_to(root)))
     for path in data:
         resolved = Path(path).resolve()
         if not resolved.is_file():

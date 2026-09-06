@@ -38,8 +38,8 @@ from pathlib import Path
 
 from newlife import provenance, scaffold, status
 from newlife.gates import (
-    goal_ready, pilot_coverage, silent_degradation_scan, unit_alignment,
-    vacuous_criterion_scan,
+    goal_ready, judgement_design, pilot_coverage, silent_degradation_scan,
+    unit_alignment, vacuous_criterion_scan,
 )
 
 SKILLS = Path(__file__).resolve().parent / "skills"
@@ -279,7 +279,8 @@ def _pilot(folder: Path) -> int:
                 if goal_md.exists() else None)
     entry = {"at": stamp, "out": str(out.relative_to(folder)),
              "returncode": proc.returncode, "units": units,
-             "env_sha256": provenance.env_digest(), "goal_sha256": goal_sha}
+             "env_sha256": provenance.env_digest(), "goal_sha256": goal_sha,
+             "python": sys.executable}
     with (folder / "pilot" / "ledger.jsonl").open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(entry) + "\n")
     print(f"\nPilot recorded in pilot/ledger.jsonl: {' '.join(units) or 'no unit recognised'} "
@@ -309,6 +310,11 @@ def _check(folder: Path) -> int:
         ("silent degradation", lambda: silent_degradation_scan.main([str(runner)])),
         ("registration <-> runner unit alignment", lambda: unit_alignment.main([str(folder)])),
     ]
+    # Rule seven applies only to worlds that declare they are not deterministic.
+    if judgement_design.declared_class(
+            (folder / "prereg.md").read_text(encoding="utf-8")) in ("seeded", "stochastic"):
+        checks.append(("judgement design (enforced at freeze)",
+                       lambda: judgement_design.main([str(folder)])))
     failed = []
     for name, run in checks:
         print(f"-- {name} " + "-" * max(0, 46 - len(name)))

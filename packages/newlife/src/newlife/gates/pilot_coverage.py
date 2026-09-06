@@ -66,6 +66,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import sys
 import json
 import pathlib
 import re
@@ -185,13 +186,13 @@ def goal_change_note(prereg_text: str) -> str | None:
     return m.group(1).strip() if m else None
 
 
-def latest_goal(ledger: pathlib.Path) -> str | None:
-    """The goal digest of the **most recent** pilot run, or None if unrecorded.
+def _latest(ledger: pathlib.Path, key: str) -> str | None:
+    """The value `key` holds in the **most recent** pilot run that recorded it, or None.
 
-    Most recent, for the same reason as `latest_env`: what matters is whether the
-    commitments moved since the last time you looked at the numbers. None covers a
-    missing ledger and records written before `goal_sha256` existed — those must stay
-    green or every registration already in flight becomes unfreezable.
+    Most recent, not "any run matched": a pilot in an environment you have since left, or
+    under commitments you have since rewritten, proves nothing about what is about to be
+    frozen. None covers a missing ledger and records written before the key existed —
+    those must stay green, or every registration already in flight becomes unfreezable.
     """
     if not ledger.exists():
         return None
@@ -199,38 +200,36 @@ def latest_goal(ledger: pathlib.Path) -> str | None:
     for line in ledger.read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
-        entry = json.loads(line)   # malformed lines raise, same rule as ledger_units
-        recorded = entry.get("goal_sha256")
-        if isinstance(recorded, str) and recorded:
-            newest = recorded
+        value = json.loads(line).get(key)   # malformed lines raise, same rule as ledger_units
+        if isinstance(value, str) and value:
+            newest = value
     return newest
+
+
+def latest_goal(ledger: pathlib.Path) -> str | None:
+    """The goal-commitments digest of the most recent pilot run, or None."""
+    return _latest(ledger, "goal_sha256")
 
 
 def latest_env(ledger: pathlib.Path) -> str | None:
-    """The environment digest of the **most recent** pilot run, or None if unrecorded.
+    """The environment digest of the most recent pilot run, or None."""
+    return _latest(ledger, "env_sha256")
 
-    Most recent, not "any run matched": a pilot in an environment you have since left
-    proves nothing about the one you are about to freeze. None covers both a missing
-    ledger and records written before `env_sha256` existed — those **must** stay green,
-    or every registration already in flight would become unfreezable.
-    """
-    if not ledger.exists():
-        return None
-    newest: str | None = None
-    for line in ledger.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        entry = json.loads(line)   # malformed lines raise, same rule as ledger_units
-        recorded = entry.get("env_sha256")
-        if isinstance(recorded, str) and recorded:
-            newest = recorded
-    return newest
+
+def latest_python(ledger: pathlib.Path) -> str | None:
+    """The interpreter the most recent pilot ran under, or None — named in the refusal
+    when the environment differs, because two newlife installations on one machine are the
+    common cause and a digest alone does not say so."""
+    return _latest(ledger, "python")
+
+
 
 
 def check(rows: dict[str, str], ledger: set[str], waived: str | None,
           piloted_env: str | None = None, live_env: str | None = None,
           piloted_goal: str | None = None, live_goal: str | None = None,
-          goal_note: str | None = None) -> list[str]:
+          goal_note: str | None = None,
+          piloted_python: str | None = None, live_python: str | None = None) -> list[str]:
     """A pure predicate over parsed inputs — which is what lets the selftest prove it can go red."""
     if waived is not None and waived.startswith("not_applicable"):
         return []
@@ -248,6 +247,10 @@ def check(rows: dict[str, str], ledger: set[str], waived: str | None,
             f"freeze would record. Run `newlife pilot` again, then freeze. Finding this "
             f"out after the freeze leaves no move: the freeze is irreversible, and "
             f"repairing the environment afterwards turns S1 red."
+            + (f" The pilot ran under {piloted_python} and this freeze under {live_python}: "
+               f"two newlife installations are two environments — run pilot and freeze "
+               f"from the same one."
+               if piloted_python and live_python and piloted_python != live_python else "")
         )
     # **What is being bet on must not have moved since the pilot.** Rule one sends the pilot
     # to look at every quantity a criterion names, so it can hand you the answer to the main
@@ -489,6 +492,16 @@ def _selftest() -> int:
         if ok
         else "  selftest FAILED."
     )
+    # The refusal must name both interpreters when the environment differs and the
+    # ledger recorded where the pilot ran — two newlife installations on one machine are
+    # the common cause, and two digests alone do not say so.
+    named = check(rows, READY_LEDGER, None, piloted_env="a" * 64, live_env="b" * 64,
+                  piloted_python="/venv-a/bin/python", live_python="/venv-b/bin/python")
+    if not any("/venv-a/bin/python" in m and "/venv-b/bin/python" in m for m in named):
+        print("  [FAIL] environment changed under a different interpreter: neither path named")
+        ok = False
+    else:
+        print("  [RED] environment changed, both interpreters named")
     return 0 if ok else 1
 
 
@@ -513,7 +526,8 @@ def main(argv: list[str] | None = None) -> int:
     problems = check(piloted(text), ledger_units(ledger), waiver(text),
                      piloted_env=latest_env(ledger), live_env=provenance.env_digest(),
                      piloted_goal=latest_goal(ledger), live_goal=live_goal,
-                     goal_note=goal_change_note(text))
+                     goal_note=goal_change_note(text),
+                     piloted_python=latest_python(ledger), live_python=sys.executable)
     for p in problems:
         print(f"[FAIL] {prereg.name}: {p}")
     if problems:

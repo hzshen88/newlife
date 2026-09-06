@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """The gate for **how the sample size was arrived at** — not for whether it was wise.
 
 A `stochastic` registration has to say how many repetitions it will run. The twenty-first
@@ -28,9 +27,29 @@ import argparse
 import json
 import math
 import pathlib
+import re
 import sys
 
 DESIGN_FILE = "judgement-design.json"
+CLASSES = ("deterministic", "seeded", "stochastic")
+CLASS_ANCHOR = re.compile(r"<!--@reproduction_class:\s*([^>]*?)-->")
+
+
+def declared_class(prereg_text: str) -> str | None:
+    """The reproduction class prereg.md declares, or None.
+
+    None covers an absent anchor and the template's untouched placeholder (it lists all
+    three words with `|` between them). The freeze treats None as `deterministic` and says
+    so; only `seeded` and `stochastic` oblige a `judgement-design.json` (rule seven).
+    """
+    m = CLASS_ANCHOR.search(prereg_text)
+    if not m:
+        return None
+    body = m.group(1).strip().lower()
+    first = body.split()[0].rstrip(",.;:") if body else ""
+    if "|" in body or first not in CLASSES:
+        return None
+    return first
 
 
 def load(folder: pathlib.Path) -> tuple[dict | None, list[str]]:
@@ -258,7 +277,7 @@ def main(argv: list[str] | None = None) -> int:
     if problems:
         print(f"\nThe repetition count is not accounted for: {len(problems)} item(s).")
         return 1
-    print(f"Judgement design: every quantity answers the six, and each n re-derives.")
+    print("Judgement design: every quantity answers the six, and each n re-derives.")
     return 0
 
 
