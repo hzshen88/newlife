@@ -1,6 +1,6 @@
 # 复现类别的可声明性
 
-**Frozen at commit:** _pending_
+**Frozen at commit:** 876ed29205e44535cadaf0d93db827bcd736116d
 
 - **slug**：`newlife-reproduction-class-declarability`
 - **上游**：goal（exloop-archive，frozen `1b0a113`）· design（同处，`38b8997`）
