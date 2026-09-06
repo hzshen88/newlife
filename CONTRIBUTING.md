@@ -75,10 +75,11 @@ reference implementation, so it needs Julia and a checkout of ParaLife, which is
 
 ## How a change to newlife itself gets accepted
 
-Anything that changes what a verdict can mean goes through the same pipeline the tool
-ships: a goal, a preregistration frozen before the implementation, a runner, a bundle under
-`results/`, a world document. [`docs/milestones.md`](docs/milestones.md) describes the
-pipeline and lists every milestone so far. Fixes to the harness, documentation and
+Anything that changes what a verdict can mean is a question folder in this repository,
+exactly as for a user: `questions/<slug>/` with `goal.md`, a `prereg.md` frozen before the
+implementation, `verdict.py`, `results/`, the closeout in `goal.md` §5, and a `README.md`
+holding the design rationale. One row goes into [`docs/milestones.md`](docs/milestones.md);
+`scripts/check_record.py` reconciles the two. Fixes to the harness, documentation and
 packaging do not need a milestone; open a pull request.
 
 ## Releasing

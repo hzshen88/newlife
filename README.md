@@ -50,7 +50,7 @@ guessing one.
    own if the goal is unfilled or a criterion was never piloted. Your environment and any
    downloaded data are pinned by hash at this moment.
 7. **Verdict.** H1, H0 or INVALID, computed by your runner from the frozen conjunction,
-   never written by hand, with five gates reported and an audit from git history alone.
+   never written by hand, with an audit from git history alone.
 
 Two moments are yours alone: the freeze, and committing the results.
 
@@ -63,10 +63,11 @@ pinned data file still hash to what was frozen. The runner's own units add the o
 the run reproduces itself byte for byte, the packages installed at run time are exactly the
 ones recorded, and every criterion proves at run time that it *can* go red.
 
-`newlife check` runs five gates against your own files: goal readiness, pilot coverage, a
-scan for criteria that are true by construction, a scan for parse failures that silently
-fall back to a convenient default, and an alignment check that the units `prereg.md`
-declares are exactly the units the runner computes.
+The freeze refuses on five checks against your own files: goal readiness, pilot coverage,
+the reproduction class (a `seeded` or `stochastic` world must account for its repetition
+count), a scan for criteria that are true by construction, and a scan for parse failures
+that silently fall back to a convenient default. The run then checks that the units
+`prereg.md` declares are exactly the units the runner computed.
 
 A registration whose criteria turn out to be defective is left as `INVALID`, exactly as it
 stands, and a new one is opened. Never re-frozen. That record is how a conclusion was
@@ -85,7 +86,6 @@ newlife freeze questions/2026-09-05-my-question     # this commit is the proof
 #   … --data questions/2026-09-05-my-question/data/*.csv   # reading downloaded data? pin it
 newlife run    questions/2026-09-05-my-question
 newlife status questions/2026-09-05-my-question     # stage, blockers, next step, decisions
-newlife check  questions/2026-09-05-my-question     # five gates
 git add questions/2026-09-05-my-question/results && git commit -m "verdict"
 newlife audit  questions/2026-09-05-my-question
 ```

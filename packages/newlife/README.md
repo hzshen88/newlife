@@ -43,7 +43,7 @@ guessing one.
    own if the goal is unfilled or a criterion was never piloted. Your environment and any
    downloaded data are pinned by hash at this moment.
 7. **Verdict.** H1, H0 or INVALID, computed by your runner from the frozen conjunction,
-   never written by hand, with five gates reported and an audit from git history alone.
+   never written by hand, with an audit from git history alone.
 
 Two moments are yours alone: the freeze, and committing the results.
 
@@ -64,7 +64,7 @@ reached, not a failure to tidy away.
 
 ```
 newlife init <slug>       newlife pilot <folder>      newlife freeze <folder> [--data FILE...]
-newlife run <folder>      newlife status <folder>     newlife check <folder>
+newlife run <folder>      newlife status <folder>
 newlife audit <folder>
 newlife skills install    newlife skills path         newlife blocks
 ```

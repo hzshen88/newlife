@@ -24,8 +24,24 @@ has its own version and its own repository. Dates are the PyPI upload dates.
   freezing, because two newlife installations on one machine are the usual cause; the
   ledger records `python`.
 
+### Removed
+
+- **`newlife check`.** Its two scans of the runner (criteria true by construction, parse
+  failures that fall back to a default) now run inside `newlife freeze` and refuse it — a
+  vacuous criterion frozen costs the round, so the check belongs before the irreversible
+  step. Its unit-alignment check runs inside `newlife run`, after the verdict, where the
+  artifact it needs exists. Nothing is advisory any more; every check has one moment.
+
 ### Changed
 
+- The freeze lists files under `data/` it is not pinning, so a dataset the verdict reads
+  and nobody pinned leaves a trace; it does not refuse.
+- The environment-drift refusal says that a short pilot on a few configurations is enough
+  after installing a package: coverage is the union of every pilot, the check reads only
+  the latest.
+- `newlife-prereg`: rule five is a checklist line (`run` enforces it); rule seven keeps the
+  class declaration and points at `references/design.md` for the six questions behind the
+  repetition count; the anchors that waive or record are listed in one table.
 - `newlife-prereg` and `newlife-goal` keep rules and checklists in `SKILL.md`; the cases,
   measurements and limits behind them moved to `references/` (`cases.md`, `evidence.md`),
   which ship in the wheel and install with the skill.

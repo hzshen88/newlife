@@ -19,8 +19,8 @@ $ newlife status questions/<slug>
 
 **What happened, and what you expected instead**
 
-If a gate or the audit refused something, paste its output as it is (`newlife check`,
-`newlife freeze`, `newlife audit`). A refusal that turns out to be right is still worth
+If a gate or the audit refused something, paste its output as it is (`newlife freeze`,
+`newlife run`, `newlife audit`). A refusal that turns out to be right is still worth
 reporting when its message did not make the reason clear.
 
 **Environment**: OS, Python version, and whether `git` is on PATH.

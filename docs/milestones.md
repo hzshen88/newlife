@@ -30,26 +30,28 @@ are frozen artifacts and are left as they were produced.
 
 ## How a milestone gets accepted
 
-Every milestone goes through the same pipeline, and the order is the discipline, not a
-formality:
+A milestone of newlife is a question folder in this repository, exactly what the tool
+scaffolds for a user (since 2026-09-06; the twenty-two before it followed a longer pipeline
+whose frozen documents are private, see above):
 
 ```
-goal → question → plan → preregistration (frozen) → implementation → verdict runner → results bundle
+questions/<slug>/goal.md → prereg.md (newlife freeze) → implementation → verdict.py → results/ → goal.md §5
 ```
 
-- **goal**: what this work is meant to buy, stated against the pain-point list in
-  `docs/zh/design/proposal.md` §1.5, *before* the question narrows. It is checked again at
-  the end, and it is allowed, and has happened, for a milestone to reach a supported
-  hypothesis while its goal went backwards.
-- **question / plan / preregistration**: frozen with `prereg.sh freeze` before any
-  implementation code is written (private, see above).
-- **verdict runner**: computes the verdict mechanically from the frozen criteria.
-  `results/*/summary.json` is its output, never an edited file.
+- **goal.md**: what this work is meant to buy, with the six anchors the freeze requires,
+  *before* the question narrows. It is judged again at the end (§5, achieved / not_achieved
+  / regressed / not_applicable), and it is allowed, and has happened, for a milestone to
+  reach a supported hypothesis while its goal went backwards.
+- **README.md** in the folder: the design rationale — what was compared and why, what was
+  ruled out — the part the tool deliberately does not ask a user for.
+- **prereg.md**: frozen by `newlife freeze` before the implementation exists; `results/`
+  is what `verdict.py` computed, never an edited file.
+- **One row** in the table below. `scripts/check_record.py` reconciles the folders against
+  it and goes red on any missing cell; the older bundles under `results/` keep their older
+  six-cell record.
 
 The two failure modes this ordering exists to prevent are both on record in the proposal's
 §8: freezing criteria after seeing results, and building for a user who does not exist yet.
-`scripts/check_record.py` reconciles the bundles against the world documents, the proposal
-and this table, and goes red on any missing cell.
 
 ## Verdicts
 
