@@ -39,6 +39,17 @@ blind — in prose. **Prose does not stop a freeze.** This gate does.
    which the runner was **never once executed**, and the discovery comes at run time,
    after the one irreversible step, when repairing the environment would itself turn S1
    red. A ledger with no digest (written before this existed) stays green.
+5. **The commitments in `goal.md` did not move between the pilot and the freeze.** Rule
+   one sends the pilot to look at every quantity a criterion names, so it may hand you the
+   answer to the main criterion before anything is frozen; changing what you are betting
+   on afterwards is HARKing and leaves no trace in any file. Four anchors are digested at
+   pilot time and compared here — `counterparty`, `attack_layer`, `decides`,
+   `who_changes_behavior`. **Not the whole file**: §5's closeout is written after the run
+   and §1's prose legitimately grows. A legitimate change is recorded, not forbidden:
+
+       <!--@goal_changed: what moved, and why it is not a response to the pilot-->
+
+   A ledger with no goal digest (written before this existed) stays green.
 
 ## What is not mechanical
 
@@ -54,6 +65,7 @@ the ledger — that judgement stays with the person, the way it always did.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import pathlib
 import re
@@ -62,6 +74,12 @@ from newlife import provenance
 
 TABLE_ROW = re.compile(r"^\|\s*\*\*([A-Z]+\d+)\*\*\s*\|")
 ANCHOR = re.compile(r"<!--@pilot_gate:\s*([^>]*?)-->")
+GOAL_ANCHOR = re.compile(r"<!--@([A-Za-z0-9_.\-]+):\s*([^>]*?)-->")
+GOAL_CHANGED = re.compile(r"<!--@goal_changed:\s*([^>]*?)-->")
+COMMITMENTS = ("counterparty", "attack_layer", "decides", "who_changes_behavior")
+"""The four anchors the pilot is not entitled to move. `evidence` and `size_estimate`
+are deliberately absent: revising a source count or an estimate is bookkeeping, not a
+change to what is being bet on."""
 UNIT_KEY = re.compile(r"^([A-Z]+\d+)(?:_|$)")
 VALUES = ("seen", "blind", "mechanical")
 
@@ -139,6 +157,55 @@ def ledger_units(ledger: pathlib.Path) -> set[str]:
     return found
 
 
+def goal_commitments(goal_text: str) -> str | None:
+    """A digest of the four `goal.md` anchors that fix what is being bet on, or None.
+
+    Whitespace inside an anchor body is normalised, so reflowing a line does not read as
+    a changed commitment. None when no commitment anchor parses at all — an unfilled
+    `goal.md` is `goal_ready`'s business, not this gate's, and reporting it twice would
+    send the author to fix the same thing from two directions.
+    """
+    found: dict[str, str] = {}
+    for m in GOAL_ANCHOR.finditer(goal_text):
+        name = m.group(1).lower()
+        if name in COMMITMENTS:
+            found[name] = " ".join(m.group(2).split())
+    if not found:
+        return None
+    blob = "\n".join(f"{k}={found[k]}" for k in sorted(found))
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()
+
+
+def goal_change_note(prereg_text: str) -> str | None:
+    """The body of a `<!--@goal_changed: ...-->` anchor in prereg.md, or None.
+
+    Same `>`-stops-the-body rule as every other anchor in this project.
+    """
+    m = GOAL_CHANGED.search(prereg_text)
+    return m.group(1).strip() if m else None
+
+
+def latest_goal(ledger: pathlib.Path) -> str | None:
+    """The goal digest of the **most recent** pilot run, or None if unrecorded.
+
+    Most recent, for the same reason as `latest_env`: what matters is whether the
+    commitments moved since the last time you looked at the numbers. None covers a
+    missing ledger and records written before `goal_sha256` existed — those must stay
+    green or every registration already in flight becomes unfreezable.
+    """
+    if not ledger.exists():
+        return None
+    newest: str | None = None
+    for line in ledger.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        entry = json.loads(line)   # malformed lines raise, same rule as ledger_units
+        recorded = entry.get("goal_sha256")
+        if isinstance(recorded, str) and recorded:
+            newest = recorded
+    return newest
+
+
 def latest_env(ledger: pathlib.Path) -> str | None:
     """The environment digest of the **most recent** pilot run, or None if unrecorded.
 
@@ -161,7 +228,9 @@ def latest_env(ledger: pathlib.Path) -> str | None:
 
 
 def check(rows: dict[str, str], ledger: set[str], waived: str | None,
-          piloted_env: str | None = None, live_env: str | None = None) -> list[str]:
+          piloted_env: str | None = None, live_env: str | None = None,
+          piloted_goal: str | None = None, live_goal: str | None = None,
+          goal_note: str | None = None) -> list[str]:
     """A pure predicate over parsed inputs — which is what lets the selftest prove it can go red."""
     if waived is not None and waived.startswith("not_applicable"):
         return []
@@ -179,6 +248,22 @@ def check(rows: dict[str, str], ledger: set[str], waived: str | None,
             f"freeze would record. Run `newlife pilot` again, then freeze. Finding this "
             f"out after the freeze leaves no move: the freeze is irreversible, and "
             f"repairing the environment afterwards turns S1 red."
+        )
+    # **What is being bet on must not have moved since the pilot.** Rule one sends the pilot
+    # to look at every quantity a criterion names, so it can hand you the answer to the main
+    # criterion before the freeze; flipping H1 afterwards would pass every other gate and
+    # leave no trace in any file. This is the only gate that can see it. A change is not
+    # forbidden — it is recorded, so that "we confirmed A" and "A was chosen after seeing B"
+    # cannot become one sentence at closeout.
+    if piloted_goal and live_goal and piloted_goal != live_goal and goal_note is None:
+        problems.append(
+            "goal.md's commitments changed after the last pilot (counterparty / "
+            "attack_layer / decides / who_changes_behavior). The pilot may change **how** "
+            "you measure, never **what** you measure or which way you expect it to go — "
+            "see newlife-prereg rule one. If the change is legitimate (a re-pointing at "
+            "data never read, a fallback to a hypothesis written before the pilot), record "
+            "it: <!--@goal_changed: what moved, and why it is not a response to the "
+            "pilot--> in prereg.md."
         )
     if not rows:
         problems.append(
@@ -230,6 +315,32 @@ READY = """
 only goes green."""
 READY_LEDGER = {"S0", "S1", "S2", "S3"}
 
+GOAL_BEFORE = """
+<!--@evidence: literature_searched=yes, sources=3, verdict=unknown-->
+<!--@counterparty: iModulon authors, who hold that regulon overlap is the right yardstick-->
+<!--@attack_layer: conclusion-->
+<!--@decides: run-->
+<!--@who_changes_behavior: a method developer choosing a decomposition-->
+<!--@size_estimate: impl_lines=200, criteria=1, failure_modes=1-->
+"""
+"""The commitments as they stood when the pilot ran."""
+
+GOAL_AFTER = GOAL_BEFORE.replace(
+    "iModulon authors, who hold that regulon overlap is the right yardstick",
+    "nobody in particular; we now expect no effect",
+)
+"""The same file after the pilot answered the main criterion and the bet was rewritten.
+**This is the move the gate exists to catch.**"""
+
+GOAL_REFLOWED = GOAL_BEFORE.replace(
+    "iModulon authors, who hold that regulon overlap is the right yardstick",
+    "iModulon authors,  who hold that regulon overlap\n  is the right yardstick",
+)
+"""Same commitment, rewrapped. Must digest identically, or the gate cries wolf at every edit."""
+
+GOAL_ESTIMATE_REVISED = GOAL_BEFORE.replace("impl_lines=200", "impl_lines=340")
+"""Revising an estimate is bookkeeping, not a change to what is being bet on."""
+
 
 def _selftest() -> int:
     ok = True
@@ -242,9 +353,13 @@ def _selftest() -> int:
         want_red: bool,
         piloted_env: str | None = None,
         live_env: str | None = None,
+        piloted_goal: str | None = None,
+        live_goal: str | None = None,
+        goal_note: str | None = None,
     ) -> None:
         nonlocal ok
-        red = bool(check(rows, ledger, waived, piloted_env, live_env))
+        red = bool(check(rows, ledger, waived, piloted_env, live_env,
+                         piloted_goal, live_goal, goal_note))
         mark = "RED" if red else "green"
         if red != want_red:
             print(
@@ -326,6 +441,49 @@ def _selftest() -> int:
         piloted_env=None, live_env="b" * 64,
     )
 
+    # ── the commitments in goal.md ──
+    g1, g2 = goal_commitments(GOAL_BEFORE), goal_commitments(GOAL_AFTER)
+    if not g1 or g1 == g2:
+        print("  [FAIL] the two fixture goals must digest differently")
+        ok = False
+    if goal_commitments(GOAL_BEFORE) != goal_commitments(GOAL_REFLOWED):
+        print("  [FAIL] reflowing an anchor body must not change the digest")
+        ok = False
+    if goal_commitments(GOAL_BEFORE) == goal_commitments(GOAL_ESTIMATE_REVISED):
+        pass  # evidence/size_estimate are outside COMMITMENTS; see the next check
+    if goal_commitments(GOAL_BEFORE) != goal_commitments(GOAL_ESTIMATE_REVISED):
+        print("  [FAIL] revising size_estimate is bookkeeping and must not go red")
+        ok = False
+    if goal_commitments("no anchors here") is not None:
+        print("  [FAIL] a goal with no commitment anchor must digest to None")
+        ok = False
+    if goal_change_note("x <!--@goal_changed: re-pointed at RPE1--> y") != "re-pointed at RPE1":
+        print("  [FAIL] the goal_changed anchor did not parse")
+        ok = False
+    print(f"  [{'green' if ok else 'RED'}] goal digest: differs, stable under reflow, ignores bookkeeping")
+
+    case(
+        "the counterparty was rewritten after the pilot",
+        rows, READY_LEDGER, None, True,
+        piloted_goal=g1, live_goal=g2,
+    )
+    case(
+        "the commitments are the ones the pilot ran against",
+        rows, READY_LEDGER, None, False,
+        piloted_goal=g1, live_goal=g1,
+    )
+    case(
+        "changed, and recorded on the record",
+        rows, READY_LEDGER, None, False,
+        piloted_goal=g1, live_goal=g2,
+        goal_note="re-pointed at RPE1, never read; direction of H1 unchanged",
+    )
+    case(
+        "a ledger written before goal_sha256 existed",
+        rows, READY_LEDGER, None, False,
+        piloted_goal=None, live_goal=g2,
+    )
+
     print(
         "  selftest passed: parsers correct, every omission red, the ready registration green."
         if ok
@@ -350,8 +508,12 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     text = prereg.read_text(encoding="utf-8")
     ledger = args.folder / "pilot" / "ledger.jsonl"
+    goal = args.folder / "goal.md"
+    live_goal = goal_commitments(goal.read_text(encoding="utf-8")) if goal.exists() else None
     problems = check(piloted(text), ledger_units(ledger), waiver(text),
-                     piloted_env=latest_env(ledger), live_env=provenance.env_digest())
+                     piloted_env=latest_env(ledger), live_env=provenance.env_digest(),
+                     piloted_goal=latest_goal(ledger), live_goal=live_goal,
+                     goal_note=goal_change_note(text))
     for p in problems:
         print(f"[FAIL] {prereg.name}: {p}")
     if problems:

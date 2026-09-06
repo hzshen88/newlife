@@ -269,9 +269,17 @@ def _pilot(folder: Path) -> int:
     # runner ran *somewhere*: install a package afterwards and the freeze records the new
     # environment, S1 goes green against it, and nothing ever executed the runner there.
     # `pilot_coverage` compares this with the live environment at the freeze.
+    # **What was being bet on when this pilot ran.** Rule one sends the pilot to look at
+    # every quantity a criterion names, so it can hand you the answer to the main criterion
+    # before anything is frozen — and rewriting the bet afterwards leaves no trace in any
+    # file. `pilot_coverage` compares this digest at the freeze. Four anchors only, not the
+    # whole file: goal.md section 5 is written after the run and section 1's prose grows.
+    goal_md = folder / "goal.md"
+    goal_sha = (pilot_coverage.goal_commitments(goal_md.read_text(encoding="utf-8"))
+                if goal_md.exists() else None)
     entry = {"at": stamp, "out": str(out.relative_to(folder)),
              "returncode": proc.returncode, "units": units,
-             "env_sha256": provenance.env_digest()}
+             "env_sha256": provenance.env_digest(), "goal_sha256": goal_sha}
     with (folder / "pilot" / "ledger.jsonl").open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(entry) + "\n")
     print(f"\nPilot recorded in pilot/ledger.jsonl: {' '.join(units) or 'no unit recognised'} "

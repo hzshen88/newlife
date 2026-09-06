@@ -17,7 +17,7 @@ themselves — while the science underneath was right both times.**
 
 ---
 
-## Rule one: the pilot must cover **every** quantity that appears in a criterion
+## Rule one: the pilot must cover **every** quantity a criterion names — and may change only **how** they are measured
 
 **Not most of them.**
 
@@ -33,13 +33,6 @@ themselves — while the science underneath was right both times.**
 every measurable quantity in it. For each one ask: **have I actually run this and looked at
 the number?** If not, either measure it now or delete that criterion.
 
-**Where the line between this rule and rule three runs.** The pilot exercises the
-*measurement*: the method, its numerical stability, the run conditions, the order of
-magnitude of every quantity a criterion names. What stays unrun until after the freeze is
-the *test*: the parameter values, seeds or data subsets the confirmatory claim will be
-judged on. Piloting the measurement on other values is looking; piloting it on the values
-you are about to freeze is peeking.
-
 `newlife pilot <folder>` is how you look: it runs the runner into `pilot/<stamp>/` (never
 `results/`) and appends the units it produced to `pilot/ledger.jsonl`. **The freeze reads
 that ledger** — a row marked `seen` with no run behind it is refused. Anything that came in
@@ -48,6 +41,104 @@ says so.
 
 > **"I derived it, so I know" does not count as having looked.** Numerical integration,
 > floating point and discrete timesteps all get a vote.
+
+### What the pilot is entitled to move
+
+Obeying the paragraph above means that sooner or later you will look at the quantity the
+whole question turns on, and know the answer before anything is frozen. **That is not a
+corner case to be patched; it is the normal consequence of doing rule one properly**, and
+it is why this rule has a second half.
+
+Two cuts, and you need both:
+
+**Which values.** The pilot exercises the *measurement*: the method, its numerical
+stability, the run conditions, the order of magnitude of every quantity a criterion names.
+What stays unrun until after the freeze is the *test*: the parameter values, seeds or data
+subsets the confirmatory claim will be judged on. Piloting the measurement on other values
+is looking; piloting it on the values you are about to freeze is peeking. (This is also
+where rule three's blind unit comes from.)
+
+**Which parts of the question.** Independently of the values:
+
+| | Examples | After the pilot |
+|---|---|---|
+| **what you measure, and which way you expect it** | H1's direction, the counterparty, which mutation would turn it red (`newlife-goal` §3, piece 4) | **fixed.** Changing it after seeing the pilot is HARKing, however reasonable the reason sounds |
+| **how you measure** | the statistic, the construction of the null, the sweep range of a nuisance parameter, regularisation strength | **must be free to move** — calibrating this is what the pilot is *for* |
+| **where the line falls** | thresholds, N, power | **the pilot fixes the value; how it would be fixed was written down beforehand** (rule seven, M1–M6) |
+
+> **One line: the pilot may change how you measure, not what you measure or which way you
+> expect it to go.**
+
+This is why `goal.md` is written *before* the pilot rather than after. Its six anchors and
+its four pieces are the row-one commitments; the pilot is not entitled to any of them.
+
+### When the pilot has already answered the main criterion
+
+- **Failure six**: a pilot run under this rule measured S3 — the fraction of
+  narrow-interface modules in K562 — across 12 configurations, and every one fell inside
+  the surrogate null. The first conjunct of H1 was thereby known to be false. Freezing it
+  would have registered a question whose answer was already in hand: **it would have passed
+  every gate and been worth nothing**, in direct conflict with the first line of
+  `newlife-goal` §6 — *you genuinely do not know the answer while drafting.*
+
+Three legitimate exits, cheapest first:
+
+1. **Report it as an exploratory negative result and do not freeze.** A round that ends
+   here is not a failed round; it cost one pilot and it produced a real answer.
+2. **Keep H1's direction and re-point it at data that has never been read.** Conditions: the
+   new criterion may use only quantities never yet computed, and it must not be the very
+   difference the re-pointing was made to produce. If H1 has become **"no effect
+   reproduces"**, it owes a **power demonstration** — a blunt instrument reproduces a null
+   trivially.
+3. **Fall back to a secondary hypothesis already written in `goal.md` before the pilot** —
+   not one thought of now.
+
+**Illegitimate, and it is the only one**: seeing the pilot, flipping H1, and freezing it on
+the same data.
+
+At closeout, **"we confirmed A" and "A was chosen after seeing B" are two sentences.** They
+may not be merged, and the second does not disappear because the first is true.
+
+### Moving the "how" is not free either
+
+- **In a registered round**: swapping a random-gene-set null for a spectrum-preserving
+  surrogate moved the reading from **0.8–1.0 to 0.0–0.077** — and at the time nobody knew
+  that choice would flip the conclusion.
+- **In an exploration one day later** (no criteria existed, so this is an illustration of
+  the mechanism, not a seventh failure of this rule): a curve read as "regulon enrichment
+  rises 21× → 70× once the low-rank layer is stripped" survived a shuffled null and **died
+  against a spectrum-preserving one, which produced the same rising trend with no block
+  structure at all**. The signal was real; the reading of the trend was not.
+
+So every move in the "how" row owes two things:
+
+- **a record** — which null, which statistic, and the reading before and after; it goes in §0
+- **a two-sided check at the real data scale** — no false alarm on structureless data
+  (≤ 2× nominal) *and* detects a planted structure (> 4×). One direction is not a check, and
+  a pass at 1200×600 does not transfer to 11258×2000.
+
+### What this rule does not protect you from
+
+Three gaps, worth stating rather than papering over:
+
+- **Exit 1 has no landing place in the tooling.** `goal.md` §5's closeout is filled in after
+  a freeze; a round that correctly stops before freezing currently leaves a `pilot/`
+  directory and nothing that records what was concluded. Write it up by hand until that
+  exists.
+- **Blind data is not a blind analyst.** Exit 2 keeps the *data* unread, but after seeing
+  the first dataset your priors are already shaped by it — what you choose to measure next,
+  which direction you expect, what size feels convincing. Clinical trials answer this with
+  third-party analysis; at this scale there is no equivalent. Exit 2's conditions are
+  therefore **necessary and not sufficient**, and the residual belongs in §5 as a stated
+  limit of the conclusion.
+- **The gate sees the anchors move, not whether the move was honest.** `newlife pilot`
+  digests four `goal.md` anchors — `counterparty`, `attack_layer`, `decides`,
+  `who_changes_behavior` — into `pilot/ledger.jsonl`, and the freeze refuses when they
+  differ unless the change is recorded (`<!--@goal_changed: …-->`). What that buys is a
+  trace: rewriting the bet after the pilot can no longer happen silently. What it cannot
+  buy is judgement — a note saying "re-pointed at data never read" is checked for
+  existence, never for truth. And a bet that shifted only in your head, with the anchors
+  left untouched, is invisible to it.
 
 ---
 
@@ -260,6 +351,9 @@ registration that passes every gate and rests on something nobody wrote down.
 
 - [ ] **run a pilot** covering every quantity that appears in a criterion (rule one) — `newlife pilot`; the freeze checks `pilot/ledger.jsonl`
 - [ ] add the "Piloted?" column and mark every row; **confirm at least one is blind** (rule three)
+- [ ] the pilot did **not** move H1's direction, the counterparty, or which mutation turns it
+      red; every change to *how* you measure is recorded in §0 with the reading before and
+      after, and the new instrument passed a two-sided check (rule one, second half)
 - [ ] ask of each criterion "could it fail on normal data?"; move those that could into IC (rule two)
 - [ ] ask of each criterion "what would make it go red?"; no answer means it is vacuous (rule four)
 - [ ] write the criteria and the invalidation conditions **separately** — otherwise a

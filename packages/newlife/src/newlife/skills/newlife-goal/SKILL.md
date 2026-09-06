@@ -144,6 +144,19 @@ detect something**. "Multiply the list by 2" does not change its i-th element; "
 four decimals that get displayed" does not change the full-precision value in the JSON.
 **Declaring a pass on the strength of a mutation that detects nothing is self-deception.**
 
+### "In advance" means **before the pilot**, and the pilot may not take it back
+
+This file comes before `verdict.py` runs, and that ordering is the whole point. The pilot
+will later look at every quantity a criterion names (`newlife-prereg` rule one), so by the
+time the criteria are drafted **the answer may already be visible**. The four pieces above,
+and the six anchors in §5, are what you owe *before* that happens.
+
+Afterwards the pilot may recalibrate **how** a thing is measured — the statistic, the null,
+a nuisance parameter. It may not move the mechanism, the direction you expect, the
+counterparty, or piece 4. The second half of `newlife-prereg` rule one covers the case where
+the pilot has already answered the main criterion; the short version: **reporting it as an
+exploratory negative result is a legitimate ending, and flipping H1 on the same data is not.**
+
 ### The shape of the criteria
 
 - **A conjunction, not a weighted score.** Any one false makes the whole false.
@@ -260,7 +273,8 @@ the criteria are written with the `newlife-prereg` skill. Nothing is frozen yet.
 In order; any "no" sends it back:
 
 - [ ] you genuinely **do not know** the answer while drafting (a question whose answer is
-      known passes every gate and is worth nothing)
+      known passes every gate and is worth nothing) — and **"while drafting" means before
+      the pilot**, which is why this file comes first
 - [ ] **failure still produces something** — you can say where the boundary is
 - [ ] the counterparty is **named down to one specific claim**, not a sentence
 - [ ] the counterparty is betting **against** you, not with you
