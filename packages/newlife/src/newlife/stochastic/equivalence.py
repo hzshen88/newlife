@@ -51,8 +51,37 @@ def mean(xs: list[float]) -> float:
     return sum(xs) / len(xs)
 
 
+def median(xs: list[float]) -> float:
+    ys = sorted(xs)
+    m = len(ys) // 2
+    return ys[m] if len(ys) % 2 else (ys[m - 1] + ys[m]) / 2.0
+
+
+def trimmed_mean(xs: list[float], frac: float = 0.2) -> float:
+    """Drop `frac` from each tail, then average. 0.2 is the conventional choice."""
+    ys = sorted(xs)
+    k = int(len(ys) * frac)
+    kept = ys[k:len(ys) - k] or ys      # never trim everything away
+    return sum(kept) / len(kept)
+
+
+LOCATION = {"mean": mean, "median": median, "trimmed": trimmed_mean}
+"""**Which statistic is compared is a decision, not a default.**
+
+The regular bootstrap fails to estimate the distribution of a sample *mean* under heavy
+tails — rare values surface in resampling in the wrong proportions — while M-estimators
+and other robust locations keep their power there. So the shape of the data decides what
+to compare **before** it decides how many samples to take.
+
+The twenty-first milestone compared means on a batch containing -400. Its diagnosis at the
+time was "the sample size stopped at 8". That was half of it; **the other half is that the
+mean should not have been the thing compared.**
+"""
+
+
 def bootstrap_diff_ci(a: list[float], b: list[float], *, level: float,
-                      resamples: int, seed: int) -> tuple[float, float]:
+                      resamples: int, seed: int,
+                      kind: str = "mean") -> tuple[float, float]:
     """Percentile CI for `mean(a) - mean(b)`, resampling both groups.
 
     **Both groups are resampled**, not just one: the question is whether the *difference*
@@ -61,10 +90,11 @@ def bootstrap_diff_ci(a: list[float], b: list[float], *, level: float,
     if not a or not b:
         raise ValueError("bootstrap needs both groups non-empty — an empty group would "
                          "make the interval degenerate and quietly report 'equivalent'")
+    loc = LOCATION[kind]
     rng = random.Random(seed)
     na, nb = len(a), len(b)
-    diffs = [mean([a[rng.randrange(na)] for _ in range(na)])
-             - mean([b[rng.randrange(nb)] for _ in range(nb)])
+    diffs = [loc([a[rng.randrange(na)] for _ in range(na)])
+             - loc([b[rng.randrange(nb)] for _ in range(nb)])
              for _ in range(resamples)]
     diffs.sort()
     tail = (1.0 - level) / 2.0
@@ -74,7 +104,7 @@ def bootstrap_diff_ci(a: list[float], b: list[float], *, level: float,
 
 
 def equivalent(a: Samples, b: Samples, *, level: float, resamples: int,
-               seed: int) -> tuple[bool, dict]:
+               seed: int, kind: str = "mean") -> tuple[bool, dict]:
     """Equivalent iff **every** sweep point's interval contains 0.
 
     Returns the per-point intervals too: a bare boolean cannot be audited, and the whole
@@ -94,7 +124,7 @@ def equivalent(a: Samples, b: Samples, *, level: float, resamples: int,
     detail = {}
     for i, p in enumerate(points):
         lo, hi = bootstrap_diff_ci(a[p], b[p], level=per_point, resamples=resamples,
-                                   seed=seed + i)     # one stream per point, still seeded
+                                   seed=seed + i, kind=kind)   # one stream per point
         detail[p] = {"lo": lo, "hi": hi, "contains_zero": lo <= 0.0 <= hi,
                      "level": per_point}
     return all(d["contains_zero"] for d in detail.values()), detail
