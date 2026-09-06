@@ -18,8 +18,11 @@ Stage detection belongs in code that is tested, not in prose that is inferred fr
    - green: stage **ready to freeze** (a decision for the person).
 4. Frozen:
    - no `results/summary.json`: stage **run**;
-   - `summary.json` without `reproduction.json`: stage **run interrupted** — the
-     self-reproduction never completed, there is no verdict;
+   - `summary.json` without `reproduction.json` and without an S0 unit inside it: stage
+     **run interrupted** — the self-reproduction never completed, there is no verdict.
+     (The scaffolded runner writes the verdict to `reproduction.json`; a runner of the
+     person's own may record S0 as a unit in `summary.json` instead, and then the
+     verdict is read off the units: S0 false → INVALID, any other false → H0, else H1.)
    - both, results not committed: stage **verdict computed, not committed**;
    - committed: stage **closeout** — `goal.md` §5 and the exploration map.
 
@@ -80,6 +83,37 @@ def _results_committed(folder: Path) -> bool:
     if proc.returncode != 0:
         raise SystemExit(f"git could not read {folder}: {proc.stderr.strip()}")
     return proc.stdout.strip() == ""
+
+
+def _verdict(summary: Path, reproduction: Path) -> str | None:
+    """The verdict on record, or None when the run never got to S0.
+
+    The scaffolded runner writes it to `reproduction.json`. A runner the person wrote
+    themselves may fold S0 into the units of `summary.json` (found 2026-09-06 on a real
+    question, which this function used to report as interrupted). When every unit carries a
+    boolean `passed`, the verdict is the conjunction the registration defines: S0 false →
+    INVALID, any other unit false → H0. When a unit is shaped differently the run still
+    counts as finished, but the verdict is left to the runner's own record, not guessed.
+    """
+    if reproduction.is_file():
+        data = json.loads(reproduction.read_text(encoding="utf-8"))
+        return str(data.get("verdict", "?"))
+    data = json.loads(summary.read_text(encoding="utf-8"))
+    if isinstance(data.get("verdict"), str):
+        return data["verdict"]
+    units = data.get("units")
+    if not isinstance(units, dict):
+        return None
+    s0 = [u for name, u in units.items() if name.upper().startswith("S0")]
+    if not s0:
+        return None
+    if not all(isinstance(u, dict) and isinstance(u.get("passed"), bool) for u in units.values()):
+        # A unit shaped differently (a real runner recorded S0 as per-predicate booleans with
+        # no `passed`) is not guessed at: the run finished, the verdict is the runner's to state.
+        return "on record in results/summary.json (a unit has no `passed` field, so not derived here)"
+    if not all(u["passed"] for u in s0):
+        return "INVALID"
+    return "H1" if all(u["passed"] for u in units.values()) else "H0"
 
 
 def inspect(folder: Path) -> Report:
@@ -178,17 +212,17 @@ def inspect(folder: Path) -> Report:
         report.stage = "run"
         report.next = "`newlife run`, then `newlife check`"
         return report
-    if not reproduction.is_file():
+    verdict = _verdict(summary, reproduction)
+    if verdict is None:
         report.stage = "run interrupted"
         report.blockers.append(
             "results/summary.json exists but results/reproduction.json does "
-            "not: the self-reproduction (S0) never completed, so there is no "
-            "verdict yet"
+            "not, and summary.json records no S0 unit: the self-reproduction "
+            "never completed, so there is no verdict yet"
         )
         report.next = "`newlife run` again; do not commit results/ as they stand"
         return report
-    data = json.loads(reproduction.read_text(encoding="utf-8"))
-    report.verdict = str(data.get("verdict", "?"))
+    report.verdict = verdict
     report.done.append(f"verdict computed: {report.verdict}")
     if not _results_committed(folder):
         report.stage = "verdict computed, not committed"

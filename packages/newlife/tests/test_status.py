@@ -6,6 +6,7 @@ reproduction.json，两者之间中断的一次运行看起来像做完了。这
 
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -113,3 +114,49 @@ def test_a_run_that_died_between_the_two_files_is_not_reported_as_done(
     assert r.verdict is None
     assert any("reproduction.json" in b for b in r.blockers)
     assert "do not commit" in r.next
+
+
+def test_a_runner_of_ones_own_that_records_s0_in_summary_is_not_interrupted(
+    tmp_path: Path,
+) -> None:
+    """**真实问题上的误报**：自定义 runner 把 S0 写进 summary.json 的 units，没有 reproduction.json，
+    status 曾报 run interrupted。现在按合取读判定：S0 真、其余有假 → H0。"""
+    repo = _repo(tmp_path)
+    folder = scaffold.init("2026-09-06-own-runner", cwd=repo)
+    (folder / "goal.md").write_text(
+        "<!--@goal_gate: not_applicable — 测自定义 runner-->\n", encoding="utf-8"
+    )
+    with (folder / "prereg.md").open("a", encoding="utf-8") as fh:
+        fh.write("\n<!--@pilot_gate: not_applicable — 同上-->\n")
+    assert scaffold.freeze(folder, cwd=repo) == 0
+    (folder / "results" / "summary.json").write_text(
+        json.dumps({"units": {
+            "S1_n_configs": {"passed": True},
+            "S3_rank_correlation": {"passed": True},
+            "S2_decision_equivalence": {"passed": False},
+            "S0_self_proof": {"passed": True},
+        }}),
+        encoding="utf-8",
+    )
+    r = status.inspect(folder)
+    assert r.stage == "verdict computed, not committed"
+    assert r.verdict == "H0"
+
+    (folder / "results" / "summary.json").write_text(
+        json.dumps({"units": {"S0_self_proof": {"passed": False}, "S1": {"passed": True}}}),
+        encoding="utf-8",
+    )
+    assert status.inspect(folder).verdict == "INVALID"
+
+    # 真实 GRN 问题的形状：S0 是一组谓词布尔值，没有 passed —— 不猜，但也不是中断
+    (folder / "results" / "summary.json").write_text(
+        json.dumps({"units": {
+            "S1_n_configs": {"value": 42, "passed": True},
+            "S0_self_proof": {"s1_too_few": True, "all_predicates_can_go_red": True},
+        }}),
+        encoding="utf-8",
+    )
+    r = status.inspect(folder)
+    assert r.stage == "verdict computed, not committed"
+    assert r.verdict and "not derived" in r.verdict
+
