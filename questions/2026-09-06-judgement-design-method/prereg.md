@@ -1,6 +1,6 @@
 # 判据设计方法论
 
-**Frozen at commit:** _pending_
+**Frozen at commit:** 55feaeb9f18ab3a86f6e613715cee9b5a9175816
 
 - **slug**：`newlife-judgement-design-method`
 - **上游**：goal（exloop-archive，frozen `f3b9b19`）· design（同处，`7d35796`）
