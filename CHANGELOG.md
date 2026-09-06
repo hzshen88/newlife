@@ -16,6 +16,20 @@ has its own version and its own repository. Dates are the PyPI upload dates.
   repairing the environment would itself turn S1 red. A ledger written before this existed
   carries no digest and stays green, so registrations already in flight can still freeze.
 
+- **A world now states which kind of reproduction it can offer** (`newlife-prereg` rule
+  seven, plus an `@reproduction_class` line in the `prereg.md` template). S0 asks for a
+  byte-identical rerun and a false S0 becomes `INVALID` — no conclusion at all, not a
+  weaker one. That is right for a deterministic world and wrong for two others: a `seeded`
+  world satisfies S0 by fixing its seed, which proves the seed was fixed and **not** that
+  the conclusion survives a different one (so it owes a unit over a frozen set of seeds);
+  a `stochastic` world — GPU reductions, concurrency, a remote service or model — cannot
+  satisfy S0 at all, and must waive it on the record and judge over a distribution.
+  Measured the same day: a runner whose simulator was an LLM behind an HTTP call went
+  green on S0, S1 and all five audit arms, while swapping the model behind an unchanged
+  `verdict.py` moved every number. **Whatever decides the result has to appear in the
+  conjunction** — `env.lock` records installed distributions, not a model version, an
+  endpoint, or an environment variable, and S0's inner run inherits `os.environ`.
+
 ### Fixed
 
 - **A registration frozen without the `**Frozen at commit:** _pending_` line could never
