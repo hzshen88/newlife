@@ -206,3 +206,67 @@ def test_init_rejects_absolute_slug_without_writing_outside_repo(tmp_path: Path)
         scaffold.init(str(outside), cwd=repo)
 
     assert not outside.exists()
+
+
+def _drop_stamp_placeholder(folder: Path) -> None:
+    """模拟助手用 Write 整体覆盖 prereg.md —— 骨架里的占位行在覆盖中丢掉。"""
+    prereg = folder / "prereg.md"
+    prereg.write_text(
+        "".join(line for line in prereg.read_text(encoding="utf-8").splitlines(keepends=True)
+                if not line.startswith("**Frozen at commit:**")),
+        encoding="utf-8")
+
+
+def test_ensure_stamp_placeholder_adds_one_line_and_is_idempotent(tmp_path: Path) -> None:
+    """补齐只加一行；已经有的不动。多加一行都会让 stamp 变成插入，审计就必然失败。"""
+    repo = _repo(tmp_path)
+    folder = scaffold.init("2026-09-06-placeholder", cwd=repo)
+    prereg = folder / "prereg.md"
+
+    assert scaffold.ensure_stamp_placeholder(prereg) is False   # 骨架自带，不该重复添加
+
+    before = len(prereg.read_text(encoding="utf-8").splitlines())
+    _drop_stamp_placeholder(folder)
+    assert len(prereg.read_text(encoding="utf-8").splitlines()) == before - 1
+
+    assert scaffold.ensure_stamp_placeholder(prereg) is True
+    text = prereg.read_text(encoding="utf-8")
+    assert len(text.splitlines()) == before
+    assert text.splitlines()[1] == scaffold.STAMP_PLACEHOLDER   # 紧跟标题
+    assert scaffold.ensure_stamp_placeholder(prereg) is False   # 幂等
+
+
+def test_a_registration_missing_the_placeholder_still_audits(tmp_path: Path) -> None:
+    """回归：没有占位行的注册曾在冻结那一刻就注定审计失败，且当时毫无提示。
+
+    根因是 stamp 只能插入而非行内替换，审计端的 strip_stamp 只扣除标记行、
+    不扣除随之插入的空行。这里断言的是最终结果——审计通过，且冻结版与 HEAD
+    的差异恰好只有 stamp 那一行（行数不变）。
+    """
+    repo = _repo(tmp_path)
+    (repo / "baseline.txt").write_text("base\n")
+    subprocess.run(["git", "-C", str(repo), "add", "baseline.txt"], check=True)
+    subprocess.run(["git", "-C", str(repo), "commit", "-qm", "baseline"], check=True)
+
+    folder = scaffold.init("2026-09-06-nostamp", cwd=repo)
+    _drop_stamp_placeholder(folder)
+    _waive_goal(folder)
+    _waive_pilot(folder)
+    assert scaffold.freeze(folder, cwd=repo) == 0
+
+    (folder / "results" / "summary.json").write_text("{}\n")
+    subprocess.run(["git", "-C", str(repo), "add", "questions/2026-09-06-nostamp/results"], check=True)
+    subprocess.run(["git", "-C", str(repo), "commit", "-qm", "result"], check=True)
+
+    assert scaffold.audit(folder, cwd=repo) == 0
+
+    rel = "questions/2026-09-06-nostamp/prereg.md"
+    log = subprocess.run(["git", "-C", str(repo), "log", "--format=%H", "--", rel],
+                         capture_output=True, text=True, check=True).stdout.split()
+    frozen, head = log[-1], "HEAD"
+    def show(ref: str) -> list[str]:
+        return subprocess.run(["git", "-C", str(repo), "show", f"{ref}:{rel}"],
+                              capture_output=True, text=True, check=True).stdout.splitlines()
+    a, b = show(frozen), show(head)
+    assert len(a) == len(b), "stamp 必须是行内替换：行数一变，INTEGRITY 就再也过不去"
+    assert [i for i, (x, y) in enumerate(zip(a, b)) if x != y] == [1], "只有 stamp 那一行可以变"

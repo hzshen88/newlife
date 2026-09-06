@@ -133,6 +133,38 @@ def init(slug: str, *, cwd: Path, commit: bool = True) -> Path:
     return folder
 
 
+STAMP_PLACEHOLDER = "**Frozen at commit:** _pending_"
+"""The line the freeze replaces **in place**. Its absence is not cosmetic — see below."""
+
+
+def ensure_stamp_placeholder(prereg: Path) -> bool:
+    """Put the stamp placeholder back if it is gone. True when this call added it.
+
+    **A registration frozen without this line is doomed at the moment it is frozen.** The
+    stamp can then only be *inserted*, `strip_stamp` in the audit removes the stamp line
+    but not the blank line inserted with it, and INTEGRITY fails on every audit from then
+    on — discovered one pilot and one full verdict later, when "never re-freeze" leaves no
+    repair and the whole round has to be demoted to exploratory. That is a real question's
+    cost, reported in a user's `issue-report-prereg-stamp.md`.
+
+    **This is not a judgement about the science**, which is what the goal and pilot gates
+    refuse over. It is this tool's own bookkeeping, and an assistant drafting the
+    registration by writing the whole file drops it without noticing — it looks like a
+    metadata line waiting to be filled in, not a functional anchor. Refusing the freeze
+    over it would push the tool's implementation detail onto the person; adding it costs
+    them nothing and removes the failure mode entirely.
+    """
+    text = prereg.read_text(encoding="utf-8")
+    if any(line.startswith("**Frozen at commit:**") for line in text.splitlines()):
+        return False
+    lines = text.splitlines(keepends=True)
+    # After the title, so the placeholder reads as the document's own metadata. Inserting
+    # **one** line and nothing else is what keeps the later stamp an in-place replacement.
+    prereg.write_text("".join(lines[:1] + [STAMP_PLACEHOLDER + "\n"] + lines[1:]),
+                      encoding="utf-8")
+    return True
+
+
 def freeze(folder: Path, *, cwd: Path, data: tuple[Path, ...] = ()) -> int:
     """Freeze this question's criteria. **The freeze must be `prereg.md`'s first commit.**
 
@@ -173,6 +205,10 @@ def freeze(folder: Path, *, cwd: Path, data: tuple[Path, ...] = ()) -> int:
         )
     # **After the history check, not before.** That one reports an already-irreversible
     # state and its recovery must not be masked by a gate about a file you can still edit.
+    # Before the gates: a missing stamp placeholder would make this freeze produce a
+    # registration that can never pass INTEGRITY. Cheaper here than anywhere downstream.
+    if ensure_stamp_placeholder(prereg):
+        print(f"  {STAMP_PLACEHOLDER!r} was missing from prereg.md and has been restored")
     ready = goal_ready.main([str(folder)])
     # **Flush before anything else writes.** The gate prints to stdout; SystemExit goes to
     # stderr and `prereg.sh` writes from a subprocess. Piped, stdout is block-buffered, so

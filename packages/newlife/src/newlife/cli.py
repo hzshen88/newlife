@@ -246,6 +246,13 @@ def _pilot(folder: Path) -> int:
     produced are appended to `pilot/ledger.jsonl`, which the freeze reads
     (`pilot_coverage`). Everything a pilot produces counts as seen.
     """
+    # **The earliest place this can be caught.** Without the stamp placeholder the runner
+    # dies inside `provenance.frozen_at` with "it is not a registration", the pilot records
+    # nothing, and the freeze then refuses for the *wrong* reason ("no pilot") — three
+    # messages, none of which names the missing line.
+    if scaffold.ensure_stamp_placeholder(folder / "prereg.md"):
+        print(f"  {scaffold.STAMP_PLACEHOLDER!r} was missing from prereg.md and has been restored")
+
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out_dir = folder / "pilot" / stamp
     out_dir.mkdir(parents=True, exist_ok=True)

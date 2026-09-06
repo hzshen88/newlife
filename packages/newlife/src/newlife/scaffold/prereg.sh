@@ -112,6 +112,22 @@ Pre-register a NEW file for a fresh confirmatory test; never re-freeze."
         done
     fi
 
+    # **The stamp has to be an in-place replacement, never an insertion.** Without the
+    # placeholder line the stamp appends two lines to the frozen text, `strip_stamp` removes
+    # only one of them, and INTEGRITY then fails on every audit from that moment on: the
+    # registration is doomed the instant it is frozen, and nothing says so at the time. It
+    # surfaces one pilot and one full verdict later, when "never re-freeze" leaves no repair.
+    # **Adding the line is not a judgement about the science**, which is what the goal and
+    # pilot gates refuse over — it is this tool's own bookkeeping, and an assistant that
+    # drafts the registration by writing the whole file drops it without noticing.
+    if ! grep -q "^\*\*Frozen at commit:\*\*" "$file"; then
+        tmp=$(mktemp)
+        awk -v p="$STAMP_PREFIX" 'NR == 1 { print; print p " _pending_"; next } { print }' \
+            "$file" > "$tmp"
+        mv "$tmp" "$file"
+        echo "  '$STAMP_PREFIX _pending_' was missing and has been added before the freeze"
+    fi
+
     git -C "$ROOT" add -- "$rel"
     git -C "$ROOT" commit -q -m "prereg-freeze: $rel" -- "$rel"
     freeze=$(git -C "$ROOT" rev-parse HEAD)
@@ -122,8 +138,11 @@ Pre-register a NEW file for a fresh confirmatory test; never re-freeze."
         awk -v c="$freeze" -v p="$STAMP_PREFIX" \
             'index($0, p) == 1 { print p " " c; next } { print }' "$file" > "$tmp"
     else
+        # Unreachable now that the placeholder is added above, and kept correct anyway:
+        # **it inserts the stamp line only.** The blank line it used to add survived
+        # `strip_stamp` and broke INTEGRITY for the life of the registration.
         awk -v c="$freeze" -v p="$STAMP_PREFIX" \
-            'NR == 1 { print; print ""; print p " " c; next } { print }' "$file" > "$tmp"
+            'NR == 1 { print; print p " " c; next } { print }' "$file" > "$tmp"
     fi
     mv "$tmp" "$file"
     git -C "$ROOT" add -- "$rel"

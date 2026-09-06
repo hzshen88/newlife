@@ -107,7 +107,13 @@ def frozen_at(prereg: Path) -> str:
                 # for a commit, and only `newlife pilot` sets this variable.
                 return "UNFROZEN: pilot run before the freeze, carries no evidential weight"
             raise SystemExit(f"{prereg} is not frozen yet — run `newlife freeze` first.")
-    raise SystemExit(f"{prereg} has no `**Frozen at commit:**` line; it is not a registration.")
+    raise SystemExit(
+        f"{prereg} has no `**Frozen at commit:**` line; it is not a registration.\n"
+        f"Add `**Frozen at commit:** _pending_` just under the title. The freeze replaces "
+        f"that placeholder in place; without it the stamp is *inserted*, and the extra line "
+        f"fails the audit's INTEGRITY check for the life of the registration.\n"
+        f"`newlife pilot` and `newlife freeze` restore the line on their own — reaching this "
+        f"message means the runner was invoked directly.")
 
 
 def env_lock_lines() -> list[str]:
