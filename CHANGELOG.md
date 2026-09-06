@@ -3,6 +3,39 @@
 `proofroot` and `newlife` are released together under one version from one tag; `exloop`
 has its own version and its own repository. Dates are the PyPI upload dates.
 
+## Unreleased
+
+### Added
+
+- **The freeze now refuses when the environment changed after the last pilot.**
+  `newlife pilot` records a digest of the live environment in `pilot/ledger.jsonl`, and the
+  pilot gate compares it with the environment at the freeze. Installing a package in
+  between used to be invisible: the freeze rewrites `env.lock` from the new environment, so
+  S1 went green against an environment in which the runner had **never once been
+  executed** — and the discovery came at run time, after the one irreversible step, when
+  repairing the environment would itself turn S1 red. A ledger written before this existed
+  carries no digest and stays green, so registrations already in flight can still freeze.
+
+### Fixed
+
+- `newlife blocks` gave the install command only when **nothing** could be imported, so
+  someone with `process-bigraph` but not `spatio-flux` saw a listing that worked and never
+  learned the other backends existed. It now reports whenever something is absent, and
+  separates "not installed" from "installed but the import fails" — `bsp` is the second
+  kind and reinstalling it does not help. A package that is not a newlife extra no longer
+  gets an install command that cannot resolve.
+
+### Changed
+
+- `docs/writing-a-world.md` says why that example's `PortBinding` is `"add"`: the third
+  field is a claim about what the wrapped `update` returns, not a default. Copying the line
+  to wrap a simulator that returns absolute values writes a level in as though it were an
+  increment — **nothing raises**, the numbers stay plausible and in the right units, and
+  the pilot records them as covered. `newlife-prereg` rule six states the same trap for the
+  person writing the criteria.
+- The bytes of `env.lock` are built by one function, `provenance.env_text()`, rather than
+  the same expression spelled out in the scaffold, the freeze and the runner template.
+
 ## 0.1.1 — 2026-09-06
 
 Depends on `exloop>=0.1,<0.2`, released to PyPI the same day.
