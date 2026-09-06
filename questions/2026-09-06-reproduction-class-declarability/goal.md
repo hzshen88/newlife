@@ -1,57 +1,25 @@
-# Goal — reproduction class declarability
+# Goal — 复现类别的可声明性
 
-**This file is red until you fill it in.** `newlife freeze` will refuse to run, and it is
-supposed to: every anchor below covers a step that **leaves no trace when skipped**. Skip
-the verdict runner and there is no `summary.json` — visible, no gate needed. Skip the
-literature search and nothing is missing at all, which is why a gate has to carry it.
+**本文件不是权威版本，是转发指针。**
 
-If this question genuinely has no goal stage — a toolchain smoke test, say — do not leave
-the file half-filled. Add one anchor giving the reason, and the gate goes green:
+goal 阶段已在作者的私有探索档案中完成并**冻结**：
 
-    <!--@goal_gate: not_applicable — <your reason here>-->
+| | |
+|---|---|
+| 权威全文 | `exloop-archive/docs/science-superpowers/goals/2026-09-06-newlife-reproduction-class-declarability.md` |
+| 冻结 commit | `1b0a113` |
+| 内容哈希 | `3e0b77e78ba3237221852a9fdbf10622611ad5cb2255c0f27e9539496019324f` |
+| design | 同档案 `designs/` 下同名文件，`38b8997` |
 
-**An anchor's body must not contain `>`** — the parser stops at the first one and the
-anchor then silently does not exist. That is also why the line above is an example rather
-than a working anchor: replace `<your reason here>`, angle brackets included.
+**这里不重复它的内容**——同一个事实写两处必然漂移，这个项目为此付过学费。
 
----
+## 为什么这个问题的 goal 在别处
 
-<!--@evidence: literature_searched=TODO, sources=TODO, verdict=TODO-->
-<!--@counterparty: TODO-->
-<!--@attack_layer: TODO-->
-<!--@decides: TODO-->
-<!--@who_changes_behavior: TODO-->
-<!--@size_estimate: impl_lines=TODO, criteria=TODO, failure_modes=TODO-->
+本里程碑是 newlife **同仓形态的第一个样板**：预注册与产物住在同一个仓库，
+因此 `newlife audit` 的 CHRONOLOGY 能够真正成立（跨仓形态下二十份注册全部只能报 PARTIAL）。
+goal 与 design 早于这个决定就已写就并冻结在档案仓库，移动它们会破坏那份冻结证明，
+所以留在原处，由本文件转发。
 
-| Anchor | What it must say | Why it is gated |
-|---|---|---|
-| `@evidence` | `literature_searched=yes, sources=N, verdict=known\|partly known\|unknown` — or `no` **with** `reason=` and `waived_by=` | A search that failed and was silently skipped looks exactly like one that found nothing |
-| `@counterparty` | Who would bet the other way, and on what grounds | If nobody would, the result is already inside your expectations. **Seven H1 and zero H0 start here** |
-| `@attack_layer` | `conclusion` \| `premise` \| `definition` | Under attack at the premise a simulation settles nothing — the output can only be a discriminating prediction. `definition` means do not simulate at all |
-| `@decides` | `design` \| `run` | Confuse them and a tooling result gets reported as a conclusion about the world |
-| `@who_changes_behavior` | A specific person **and** a specific decision | The "unimportant but decidable" bucket passes every later gate and is still not worth asking |
-| `@size_estimate` | `impl_lines=N, criteria=N, failure_modes=1` | No estimate made in advance means nothing to calibrate against |
-
-**`failure_modes` must be 1.** A failure A and a failure B you would want to report
-separately are two questions, not one. To merge them anyway, add `split_waived=<reason>`.
-
-## 1. What this buys
-
-(Including anything cheap that already falsified part of it while you were drafting.
-A draft that survived contact with no evidence at all is a draft, not a goal.)
-
-## 2. Success criteria
-
-(A conjunction, and **independent of H1** — these say whether the question was answered,
-not whether the answer came out the way you wanted.)
-
-## 3. Explicitly not doing
-
-## 4. Risks declared in advance
-
-(Including what this does **not** prove even if every criterion holds. At closeout,
-"we showed A" and "we did not show B" must be two separate sentences.)
-
-## 5. Closeout judgement
-
-(Filled in afterwards: achieved / not_achieved / regressed / not_applicable.)
+<!--@goal_gate: not_applicable — goal 阶段已在 exloop-archive 完成并冻结（commit 1b0a113，
+内容哈希 3e0b77e7…），六个锚点在那份文件里，`newlife.gates.goal_ready` 对它实跑为绿。
+本文件是同仓形态样板下的转发指针，刻意不重复其内容。这是显式豁免，不是跳过。-->
