@@ -23,6 +23,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
+QUESTIONS = ROOT / "questions"   # 2026-09-06 起：里程碑就是本仓库里的一个问题文件夹
 WORLDS = ROOT / "docs/zh/worlds"
 PROPOSAL = ROOT / "docs/zh/design/proposal.md"
 # 里程碑表 2026-09-06 从根 README 搬到 docs/milestones.md（根 README 改为面向用户）；键名 readme_row 沿用
@@ -44,7 +45,37 @@ KNOWN_GAPS = {
         "第十二个的产出者未提交，产物不可重跑——**这与它自己的主题（归档重放）矛盾**。"
         "如实登记，不伪造一个产出者去凑绿。"
     ),
+    # 第 20–22 个里程碑早于「设计理由写进 questions/<slug>/README.md」的约定（2026-09-06）。
+    # 不追溯补写：事后写的设计理由不是当时的设计理由。
+    ("2026-09-06-reproduction-class-declarability", "readme"): "早于 README 约定，不追溯补写",
+    ("2026-09-06-stochastic-world-judgeable", "readme"): "早于 README 约定，不追溯补写",
+    ("2026-09-06-judgement-design-method", "readme"): "早于 README 约定，不追溯补写",
 }
+
+
+def question_milestones() -> list[str]:
+    """本仓库 questions/ 下已有判定产物的问题文件夹——新布局的里程碑。"""
+    if not QUESTIONS.exists():
+        return []
+    return sorted(p.name for p in QUESTIONS.iterdir()
+                  if (p / "results" / "summary.json").exists())
+
+
+Q_COLUMNS = ("summary", "readme", "closeout", "readme_row")
+Q_LABELS = {"summary": "产物", "readme": "README", "closeout": "§5收尾", "readme_row": "docs/milestones.md"}
+
+
+def check_question(slug: str) -> dict[str, bool]:
+    """新布局的四格：产物、设计理由（README.md）、goal.md §5 收尾、里程碑表里的一行。
+    worlds 文档与 proposal §7 不再要求——每个事实只在一处。"""
+    q = QUESTIONS / slug
+    goal = q / "goal.md"
+    return {
+        "summary": (q / "results" / "summary.json").exists(),
+        "readme": (q / "README.md").exists(),
+        "closeout": goal.exists() and "(Filled in afterwards" not in goal.read_text(encoding="utf-8"),
+        "readme_row": f"questions/{slug}/" in MILESTONES.read_text(encoding="utf-8"),
+    }
 
 
 def milestones() -> list[str]:
@@ -131,6 +162,22 @@ def report() -> int:
             else:
                 missing.append(f"{m}.{col}")
 
+    qs = question_milestones()
+    if qs:
+        header = "  " + "".join(f"{Q_LABELS[c]:>11}" for c in Q_COLUMNS)
+        print(f"\n{'问题文件夹（新布局）':<16}{header}")
+        for slug in qs:
+            row = check_question(slug)
+            marks = "".join(f"{('✓' if row[c] else '✗'):>11}" for c in Q_COLUMNS)
+            print(f"{slug[:44]:<46}{marks}")
+            for col in Q_COLUMNS:
+                if row[col]:
+                    continue
+                if (slug, col) in KNOWN_GAPS:
+                    known.append(f"{slug}.{col} —— {KNOWN_GAPS[(slug, col)]}")
+                else:
+                    missing.append(f"{slug}.{col}")
+
     if known:
         print(f"\n已登记的缺口 {len(known)} 处（每次对账都会列出）：")
         for k in known:
@@ -184,6 +231,22 @@ def selftest() -> int:
         else:
             print(f"  [红] {column:12s} {why}")
 
+    # 新布局：抹掉里程碑表里对某个问题文件夹的引用，对账必须红
+    qs = question_milestones()
+    if qs:
+        slug = qs[0]
+        text = MILESTONES.read_text(encoding="utf-8")
+        needle = f"questions/{slug}/"
+        try:
+            MILESTONES.write_text(text.replace(needle, "questions/__mutated__/"), encoding="utf-8")
+            still = check_question(slug)["readme_row"]
+        finally:
+            MILESTONES.write_text(text, encoding="utf-8")
+        if still:
+            failures.append("questions.readme_row: 抹掉表里的引用后仍然为真")
+        else:
+            print(f"  [红] {'readme_row':12s} 新布局：从 docs/milestones.md 抹掉 questions/{slug}/")
+
     # 反向对照：豁免项必须**不**被报出来，否则门会对历史里程碑误报
     if "v0.1a" not in EXEMPT:
         failures.append("反向对照失效：v0.1a 不在豁免表里")
@@ -195,7 +258,7 @@ def selftest() -> int:
         for f in failures:
             print(f"  {f}")
         return 1
-    print(f"\n自检通过：{len(FIXTURES)} 条变异全部让对账变红，反向对照未误报。")
+    print(f"\n自检通过：{len(FIXTURES)} 条变异（加新布局 1 条）全部让对账变红，反向对照未误报。")
     return 0
 
 

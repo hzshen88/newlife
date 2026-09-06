@@ -4,7 +4,7 @@
 搬家原因（2026-09-05）：这道门检查的六个锚正是 `newlife-goal` skill 产出的，
 而 skill 随 wheel 发布、门不发布——**用户拿到了会写锚的 skill，却拿不到验锚的门**，
 四份真实 `prereg.md` 里锚数是 0。现在 `newlife init` 生成 `goal.md`，
-`newlife freeze` 在冻结前挡一道，`newlife check` 一并报告。
+`newlife freeze` 在冻结前挡一道（`newlife check` 已于 2026-09-06 退役）。
 
 本文件保留是因为 exloop 那条文档流水线用它（`run_gates.py` / `gate_selftest.py`
 按脚本路径调用）。**它不是第二份实现**：逻辑只有一处，在
