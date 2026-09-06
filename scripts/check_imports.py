@@ -6,7 +6,9 @@ Rules (proposal v0.6 §5.1 / §4):
 2. `process_bigraph` / `bigraph_schema` may ONLY be imported inside
    packages/newlife/src/newlife/adapters/process_bigraph/ — vendor types
    never leak past the adapter layer.
-3. newlife may import proofroot; proofroot imports nothing but stdlib.
+3. newlife may import proofroot; newlife/cli.py alone may import exloop (skill
+   file discovery — a declared dependency, 2026-09-06); proofroot imports nothing
+   but stdlib.
 4. (v0.3 compare prereg R6) newlife.core must not import newlife.mechanisms
    or newlife.adapters — core stays domain-free even though rule 1's
    zero-third-party check alone would not catch an intra-newlife leak.
@@ -132,6 +134,15 @@ for src_dir in (PROOFROOT_SRC, NEWLIFE_SRC):
                 if src_dir == PROOFROOT_SRC:
                     violations.append(
                         f"{py}:{lineno}: proofroot must not import itself"
+                    )
+                continue
+            if module == "exloop":
+                # 探索阶段的 skill 包，newlife 的显式依赖（pyproject）。newlife 不 import 它的
+                # 代码，只借 exloop.skills_dir() 找 skill 文件；这件事只发生在 cli.py 一处。
+                if py != NEWLIFE_SRC / "cli.py":
+                    violations.append(
+                        f"{py}:{lineno}: 'exloop' may only be imported by newlife/cli.py "
+                        f"(rule 3)"
                     )
                 continue
             if module in VENDOR_MODULES:

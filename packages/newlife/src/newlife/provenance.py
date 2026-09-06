@@ -25,6 +25,7 @@ import hashlib
 import importlib.metadata
 import os
 import platform
+import site
 import sys
 from pathlib import Path
 from typing import Any
@@ -116,9 +117,19 @@ def env_lock_lines() -> list[str]:
     their environment — simply does not exist under this toolchain. And `uv pip freeze`
     records a local wheel as `name @ file:///…`, **a path that means nothing on another
     machine**. This sidesteps both.
+
+    Distributions are read from the interpreter's site-packages directories, **not from
+    `sys.path` as it stands** at the moment of the call. Libraries such as `ray` insert a
+    vendored `thirdparty_files/` directory into `sys.path` when imported, and a lock that
+    changed with import order would make S1 depend on what the runner happened to import
+    before it looked: found 2026-09-06, when a process that had imported spatio-flux (and
+    through it ray) recorded `colorama` and the runner subprocess, which had not, did not.
     """
+    paths = list(site.getsitepackages())
+    if site.ENABLE_USER_SITE:
+        paths.append(site.getusersitepackages())
     seen = {}
-    for dist in importlib.metadata.distributions():
+    for dist in importlib.metadata.distributions(path=paths):
         name = dist.metadata["Name"]
         if name:
             seen[name.lower()] = f"{name}=={dist.version}"
