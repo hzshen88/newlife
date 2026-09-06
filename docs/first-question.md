@@ -138,6 +138,10 @@ The pilot writes to `pilot/<stamp>/`, never to `results/`, and appends one line 
 {"at": "20260906T010110Z", "out": "pilot/20260906T010110Z/summary.json", "returncode": 0, "units": ["S0", "S1", "S2", "S3"]}
 ```
 
+Since 0.1.2 the line also records `env_sha256`, `goal_sha256` and `python`: the environment,
+the four goal commitments and the interpreter the pilot ran under. The freeze compares the
+first two with what it sees and refuses if either moved.
+
 Why this exists: of the first four real registrations, two came back INVALID because a
 criterion named a quantity nobody had looked at before the freeze. Looking first is now a
 gate.

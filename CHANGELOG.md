@@ -3,6 +3,39 @@
 `proofroot` and `newlife` are released together under one version from one tag; `exloop`
 has its own version and its own repository. Dates are the PyPI upload dates.
 
+## Unreleased
+
+### Added
+
+- **The freeze checks that `goal.md`'s commitments did not move after the last pilot.**
+  `newlife pilot` digests four anchors (`counterparty`, `attack_layer`, `decides`,
+  `who_changes_behavior`) into the ledger; the pilot gate refuses when they differ at the
+  freeze unless `<!--@goal_changed: …-->` in `prereg.md` records why. The pilot may change
+  how you measure, never what or which way (`newlife-prereg` rule one, second half).
+  Ledgers written before this stay green.
+- **Rule seven is enforced, not described.** 0.1.2's note said `newlife.gates.judgement_design`
+  refuses a freeze; nothing called it. The freeze now reads `prereg.md`'s
+  `@reproduction_class` anchor: `seeded` or `stochastic` must have a `judgement-design.json`
+  whose N re-derives from its premises, and the freeze pins that file with the criteria;
+  `deterministic`, or an anchor left as the template's placeholder, is treated as S0 as
+  written and said aloud at the freeze. `newlife check` reports the same gate for those
+  classes.
+- The environment-drift refusal names the interpreter the pilot ran under and the one
+  freezing, because two newlife installations on one machine are the usual cause; the
+  ledger records `python`.
+
+### Changed
+
+- `newlife-prereg` and `newlife-goal` keep rules and checklists in `SKILL.md`; the cases,
+  measurements and limits behind them moved to `references/` (`cases.md`, `evidence.md`),
+  which ship in the wheel and install with the skill.
+- The gate modules are not standalone files any more: their selftests run as
+  `python -m newlife.gates.<name> --selftest` (CI does), and the shebangs are gone.
+
+### Fixed
+
+- An unused import in `newlife.stochastic.design`.
+
 ## 0.1.2 — 2026-09-06
 
 ### Added
