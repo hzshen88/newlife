@@ -51,6 +51,10 @@ import sys
 
 # <!--@check-11: kernel_diffs=14, chain_diffs=8; covers=grid_transitions-->
 ANCHOR_RE = re.compile(r"<!--@\s*([A-Za-z0-9_.-]+)\s*:\s*(.*?)\s*-->", re.DOTALL)
+FROZEN_END_RE = re.compile(r"<!--@\s*frozen_end\s*:.*?-->", re.DOTALL)
+"""End of the frozen region. Everything after it is outside the hash — see
+`frozen_normalise`. Written as its own pattern rather than reusing ANCHOR_RE
+because the truncation must happen **before** any anchor substitution."""
 
 PASS, FAIL, UNVERIFIABLE, PENDING = "PASS", "FAIL", "UNVERIFIABLE", "PENDING"
 
@@ -106,7 +110,25 @@ def frozen_normalise(text: str) -> str:
 
     现在用 ANCHOR_RE 做定点 span 替换，只吃掉 `<!--@frozen: ...-->` 这段注释，
     同一行上的其余文字照常进哈希。
+
+    ## `@frozen_end`：保护区的下界
+
+    冻结要保护的是**目标与判据**，而同一份文档里还有一节是**冻结之后才该填的**——
+    goal 的收尾判定。哈希覆盖全文时这两件事互斥：填了收尾判定，哈希必然失效，
+    「目标未被事后修改」的证明随之丢失；不填，skill 要求的落点就空着。
+    第十九个里程碑的收尾判定至今为空，正是卡在这里。
+
+    `<!--@frozen_end: 理由-->` 之后的内容不进哈希。**锚本身的位置无需另加保护**：
+    往前挪、往后挪、事后添加、事后删除，都会改变保护区的内容，因而改变哈希。
+
+    **无此锚时行为与从前逐字节一致**——已冻结的文档不受影响，这条由自检的 P6
+    对仓库里真实的冻结文档验证，不是靠断言。
+
+    多个 `@frozen_end` 时取**第一个**：保护区取最大，是保守的那一侧。
     """
+    end = FROZEN_END_RE.search(text)
+    if end:
+        text = text[: end.start()]
     return ANCHOR_RE.sub(
         lambda m: "" if m.group(1) == "frozen" else m.group(0), text
     )
@@ -423,12 +445,29 @@ def run_selftest() -> int:
             "剔除粒度是整行而非锚 span，冻结保护可被一句行内旁注绕过"
         )
 
+    # ── `@frozen_end` 的四条性质 ────────────────────────────────────
+    # 保护区下界一旦可被事后挪动，冻结就只是装饰。**这四条里 P5 是承重的那条**：
+    # 它保证锚的位置本身无需另加保护——挪动它必然改变保护区内容。
+    body = "目标：三条判据\n"
+    end = "<!--@frozen_end: 以下为收尾时填-->\n"
+    if frozen_normalise(body + end + "判定：achieved\n") != frozen_normalise(body + end + "判定：regressed\n"):
+        failures.append("P3: @frozen_end 之后的内容改了、归一结果却变了——收尾判定仍被冻结绑住")
+    if frozen_normalise(body + end + "x") == frozen_normalise("目标：四条判据\n" + end + "x"):
+        failures.append("P4: 保护区内的文字改了、归一结果却相同——冻结形同虚设")
+    moved = "目标：" + end + "三条判据\n" + "x"
+    if frozen_normalise(body + end + "x") == frozen_normalise(moved):
+        failures.append("P5: @frozen_end 被挪动、归一结果却相同——保护区下界可被事后改小")
+    plain = "只有正文，没有 frozen_end 锚\n<!--@frozen: commit=a, sha256=" + "0" * 64 + "-->\n"
+    if frozen_normalise(plain) != ANCHOR_RE.sub(
+            lambda m: "" if m.group(1) == "frozen" else m.group(0), plain):
+        failures.append("P6: 无 @frozen_end 时行为与旧实现不一致——已冻结的文档会集体失效")
+
     for f in failures:
         print(f"[{FAIL:12s}] frozen_normalise: {f}")
     if failures:
         print(f"\nfrozen_normalise selftest: {len(failures)} 条性质不成立")
         return 1
-    print("frozen_normalise selftest: P1/P2 均成立")
+    print("frozen_normalise selftest: P1–P6 均成立")
     return 0
 
 
