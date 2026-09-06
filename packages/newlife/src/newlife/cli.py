@@ -36,7 +36,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from newlife import scaffold, status
+from newlife import provenance, scaffold, status
 from newlife.gates import (
     goal_ready, pilot_coverage, silent_degradation_scan, unit_alignment,
     vacuous_criterion_scan,
@@ -229,8 +229,13 @@ def _pilot(folder: Path) -> int:
               f"--out (the scaffolded one does).")
         return 1
     units = sorted(pilot_coverage.produced(out_dir))
+    # **Which environment this pilot ran in.** Without it the pilot proves only that the
+    # runner ran *somewhere*: install a package afterwards and the freeze records the new
+    # environment, S1 goes green against it, and nothing ever executed the runner there.
+    # `pilot_coverage` compares this with the live environment at the freeze.
     entry = {"at": stamp, "out": str(out.relative_to(folder)),
-             "returncode": proc.returncode, "units": units}
+             "returncode": proc.returncode, "units": units,
+             "env_sha256": provenance.env_digest()}
     with (folder / "pilot" / "ledger.jsonl").open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(entry) + "\n")
     print(f"\nPilot recorded in pilot/ledger.jsonl: {' '.join(units) or 'no unit recognised'} "

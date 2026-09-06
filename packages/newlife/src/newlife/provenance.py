@@ -134,3 +134,28 @@ def env_lock_lines() -> list[str]:
         if name:
             seen[name.lower()] = f"{name}=={dist.version}"
     return [seen[k] for k in sorted(seen)]
+
+
+def env_text() -> str:
+    """The live environment rendered **exactly as `env.lock` holds it**.
+
+    One function, so the three places that need those bytes cannot drift apart: the
+    scaffold writes this, the freeze rewrites `env.lock` from it, and the runner's S1
+    compares the file against it character by character.
+    """
+    return "\n".join(env_lock_lines()) + "\n"
+
+
+def env_digest() -> str:
+    """sha256 of the live environment.
+
+    Directly comparable with `file_digest(<env.lock>)` — both hash the same bytes — and
+    that is what makes a recorded pilot's environment comparable with the environment at
+    the freeze. **A pilot proves the runner ran; it proves it in the environment that was
+    live at the time.** Nothing else records which one that was: `pilot/ledger.jsonl`
+    stores unit names, and `env.lock` is not rewritten until the freeze. So a package
+    installed between the pilot and the freeze used to be invisible — S1 stayed green
+    (the freeze had just recorded the new environment) while the runner had never once
+    been executed in it.
+    """
+    return hashlib.sha256(env_text().encode()).hexdigest()

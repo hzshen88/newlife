@@ -110,7 +110,7 @@ def init(slug: str, *, cwd: Path, commit: bool = True) -> Path:
         (TEMPLATES / "verdict.py.template").read_text()
         .replace("{title}", title).replace("{slug}", slug), encoding="utf-8")
     (folder / "env.lock").write_text(
-        "\n".join(provenance.env_lock_lines()) + "\n", encoding="utf-8")
+        provenance.env_text(), encoding="utf-8")
     (folder / "origin").mkdir()
     shutil.copyfile(TEMPLATES / "origin-README.md", folder / "origin" / "README.md")
 
@@ -199,7 +199,7 @@ def freeze(folder: Path, *, cwd: Path, data: tuple[Path, ...] = ()) -> int:
     # env.lock: rewrite from the live environment, commit if that changed anything, and pin
     # it first — the runner's S1 and the audit's DATA arm both hang off this file.
     env_lock = folder / "env.lock"
-    live = "\n".join(provenance.env_lock_lines()) + "\n"
+    live = provenance.env_text()
     if not env_lock.exists() or env_lock.read_text(encoding="utf-8") != live:
         env_lock.write_text(live, encoding="utf-8")
     env_rel = str(env_lock.resolve().relative_to(root))

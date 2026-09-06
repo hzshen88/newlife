@@ -81,8 +81,7 @@ def main() -> int:
     # early question.** `newlife freeze` rewrites env.lock from the live environment and
     # pins its hash into the registration; `newlife audit` proves the file never changed
     # afterwards; this line proves the run happened in that environment.
-    s1 = ("\n".join(provenance.env_lock_lines()) + "\n"
-          == (HERE / "env.lock").read_text(encoding="utf-8"))
+    s1 = provenance.env_text() == (HERE / "env.lock").read_text(encoding="utf-8")
     s2 = strictly_increasing(observed)
     # **"the criteria can fail" is its own visible slot in the conjunction, not a
     # detail nested inside another unit.** The first version folded it into a sub-field

@@ -32,6 +32,14 @@ blind — in prose. **Prose does not stop a freeze.** This gate does.
 
        <!--@pilot_gate: not_applicable — why-->
 
+4. The **most recent** pilot ran in the environment being frozen. `newlife pilot` records
+   a digest of the live environment in the ledger; this compares it with the live
+   environment at the freeze. Install a package in between and the freeze rewrites
+   `env.lock` from the new environment — S1 then goes green against an environment in
+   which the runner was **never once executed**, and the discovery comes at run time,
+   after the one irreversible step, when repairing the environment would itself turn S1
+   red. A ledger with no digest (written before this existed) stays green.
+
 ## What is not mechanical
 
 Whether a `blind` row is genuinely blind. The ledger records which *units* a run
@@ -49,6 +57,8 @@ import argparse
 import json
 import pathlib
 import re
+
+from newlife import provenance
 
 TABLE_ROW = re.compile(r"^\|\s*\*\*([A-Z]+\d+)\*\*\s*\|")
 ANCHOR = re.compile(r"<!--@pilot_gate:\s*([^>]*?)-->")
@@ -129,11 +139,47 @@ def ledger_units(ledger: pathlib.Path) -> set[str]:
     return found
 
 
-def check(rows: dict[str, str], ledger: set[str], waived: str | None) -> list[str]:
+def latest_env(ledger: pathlib.Path) -> str | None:
+    """The environment digest of the **most recent** pilot run, or None if unrecorded.
+
+    Most recent, not "any run matched": a pilot in an environment you have since left
+    proves nothing about the one you are about to freeze. None covers both a missing
+    ledger and records written before `env_sha256` existed — those **must** stay green,
+    or every registration already in flight would become unfreezable.
+    """
+    if not ledger.exists():
+        return None
+    newest: str | None = None
+    for line in ledger.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        entry = json.loads(line)   # malformed lines raise, same rule as ledger_units
+        recorded = entry.get("env_sha256")
+        if isinstance(recorded, str) and recorded:
+            newest = recorded
+    return newest
+
+
+def check(rows: dict[str, str], ledger: set[str], waived: str | None,
+          piloted_env: str | None = None, live_env: str | None = None) -> list[str]:
     """A pure predicate over parsed inputs — which is what lets the selftest prove it can go red."""
     if waived is not None and waived.startswith("not_applicable"):
         return []
     problems: list[str] = []
+    # **The environment the pilot ran in must still be the one being frozen.** Both digests
+    # known and different means: install/upgrade/removal since the pilot, so the runner has
+    # never been executed in the environment `env.lock` is about to record. S1 will not
+    # catch it — the freeze rewrites `env.lock` from the live environment, so S1 goes green
+    # against an environment nobody ever ran. And the freeze is irreversible: discovering
+    # it at run time leaves no move, because repairing the environment then turns S1 red.
+    if piloted_env and live_env and piloted_env != live_env:
+        problems.append(
+            f"the environment changed after the last pilot (pilot {piloted_env[:12]}, "
+            f"now {live_env[:12]}) — the runner has never run in the environment this "
+            f"freeze would record. Run `newlife pilot` again, then freeze. Finding this "
+            f"out after the freeze leaves no move: the freeze is irreversible, and "
+            f"repairing the environment afterwards turns S1 red."
+        )
     if not rows:
         problems.append(
             "no judgement unit parsed out of prereg.md §2 — table rows must look "
@@ -194,9 +240,11 @@ def _selftest() -> int:
         ledger: set[str],
         waived: str | None,
         want_red: bool,
+        piloted_env: str | None = None,
+        live_env: str | None = None,
     ) -> None:
         nonlocal ok
-        red = bool(check(rows, ledger, waived))
+        red = bool(check(rows, ledger, waived, piloted_env, live_env))
         mark = "RED" if red else "green"
         if red != want_red:
             print(
@@ -262,6 +310,21 @@ def _selftest() -> int:
         "not_applicable — a toolchain smoke test",
         False,
     )
+    case(
+        "a package installed between the pilot and the freeze",
+        rows, READY_LEDGER, None, True,
+        piloted_env="a" * 64, live_env="b" * 64,
+    )
+    case(
+        "the environment is the one the pilot ran in",
+        rows, READY_LEDGER, None, False,
+        piloted_env="a" * 64, live_env="a" * 64,
+    )
+    case(
+        "a ledger written before env_sha256 existed",
+        rows, READY_LEDGER, None, False,
+        piloted_env=None, live_env="b" * 64,
+    )
 
     print(
         "  selftest passed: parsers correct, every omission red, the ready registration green."
@@ -287,7 +350,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     text = prereg.read_text(encoding="utf-8")
     ledger = args.folder / "pilot" / "ledger.jsonl"
-    problems = check(piloted(text), ledger_units(ledger), waiver(text))
+    problems = check(piloted(text), ledger_units(ledger), waiver(text),
+                     piloted_env=latest_env(ledger), live_env=provenance.env_digest())
     for p in problems:
         print(f"[FAIL] {prereg.name}: {p}")
     if problems:
