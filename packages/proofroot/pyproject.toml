@@ -1,6 +1,6 @@
 [project]
 name = "proofroot"
-version = "0.1.2"
+version = "0.1.3"
 description = "Language-neutral trust core for reproducible simulation: named RNG stream derivation, run phases, evidence tiers, canonical serialization."
 readme = "README.md"
 requires-python = ">=3.12"
