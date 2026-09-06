@@ -8,14 +8,8 @@ description: Turn any question into one that the later steps can actually settle
 > **Commands in this file are for you, the assistant, to run; the person decides.**
 > Asked how this works or where they are, describe what *they* do — see the `newlife` skill.
 
-> **This file ships with the `newlife` wheel; `newlife skills install` copies it verbatim
-> into your AI's config directory. No transformation** — the master and the deployed copy
-> are one file, because "two copies drift apart" is a shape this project has paid for
-> repeatedly.
->
-> This is **step one**: pure method, zero tool dependencies, entirely conducted in
-> conversation, producing a text. Works in ChatGPT, Claude or anywhere else. Step two
-> (writing the criteria) is `newlife-prereg`; step three (execution and judgement) is
+> This is **step one**: pure method, conducted in conversation, producing a text. Step two
+> (the criteria) is `newlife-prereg`; step three (execution and judgement) is
 > `newlife init / freeze / run / check / audit`.
 
 **Its output is the next step's input**: an anchored goal draft. It belongs in
@@ -285,27 +279,7 @@ In order; any "no" sends it back:
 
 ---
 
-## 7. Fixtures: graded questions with known answers
+## 7. Fixtures and evidence grading
 
-A new rule is first made into a fixture that goes red, then the rule is changed — **TDD on
-the methodology itself.**
-
-| Question | Correct tier | Why it is easy to grade wrong |
-|---|---|---|
-| "install only the declared dependencies — can the frozen artifact still be replayed?" | **methodology** | it has a counterparty, literature and negative controls, so it **looks the most like science** — but the answer is decided by design |
-| "phenomenological vs mechanistic model: what did the network layer buy?" | **methodology** | a real biological phenomenon and textbook curves make it **the easiest to misgrade as a world question** |
-| "re-express a known model on a new platform, bit-for-bit" | **tool** | the criterion is "bit-for-bit" and it reproduces a known result |
-| "does freezing this locus cause extinction or a uniform weakening?" | **world** | in artificial life there is no external measurement — **only "design vs running" grades it correctly** |
-
----
-
-## 8. Evidence grading: which rules have been checked
-
-| Rule | Status |
-|---|---|
-| eight moves complete, E/F endogenous-only, 3.2% for new intersections | **corpus statistics** (164 + 94 papers) |
-| "the mutation must really detect something" | **walked into twice** |
-| "behaving the same is not enough; compare item by item" | **walked into once** |
-| size estimate: "list in full, report directly" | **calibrated three times, ±5%** |
-| the "design vs running" grading | **20 cases validated retrospectively**, never prospectively |
-| "who changes what they do" as an importance gate | **unvalidated** — it has never yet stopped a real candidate |
+Which rules have been checked against what, and the graded fixtures a new rule is tested
+on first: `references/evidence.md`.

@@ -74,14 +74,9 @@ its four pieces are the row-one commitments; the pilot is not entitled to any of
 
 ### When the pilot has already answered the main criterion
 
-- **Failure six**: a pilot run under this rule measured S3 — the fraction of
-  narrow-interface modules in K562 — across 12 configurations, and every one fell inside
-  the surrogate null. The first conjunct of H1 was thereby known to be false. Freezing it
-  would have registered a question whose answer was already in hand: **it would have passed
-  every gate and been worth nothing**, in direct conflict with the first line of
-  `newlife-goal` §6 — *you genuinely do not know the answer while drafting.*
-
-Three legitimate exits, cheapest first:
+It happens (failure six, `references/cases.md`): the pilot showed the first conjunct of H1
+to be false before anything was frozen, and freezing it would have passed every gate and
+been worth nothing. Three legitimate exits, cheapest first:
 
 1. **Report it as an exploratory negative result and do not freeze.** A round that ends
    here is not a failed round; it cost one pilot and it produced a real answer.
@@ -101,16 +96,8 @@ may not be merged, and the second does not disappear because the first is true.
 
 ### Moving the "how" is not free either
 
-- **In a registered round**: swapping a random-gene-set null for a spectrum-preserving
-  surrogate moved the reading from **0.8–1.0 to 0.0–0.077** — and at the time nobody knew
-  that choice would flip the conclusion.
-- **In an exploration one day later** (no criteria existed, so this is an illustration of
-  the mechanism, not a seventh failure of this rule): a curve read as "regulon enrichment
-  rises 21× → 70× once the low-rank layer is stripped" survived a shuffled null and **died
-  against a spectrum-preserving one, which produced the same rising trend with no block
-  structure at all**. The signal was real; the reading of the trend was not.
-
-So every move in the "how" row owes two things:
+A change of null or statistic can flip the reading on its own (two measured cases in
+`references/cases.md`). So every move in the "how" row owes two things:
 
 - **a record** — which null, which statistic, and the reading before and after; it goes in §0
 - **a two-sided check at the real data scale** — no false alarm on structureless data
@@ -119,26 +106,9 @@ So every move in the "how" row owes two things:
 
 ### What this rule does not protect you from
 
-Three gaps, worth stating rather than papering over:
-
-- **Exit 1 has no landing place in the tooling.** `goal.md` §5's closeout is filled in after
-  a freeze; a round that correctly stops before freezing currently leaves a `pilot/`
-  directory and nothing that records what was concluded. Write it up by hand until that
-  exists.
-- **Blind data is not a blind analyst.** Exit 2 keeps the *data* unread, but after seeing
-  the first dataset your priors are already shaped by it — what you choose to measure next,
-  which direction you expect, what size feels convincing. Clinical trials answer this with
-  third-party analysis; at this scale there is no equivalent. Exit 2's conditions are
-  therefore **necessary and not sufficient**, and the residual belongs in §5 as a stated
-  limit of the conclusion.
-- **The gate sees the anchors move, not whether the move was honest.** `newlife pilot`
-  digests four `goal.md` anchors — `counterparty`, `attack_layer`, `decides`,
-  `who_changes_behavior` — into `pilot/ledger.jsonl`, and the freeze refuses when they
-  differ unless the change is recorded (`<!--@goal_changed: …-->`). What that buys is a
-  trace: rewriting the bet after the pilot can no longer happen silently. What it cannot
-  buy is judgement — a note saying "re-pointed at data never read" is checked for
-  existence, never for truth. And a bet that shifted only in your head, with the anchors
-  left untouched, is invisible to it.
+Three limits, stated in `references/cases.md`. The one that changes what you write: exit 2
+keeps the *data* unread, not the analyst — its conditions are necessary, not sufficient,
+and the residual belongs in §5 as a stated limit of the conclusion.
 
 ---
 
@@ -289,7 +259,7 @@ sample costs you — all three differ per question. What can be given is the seq
 questions whose answers determine it, and a gate that refuses when they are unanswered.
 
 **Answer these before freezing** (they go in `judgement-design.json` beside the
-registration; freeze it with `--data` so it is as immutable as the criteria):
+registration; the freeze pins it with the criteria):
 
 | | | Why it cannot be skipped |
 |---|---|---|
@@ -302,8 +272,7 @@ registration; freeze it with `--data` so it is as immutable as the criteria):
 
 **The order matters: shape first, then statistic, then N.** The regular bootstrap fails to
 estimate the distribution of a sample *mean* under heavy tails, while robust locations keep
-their power there. Measured on synthetic heavy-tailed data: **a trimmed mean reached the
-target with n=64 while the mean never reached it within a budget of 256.** Choosing the
+their power there (measured: `references/cases.md`). Choosing the
 statistic is not a matter of taste; it is the difference between decidable and not.
 
 **Derive N by bootstrap power analysis, not by a formula.** `n = 2(z+z)²σ²/δ²` assumes
@@ -313,11 +282,9 @@ each candidate N run **the same test you will judge with**, counting how often i
 Take the smallest N that reaches your power. Multiple comparisons need no extra correction
 because the real test already contains them.
 
-**"Undecidable within this budget" is a correct answer.** It happened on the first real
-use: judging one LLM against another at one order of magnitude needed more than 64 calls at
-two seconds each, so the method said so instead of returning a number that would have looked
-fine. That output tells you what the question would cost — which is more than a wrong N
-tells you.
+**"Undecidable within this budget" is a correct answer.** It tells you what the question
+would cost, which is more than a wrong N tells you (the first real use returned it:
+`references/cases.md`).
 
 **What this covers, and what it does not.** The derivation above is for **two groups
 compared on a location statistic**. It does **not** cover monotone trends, more than two
@@ -326,19 +293,17 @@ milestone that produced this method had, as its own scientific question, whether
 rises monotonically — **a shape this method cannot judge.** Forcing such a question into a
 two-group derivation yields a number unrelated to what is being asked.
 
-`newlife.gates.judgement_design` checks two things: that the six answers are present with
-their reasons, and that **the declared N re-derives from the premises stated next to it**.
-It never judges whether an effect size is the right one to care about — that would need a
-referee who understands the question better than the person asking, and there is none.
+**The freeze runs this check** when the `@reproduction_class` anchor in `prereg.md` says
+`seeded` or `stochastic`: the six answers must be present with their reasons, and **the
+declared N must re-derive from the premises stated next to it**; the freeze pins
+`judgement-design.json` with the criteria. It never judges whether an effect size is the
+right one to care about — that would need a referee who understands the question better
+than the person asking, and there is none. An anchor left as the template's placeholder is
+treated as `deterministic`, and the freeze says so.
 
-**Why the `stochastic` row is not hypothetical.** A runner whose "simulator" is an LLM
-behind an HTTP call was measured on 2026-09-06: at `temperature=0` the model is
-byte-deterministic, so **S0 went green, S1 went green, and `newlife audit` returned PASS on
-all five arms** — while swapping the model behind the same unchanged `verdict.py` moved the
-data from `[-10.0, -1.5, -1.2, -1.25]` to `[-1.0, -1.0, -12.5, -12.5]`. Every check was
-green and nothing recorded the thing that decided the answer.
-
-**So the rule has a second half**: whatever decides your result must be *named in the
+Measured on 2026-09-06 (`references/cases.md`): a runner whose simulator was an LLM went
+green on every check while swapping the model moved every number. **So the rule has a
+second half**: whatever decides your result must be *named in the
 conjunction*. `env.lock` records the distributions installed here — it knows nothing about a
 model version, an endpoint, or an environment variable, and S0's inner run inherits
 `os.environ`, so self-reproduction cannot see them either. If a remote service, a model
@@ -361,6 +326,9 @@ registration that passes every gate and rests on something nobody wrote down.
 - [ ] §5 states **what this round does not establish**; at closeout "we showed A" must never
       stand in for "B also holds"
 - [ ] `git log -- <prereg path>` is empty — **the freeze must be its first commit**
+- [ ] `newlife pilot` and `newlife freeze` were run from the **same** newlife — two
+      installations on one machine are two environments, and the freeze refuses when the
+      last pilot's differs
 - [ ] **the reproduction class is stated** (rule seven), and if it is `seeded` or
       `stochastic`, the unit that class obliges you to add is actually in the conjunction
 - [ ] **everything the question needs is installed now** — S1 compares the live environment

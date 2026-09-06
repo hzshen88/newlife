@@ -54,6 +54,11 @@ def check_wheels(dist: pathlib.Path) -> None:
             "newlife/scaffold/templates/origin-README.md",
             "newlife/scaffold/templates/prereg.md",
             "newlife/scaffold/templates/verdict.py.template",
+            "newlife/skills/newlife/SKILL.md",
+            "newlife/skills/newlife-goal/SKILL.md",
+            "newlife/skills/newlife-goal/references/evidence.md",
+            "newlife/skills/newlife-prereg/SKILL.md",
+            "newlife/skills/newlife-prereg/references/cases.md",
         ):
             _require_suffix(names, suffix, newlife.name)
         metadata = _metadata(archive)
