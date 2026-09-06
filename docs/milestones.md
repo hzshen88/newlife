@@ -13,8 +13,9 @@ documents under `docs/zh/worlds/` describe each question, its frozen known answe
 comparison tier that applied.
 
 **The frozen registration documents are not published.** Each milestone's goal, question,
-plan and preregistration live in the author's private exploration archive (the `exloop`
-repository's `docs/science-superpowers/`), frozen there with `prereg.sh freeze` before any
+plan and preregistration live in the author's private exploration archive (the
+`exloop-archive` repository's `docs/science-superpowers/`; the public `exloop` repository
+holds only the skill), frozen there with `prereg.sh freeze` before any
 implementation code was written, and stamped by that repository's git history. That
 history holds forty freeze and stamp commits and cannot be rewritten or moved without
 breaking the chain, and the same repository holds the author's personal explorations, so

@@ -59,7 +59,7 @@ not change what the program computes.
 on the governance side, next to the frozen preregistration it reads:
 
 ```sh
-cd ~/Projects/exloop && sh vendor/ms/verify_frozen_checksums.sh
+cd ~/Projects/exloop-archive && sh vendor/ms/verify_frozen_checksums.sh
 ```
 
 It parses the four SHA-256 values out of the frozen World 2 preregistration and compares

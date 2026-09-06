@@ -17,11 +17,11 @@ from newlife.mechanisms.third_world import moran
 
 _ORACLE_DIR = (
     pathlib.Path.home()
-    / "Projects/exloop/docs/science-superpowers/questions/verification"
+    / "Projects/exloop-archive/docs/science-superpowers/questions/verification"
 )
 pytestmark = pytest.mark.skipif(
     not (_ORACLE_DIR / "moran_fixation_check.py").exists(),
-    reason="oracle lives in the exloop repo; skipped when it is not checked out",
+    reason="oracle lives in the author's private exloop-archive repo; skipped when it is not checked out",
 )
 sys.path.insert(0, str(_ORACLE_DIR))
 

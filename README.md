@@ -100,7 +100,7 @@ siblings, not a chain: a question's verdict never runs another question's runner
 |---|---|---|
 | `newlife` | The harness: scaffold, gates, freeze, verdict runner template, audit, and the `newlife`, `newlife-goal`, `newlife-prereg` skills. | [`packages/newlife`](packages/newlife/), [PyPI](https://pypi.org/project/newlife/) |
 | `proofroot` | Language-neutral trust core: named RNG stream derivation, run phases, evidence tiers, canonical serialization with cross-language vectors. Zero dependencies. | [`packages/proofroot`](packages/proofroot/), [PyPI](https://pypi.org/project/proofroot/) |
-| `exloop` | The exploration skill and the zero-dependency state helper it runs. A dependency of newlife; its own repository. | [PyPI](https://pypi.org/project/exloop/) |
+| `exloop` | The exploration skill and the zero-dependency state helper it runs. A dependency of newlife; its own repository. | [github.com/hzshen88/exloop](https://github.com/hzshen88/exloop), [PyPI](https://pypi.org/project/exloop/) |
 
 Optional simulation backends: `pip install "newlife[spatio-flux]"` (Monod kinetics, dynamic
 FBA with GLPK, diffusion, particles) or `"newlife[process-bigraph]"` for the runtime alone;

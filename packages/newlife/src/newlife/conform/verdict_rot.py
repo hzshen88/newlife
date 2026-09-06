@@ -28,7 +28,7 @@ import tempfile
 
 REPO = pathlib.Path(__file__).resolve().parents[5]
 CONFORM = "packages/newlife/src/newlife/conform"
-EXLOOP = pathlib.Path.home() / "Projects/exloop/docs/science-superpowers"
+EXLOOP = pathlib.Path.home() / "Projects/exloop-archive/docs/science-superpowers"
 
 # (runner, 冻结产物, 额外参数构造器)。--out/--output 由本模块统一接管。
 TARGETS: dict[str, tuple[str, str, list[str]]] = {

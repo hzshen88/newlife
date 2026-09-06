@@ -29,7 +29,7 @@ whole suite runs in CI on every push to `main` and every pull request (`lint.yml
 Twelve tests skip unless the author's private exloop checkout is present: the third
 world's oracle-conformance module (`tests/third_world/test_oracle_conformance.py`) replays
 a Moran fixation oracle that lives in that repository's frozen verification documents, and
-the module is `skipif`-gated on the file existing at `~/Projects/exloop/...`. On CI and on
+the module is `skipif`-gated on the file existing at `~/Projects/exloop-archive/...`. On CI and on
 any other machine they report as skipped, not as passed; the third world's own verdict
 bundle under `results/third-world/` is the public record of that comparison.
 
