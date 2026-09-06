@@ -1,0 +1,8 @@
+{
+  "schema": "self-reproduction.v1",
+  "S0_byte_identical_on_rerun": true,
+  "verdict": "H0",
+  "verdict_before_reproduction": "H0",
+  "of": "summary.json",
+  "sha256": "bce8e961c3bb9508169b44edd105c728ede58fe83e6176c00cf21da5c15d439e"
+}

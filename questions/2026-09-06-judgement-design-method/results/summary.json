@@ -1,0 +1,78 @@
+{
+  "schema": "2026-09-06-judgement-design-method.v1",
+  "provenance": {
+    "newlife_version": "0.1.1",
+    "newlife_source_sha256": "fc186576583a2053434b93b2daf0db3c47a9f6f9af5a18b547d0ff487b0e9f39",
+    "newlife_location": "/Users/hzshen/Projects/newlife/packages/newlife/src/newlife",
+    "python": "3.12.8",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "preregistration_freeze": "55feaeb9f18ab3a86f6e613715cee9b5a9175816",
+    "env_lock_sha256": "5c99799f5bd56956fd6d21a2cb5e65f44b6d43eac6ea6ddd80a78d83a89a626c"
+  },
+  "units": {
+    "S1_env_unchanged": {
+      "passed": true
+    },
+    "S2_deriver_correct_on_synthetic": {
+      "passed": true,
+      "per_case": {
+        "robust wins on heavy tails": true,
+        "a bigger effect is not harder": true,
+        "undecidable is reachable": true
+      }
+    },
+    "S3_criteria_can_fail": {
+      "passed": true,
+      "demonstrations": {
+        "equivalent() false on far-apart centres": true,
+        "equivalent() true on one shared distribution": true,
+        "derive_n returns None when the budget is too small": true,
+        "tail_ratio separates normal from heavy": true
+      }
+    },
+    "S4_gate_catches_inconsistency": {
+      "passed": true,
+      "clean_problems": [],
+      "mutated_problems": [
+        "log10_tof: declared n=7 but re-deriving from effect=1.0, location=trimmed, alpha=0.05, beta=0.2 gives None. **A number that does not follow from its own premises was chosen, not derived.**",
+        "segsites: declared n=23 but re-deriving from effect=2.0, location=mean, alpha=0.05, beta=0.2 gives 16. **A number that does not follow from its own premises was chosen, not derived.**"
+      ]
+    },
+    "S5_world_a_has_power": {
+      "passed": false,
+      "undecidable_within_budget": true,
+      "note": "the method reported no N within budget; that is its correct output, and this unit records it as not established"
+    },
+    "S6_world_b_has_power": {
+      "passed": true,
+      "n": 16,
+      "location": "mean",
+      "stability": {
+        "segsites": {
+          "lo": -1.3125,
+          "hi": 0.75,
+          "contains_zero": true
+        }
+      },
+      "sensitivity": {
+        "segsites": {
+          "lo": -5.5,
+          "hi": -2.3125,
+          "contains_zero": false
+        }
+      }
+    },
+    "S7_designs_differ": {
+      "passed": true,
+      "world_a": {
+        "n": null,
+        "location": "trimmed"
+      },
+      "world_b": {
+        "n": 16,
+        "location": "mean"
+      }
+    }
+  },
+  "verdict_before_reproduction": "H0"
+}
