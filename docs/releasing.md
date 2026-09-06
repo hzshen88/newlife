@@ -95,3 +95,9 @@ the lock cannot resolve the dependency and `uv run` needs `--frozen`.
 6. Verify from PyPI, not from the workflow's word:
 
        uv pip install newlife && newlife init <slug> && newlife freeze … && newlife audit …
+
+7. Before the bump commit, retitle the `Unreleased` section of `CHANGELOG.md` with the
+   version and date; after the upload, create the GitHub Release from that section so the
+   Releases page says what changed:
+
+       gh release create v0.1.1 --title "newlife 0.1.1" --notes-file <that section>

@@ -1,9 +1,13 @@
 name: lint-and-test
 
-# 手动触发：private 仓库的 Actions 分钟数计入账户额度，逐次提交跑 CI 不值得。
-# 本地等价命令见 README「Quickstart」，日常防线是本地跑，CI 只在里程碑收尾时手动跑一次。
+# 2026-09-06 起 push / PR 自动触发（公开仓库的 Actions 分钟免费；此前私有时只手动跑）。
+# 本地等价命令见 CONTRIBUTING.md；手动触发仍保留：
 #   gh workflow run lint-and-test          # 或 Actions 页面的 "Run workflow" 按钮
-on: workflow_dispatch
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   import-lint:
