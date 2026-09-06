@@ -1,6 +1,6 @@
 # 不确定世界的可判定性
 
-**Frozen at commit:** _pending_
+**Frozen at commit:** 994c4bf6b6f8fab2a8a8399c1fe720ed10966801
 
 - **slug**：`newlife-stochastic-world-judgeable`
 - **上游**：goal（exloop-archive，frozen `56dc2b0`）· design（同处，`d4ad607`）
