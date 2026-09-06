@@ -1274,7 +1274,7 @@ wheels = [
 
 [[package]]
 name = "newlife"
-version = "0.1.1"
+version = "0.1.2"
 source = { editable = "packages/newlife" }
 dependencies = [
     { name = "exloop" },
@@ -1682,7 +1682,7 @@ wheels = [
 
 [[package]]
 name = "proofroot"
-version = "0.1.1"
+version = "0.1.2"
 source = { editable = "packages/proofroot" }
 
 [package.dev-dependencies]

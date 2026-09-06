@@ -3,7 +3,7 @@
 `proofroot` and `newlife` are released together under one version from one tag; `exloop`
 has its own version and its own repository. Dates are the PyPI upload dates.
 
-## Unreleased
+## 0.1.2 — 2026-09-06
 
 ### Added
 

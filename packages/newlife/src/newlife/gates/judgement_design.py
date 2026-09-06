@@ -166,6 +166,11 @@ def _complete() -> dict:
     }
 
 
+# Measured 2026-09-06 and deliberately left alone: this function is 70 lines, the
+# largest here, and its twenty-odd cases share one shape (deepcopy, drop a field,
+# assert red). Turning them into a table would save about 25 lines and stop a new
+# field from being added without a case. **Not done**: it fixes no defect and was in
+# no registration's criteria. Do it the next time a field is actually added.
 def _selftest() -> int:
     from newlife.stochastic.schema import shape_problems
     ok = True
