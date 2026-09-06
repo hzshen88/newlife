@@ -16,6 +16,20 @@ has its own version and its own repository. Dates are the PyPI upload dates.
   repairing the environment would itself turn S1 red. A ledger written before this existed
   carries no digest and stays green, so registrations already in flight can still freeze.
 
+- **Rule seven now says where the repetition count comes from** — and it is not a number
+  anyone can hand you. Six questions must be answered before freezing (in
+  `judgement-design.json`, pinned with `--data` so it is as immutable as the criteria), and
+  `newlife.gates.judgement_design` refuses a freeze when they are unanswered **or when the
+  declared N does not re-derive from the premises written beside it**. The order matters:
+  the shape of the data chooses the statistic, and only then does the statistic choose N —
+  the regular bootstrap fails on the mean of heavy-tailed samples, where a trimmed mean
+  reached the target at n=64 and the mean never reached it within 256. N comes from a
+  bootstrap power analysis running the very test you will judge with, never from
+  `n = 2(z+z)²σ²/δ²`, which assumes normality and describes a t-test. **"Undecidable within
+  this budget" is one of the answers**, and the first real use returned it. The gate never
+  judges whether an effect size is worth caring about; it checks that a reason was given and
+  that the arithmetic follows. **Scope is stated rather than implied**: two groups compared
+  on a location statistic — not trends, not more than two groups, not slopes or proportions.
 - **`newlife.stochastic.equivalence`**: one equivalence test, used in both directions, for
   worlds whose outcome differs every run. Two batches of the same configuration must come
   back equivalent; two genuinely different configurations must not — **the same test and
