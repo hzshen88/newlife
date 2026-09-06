@@ -39,6 +39,32 @@ import sys
 from newlife.stochastic.equivalence import LOCATION, bootstrap_diff_ci
 
 
+def tail_ratio(xs: list[float]) -> float:
+    """`sd / (1.4826 * MAD)` — about 1 for a normal sample, well above 1 under heavy tails.
+
+    **Why this rather than kurtosis**: kurtosis is itself a fourth moment, so on exactly the
+    data where the question matters it is estimated worst. This ratio compares a
+    tail-sensitive scale against a tail-resistant one; the divergence between them *is* the
+    tail. Reported so the declaration can be cross-checked — **a fact that can be measured
+    should not rest on self-report**, even under a rule that never judges answers.
+    """
+    if len(xs) < 4:
+        raise ValueError("tail ratio needs at least 4 values")
+    med = sorted(xs)[len(xs) // 2]
+    mad = sorted(abs(x - med) for x in xs)[len(xs) // 2]
+    mean_x = sum(xs) / len(xs)
+    sd = (sum((x - mean_x) ** 2 for x in xs) / (len(xs) - 1)) ** 0.5
+    if mad == 0.0:
+        return float("inf") if sd > 0 else 1.0
+    return sd / (1.4826 * mad)
+
+
+HEAVY_TAIL_RATIO = 1.5
+"""Above this, the sample is treated as heavy-tailed for cross-checking purposes.
+Not a law of nature — a threshold, chosen so that a normal sample sits comfortably below
+and the twenty-first milestone's batch (which contained a -400) sits far above."""
+
+
 def detection_rate(pilot: list[float], effect: float, n: int, *, kind: str, level: float,
                    resamples: int, trials: int, seed: int) -> float:
     """How often N samples per group let the test see a shift of `effect`.
