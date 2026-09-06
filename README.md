@@ -74,13 +74,6 @@ reached, not a failure to tidy away.
 
 ## If you would rather type
 
-What the AI runs for you, end to end, in 75 seconds of real output (the written version is
-[`docs/first-question.md`](docs/first-question.md)):
-
-<p align="center">
-  <img src="docs/demo/first-question.gif" alt="newlife: one question from start to a passing audit, 75 seconds" width="900">
-</p>
-
 ```bash
 cd my-research
 newlife init 2026-09-05-my-question                 # scaffold; prereg.md is left uncommitted on purpose
