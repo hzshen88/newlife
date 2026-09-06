@@ -113,3 +113,25 @@ def test_start_does_not_promise_exploration_when_exloop_is_missing(tmp_path: Pat
     assert "pip install exloop" in out
     assert "Explore this with me" not in out
     assert (dest / "newlife-goal" / "SKILL.md").exists()          # 其余照做
+
+
+def test_start_refreshes_a_stale_next_md_but_not_a_persons_own(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """升级后 NEXT.md 不刷新就一直教人跑一个已经不存在的命令（实测：check 退役后 my-research 的
+    NEXT.md 还写着它）。带模板标记的文件重写；没有标记的是人的笔记，不碰。"""
+    _git_identity(tmp_path, monkeypatch, present=True)
+    dest = tmp_path / "skills"
+    dest.mkdir()
+    root = tmp_path / "my-research"
+    cli._start(_args(root, dest))
+    template = (cli.scaffold.TEMPLATES / "next.md").read_text(encoding="utf-8")
+    marker = template.splitlines()[0]
+    (root / "NEXT.md").write_text(marker + "\n\nan older version of the guidance\n", encoding="utf-8")
+    cli._start(_args(root, dest))
+    assert (root / "NEXT.md").read_text(encoding="utf-8") == template
+    assert "refreshed" in capsys.readouterr().out
+    (root / "NEXT.md").write_text("# my own notes\n", encoding="utf-8")
+    cli._start(_args(root, dest))
+    assert (root / "NEXT.md").read_text(encoding="utf-8") == "# my own notes\n"
+

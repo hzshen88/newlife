@@ -185,6 +185,12 @@ def _skills(args) -> int:
     return 1 if skipped else 0
 
 
+def _is_our_next_md(path: Path) -> bool:
+    """True when NEXT.md still opens with the marker the template carries."""
+    with path.open(encoding="utf-8") as fh:
+        return fh.readline().startswith("<!-- Written by `newlife start`")
+
+
 def _start(args) -> int:
     """From `pip install` to "now talk to your AI" in one command.
 
@@ -204,9 +210,17 @@ def _start(args) -> int:
                                  capture_output=True, text=True).returncode != 0]
     for name, template in ((".gitignore", "gitignore"), ("NEXT.md", "next.md")):
         target = root / name
+        source = scaffold.TEMPLATES / template
         if not target.exists():
-            shutil.copyfile(scaffold.TEMPLATES / template, target)
+            shutil.copyfile(source, target)
             print(f"  wrote         {target}")
+        elif name == "NEXT.md" and _is_our_next_md(target) \
+                and target.read_bytes() != source.read_bytes():
+            # Guidance that never refreshes goes stale silently: a NEXT.md written by an
+            # older release kept telling people to run a command that no longer existed.
+            # Only a file carrying our marker is rewritten; a person's own notes are not.
+            shutil.copyfile(source, target)
+            print(f"  refreshed     {target} (written by an older newlife)")
     rc = _skills(argparse.Namespace(action="install", dest=args.skills_dest, force=args.force))
     has_exloop = any(provider == "exloop" for provider, _ in _skill_sources())
     if has_exloop:

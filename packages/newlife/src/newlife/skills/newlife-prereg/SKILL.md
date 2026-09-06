@@ -208,7 +208,7 @@ wrapper returns `float(self.rr[n]) - float(state["species"][n])`, a difference. 
 that line to wrap a simulator that returns absolute values is the same error in reverse.**
 Say out loud which of the two the process returns, and say it before writing the binding.
 
-Nothing downstream catches this — not `admit`, not the pilot, not the five gates. What can
+Nothing downstream catches this — not `admit`, not the pilot, not the freeze's scans, not the run's alignment check. What can
 catch it is a criterion you write on purpose: a conserved total that must stay conserved
 when there is no source or sink, or a unit check that an increment and a level cannot both
 be right. **If a foreign process is in the composite, one such criterion belongs in the

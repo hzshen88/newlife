@@ -1,3 +1,5 @@
+<!-- Written by `newlife start`, which rewrites this file when it has changed; keep your own notes elsewhere. -->
+
 # What happens from here
 
 This is a research repository. Everything from here on is a conversation with your AI

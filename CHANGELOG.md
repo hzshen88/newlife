@@ -51,6 +51,10 @@ has its own version and its own repository. Dates are the PyPI upload dates.
 ### Fixed
 
 - An unused import in `newlife.stochastic.design`.
+- `NEXT.md` went stale after an upgrade: `newlife start` never touched an existing one, so
+  a research repository kept guidance naming commands that no longer existed. The template
+  now opens with a marker, and `start` rewrites a `NEXT.md` that carries it when it differs
+  from the current template; a file without the marker is a person's own and is left alone.
 
 ## 0.1.2 — 2026-09-06
 

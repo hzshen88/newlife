@@ -26,7 +26,7 @@ Stage detection belongs in code that is tested, not in prose that is inferred fr
    - both, results not committed: stage **verdict computed, not committed**;
    - committed: stage **closeout** — `goal.md` §5 and the exploration map.
 
-It runs no gate that needs a scan (`check` does that) and changes nothing.
+It runs no scan (the freeze and the run do that) and changes nothing.
 
     newlife status <question-folder>
 """
