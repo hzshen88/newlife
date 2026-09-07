@@ -1,6 +1,6 @@
 # repro class gate false negatives
 
-**Frozen at commit:** _pending_
+**Frozen at commit:** fb4883d73ca818d54c4a7e145dca2b8a6943f61a
 
 ## 1. Hypothesis
 
