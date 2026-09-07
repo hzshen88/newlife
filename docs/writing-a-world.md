@@ -60,6 +60,17 @@ composite = build_composite(
 > and the pilot records them as covered. Read what your `update` returns and say which of
 > the two it is before you write the binding.
 
+> **The port's registered type decides whether a write replaces or accumulates — the
+> binding does not.** Declaring `"set"` and lowering through `list-direct` reads like an
+> overwrite; it is not one if the port's type is `list[…]`, because `list` reconciles by
+> **appending** (`apply(list, [1,2], [9])` → `[1,2,9]`). A process that returns its whole
+> state through such a port **doubles that state every tick**, and nothing raises: the
+> binding matches the handler, the handler matches the declaration, the contract matches
+> the claimed path, and no layer ever looks at the store. Use `overwrite` (or `object` /
+> `tree`) for a port whose value replaces what was there. Found by admitting a real local
+> simulator whose ownership array grew from 1526 entries to 3052 in one tick, with a
+> green run; pinned by `tests/test_store_semantics.py`.
+
 Writing anywhere you did not claim raises `newlife.core.errors.CommitAuthorityError` —
 **from the contract layer, not from your solver**. That distinction matters: "an exception
 was raised" is not the same as "the contract stopped it", and a criterion that conflates

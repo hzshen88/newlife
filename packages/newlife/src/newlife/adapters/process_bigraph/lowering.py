@@ -84,7 +84,14 @@ def _sum_float_set(op: LoweredOp, port: str, view, _interval) -> dict[str, Any]:
 
 def _list_direct(op: LoweredOp, port: str, _view, _interval) -> dict[str, Any]:
     _expect(op, OP_SET, 'list-direct')
-    # set on a list store: the update is the whole new list (overwrite).
+    # The update is the whole new list. **Whether that overwrites depends on the port's
+    # registered type, not on this handler** — and the two are never reconciled anywhere.
+    # `list` reconciles by *appending* (measured: apply(list, [1,2], [9]) -> [1,2,9]), so
+    # a process returning its whole state through a `list[…]` port doubles that state
+    # every tick, silently: the declaration says `set`, `_expect` passes because the
+    # declaration matches this handler, the contract passes because the path is the one
+    # claimed, and nothing looks at the store. Use `overwrite` (or `object` / `tree`) for
+    # a port whose value replaces what was there. See tests/test_store_semantics.py.
     return {port: op.payload}
 
 
