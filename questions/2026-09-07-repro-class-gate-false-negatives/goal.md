@@ -67,4 +67,49 @@ H0（存在假阴性）成立时下面三条仍应满足。
 
 ## 5. Closeout judgement
 
-(Filled in afterwards: achieved / not_achieved / regressed / not_applicable.)
+**判定：`achieved`**
+
+prereg verdict 是 **H0**（`results/reproduction.json`）；goal 判 `achieved`。两者物理分开，
+而且事前就把达成判据写成独立于 H1——**问题被回答了**，答案恰好是「有假阴性」。
+
+### 对照第 2 节逐条
+
+| 事前判据 | 实际 | 结论 |
+|---|---|---|
+| **C1** 每种变异先自证破坏可复现性，证明由代码给出 | 七种变异全部跑了自证（重建后结果不同或重建失败）。三种边缘变异自证不通过，被记 `not_a_mutation` 并排除在分子分母外 | **满足** |
+| **C2** 判定取自封闭词表，由代码算出 | `caught` / `false_negative` / `not_a_mutation` / `construction_failed`，逐条落进产物 | **满足** |
+| **C3** 假阴性能指出漏的是哪条判据 | `submodule_uninitialised` 的 `caught_by` 为空数组——三条判据**全部**漏掉，而不是笼统「整体漏了」 | **满足** |
+
+### 结论：找到一个假阴性
+
+**`submodule_uninitialised`**：依赖放在 submodule 里的仓库，工作区 clean、commit 在 remote
+上可达、内容摘要与数据校验和全部一致——**三条判据一条都不红**；而重建者按注册记下的信息
+clone 下来，`lib/` 是空的，跑不起来（`rebuild_failed=True`）。
+
+三条各自独立地漏掉它：`git status --porcelain` 对未初始化的 submodule 返回空；
+`git ls-files` 里 submodule 是 gitlink 条目而非文件，内容不进摘要；commit 确实在 remote 上，
+可达性判据本来就该通过。**而注册里没有任何地方能写下「这个仓库有 submodule，
+重建要 --recursive」**——重建流程不得依赖注册之外的知识，这是实现里冻住的建模前提。
+
+### 如实记录（不润色）
+
+1. **另外三种 `not_a_mutation` 有两种不同含义，不能混为一谈。**
+   `shallow_clone` 是**真的无害**——shallow clone 里代码是全的，checkout 记录的 commit
+   能成功，这个重建流程不受影响。而 `gitattributes_filter` 与 `lfs_pointer_not_fetched`
+   **更可能是在本地 `file://` remote 上没构造成功**（LFS 需要真正的 LFS endpoint）。
+   **「测过了没事」与「没测成」是两句话**，前者不得冒充后者。
+2. **清单不穷尽。** 找到一个假阴性不等于只有一个；三个没测出破坏也不等于没有。
+   这是第十七个里程碑「穷举有保质期」的同一形状，事前已在第 4 节声明。
+3. **结论绑定在 git 2.50.1 上**，产物记录了版本字符串。边缘行为随版本变。
+4. **pilot 抓出实验台自己的两个建模缺陷**，都不跑发现不了：重建函数绕过 remote 配置
+   （于是「删掉 remote」这个变异根本没生效）；变异清单混进了两种「破坏」
+   （`source_edited`/`data_edited` 破坏的是「注册与实际不符」而非「能不能重建」，
+   若把定义扩过去就成了用判据定义破坏的恒真圈——**上一个里程碑 S5 正是这么塌的**）。
+   两者都在 pilot 阶段修掉，并把教训冻成了 F6。
+5. **规模估计对照**：事前估 `impl_lines=420`，实际 488 行（含骨架约 373 行的基线，
+   净增约 115 行的判据实现 + 变异构造）。**按总行数看高估 15%，按净增看严重低估**
+   ——事前把「骨架」和「新增」混在一个数里估，是这次估计口径的缺陷，下次分开报。
+
+### 对应的 prereg verdict（只作交叉引用）
+
+`questions/2026-09-07-repro-class-gate-false-negatives/results/reproduction.json` → `H0`

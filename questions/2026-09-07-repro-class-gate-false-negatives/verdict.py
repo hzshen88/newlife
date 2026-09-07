@@ -234,6 +234,132 @@ def mismatch_demo() -> dict:
     return {"digest_caught": digest_caught, "data_caught": data_caught}
 
 
+
+# ─────────────────────────────────────────────────────────────────────
+# S5 — 边缘变异。**登记冻结后才实现**（fb4883d7）。
+#
+# 与前三个不同：它们改的是工作区内容，这些改的是**仓库形态**，所以各自要造场景。
+# 重建流程一律按注册记得下的信息走（remote URL + commit），**不得依赖注册之外的知识**
+# ——比如「这个仓库有 submodule，要 --recursive」这句话，注册里没有地方写。
+# ─────────────────────────────────────────────────────────────────────
+def _seed_repo(work: Path, extra: str = "") -> None:
+    (work / "params.py").write_text("seed = 7\n")
+    (work / "data.txt").write_text("3 1 4 1 5\n")
+    (work / "model.py").write_text(extra + MODEL)
+
+
+def edge_shallow(root: Path) -> dict:
+    """工作副本本身是 shallow clone —— CI runner 默认 depth=1 就是这个形态。"""
+    bare, seed, work = root / "origin.git", root / "seed", root / "work"
+    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True)
+    subprocess.run(["git", "clone", "-q", str(bare), str(seed)], capture_output=True)
+    _seed_repo(seed)
+    git(seed, "add", "-A")
+    git(seed, "commit", "-qm", "first")
+    (seed / "params.py").write_text("seed = 7\n# second commit\n")
+    git(seed, "add", "-A")
+    git(seed, "commit", "-qm", "second")
+    git(seed, "push", "-q", "origin", "HEAD:refs/heads/main")
+    subprocess.run(["git", "clone", "-q", "--depth=1", str(bare), str(work)],
+                   capture_output=True)
+    return {"bare": bare, "work": work, "commit": git(work, "rev-parse", "HEAD"),
+            "digest": tree_digest(work), "data_sha": file_sha(work / "data.txt")}
+
+
+def edge_submodule(root: Path) -> dict:
+    """依赖放在 submodule 里，而重建时没有 --recursive —— 注册里没有地方写这件事。"""
+    subbare, subwork = root / "sub.git", root / "subwork"
+    subprocess.run(["git", "init", "-q", "--bare", str(subbare)], check=True)
+    subprocess.run(["git", "clone", "-q", str(subbare), str(subwork)], capture_output=True)
+    (subwork / "helper.py").write_text("factor = 1\n")
+    git(subwork, "add", "-A")
+    git(subwork, "commit", "-qm", "sub")
+    git(subwork, "push", "-q", "origin", "HEAD:refs/heads/main")
+
+    bare, work = root / "origin.git", root / "work"
+    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True)
+    subprocess.run(["git", "clone", "-q", str(bare), str(work)], capture_output=True)
+    _seed_repo(work, "import sys; sys.path.insert(0, 'lib')\nimport helper\n")
+    subprocess.run(["git", "-C", str(work), "-c", "protocol.file.allow=always",
+                    "submodule", "add", "-q", str(subbare), "lib"],
+                   capture_output=True, env={**os.environ, **GIT_ENV})
+    git(work, "add", "-A")
+    git(work, "commit", "-qm", "with submodule")
+    git(work, "push", "-q", "origin", "HEAD:refs/heads/main")
+    return {"bare": bare, "work": work, "commit": git(work, "rev-parse", "HEAD"),
+            "digest": tree_digest(work), "data_sha": file_sha(work / "data.txt")}
+
+
+def edge_filter(root: Path) -> dict:
+    """`.gitattributes` 的 smudge filter 使 checkout 出的内容不等于仓库里存的内容。
+
+    filter driver 配在**本地 git config 里，不在仓库里** —— 重建者没有它。
+    """
+    bare, work = root / "origin.git", root / "work"
+    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True)
+    subprocess.run(["git", "clone", "-q", str(bare), str(work)], capture_output=True)
+    _seed_repo(work)
+    (work / ".gitattributes").write_text("params.py filter=tweak\n")
+    git(work, "config", "filter.tweak.smudge", "sed s/seed=7/seed=13/")
+    git(work, "config", "filter.tweak.clean", "cat")
+    git(work, "add", "-A")
+    git(work, "commit", "-qm", "with filter")
+    git(work, "push", "-q", "origin", "HEAD:refs/heads/main")
+    (work / "params.py").unlink()
+    git(work, "checkout", "--", "params.py")
+    return {"bare": bare, "work": work, "commit": git(work, "rev-parse", "HEAD"),
+            "digest": tree_digest(work), "data_sha": file_sha(work / "data.txt")}
+
+
+def edge_lfs(root: Path) -> dict:
+    """数据文件由 LFS 管理，而重建时指针没被拉取成内容。"""
+    bare, work = root / "origin.git", root / "work"
+    subprocess.run(["git", "init", "-q", "--bare", str(bare)], check=True)
+    subprocess.run(["git", "clone", "-q", str(bare), str(work)], capture_output=True)
+    _seed_repo(work)
+    subprocess.run(["git", "-C", str(work), "lfs", "install", "--local"],
+                   capture_output=True, env={**os.environ, **GIT_ENV})
+    subprocess.run(["git", "-C", str(work), "lfs", "track", "data.txt"],
+                   capture_output=True, env={**os.environ, **GIT_ENV})
+    git(work, "add", "-A")
+    git(work, "commit", "-qm", "lfs")
+    git(work, "push", "-q", "origin", "HEAD:refs/heads/main")
+    return {"bare": bare, "work": work, "commit": git(work, "rev-parse", "HEAD"),
+            "digest": tree_digest(work), "data_sha": file_sha(work / "data.txt")}
+
+
+EDGE_MUTATIONS = {
+    "shallow_clone": (edge_shallow, "CI runner 默认 depth=1"),
+    "submodule_uninitialised": (edge_submodule, "clone 时忘了 --recursive"),
+    "gitattributes_filter": (edge_filter, "filter driver 在本地 config，不随仓库走"),
+    "lfs_pointer_not_fetched": (edge_lfs, "没装 git-lfs 或没 lfs pull"),
+}
+
+
+def evaluate_edge(name: str) -> dict:
+    """边缘变异：造场景 → 自证破坏可复现性（F5）→ 看哪条判据抓住。
+
+    构造本身失败时如实记 `construction_failed`：**它既不是 caught 也不是假阴性**，
+    把构造失败当成任何一种结论都是在拿测不出问题的东西下判断。
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        try:
+            record = EDGE_MUTATIONS[name][0](root)
+        except Exception as error:  # noqa: BLE001 —— 构造失败本身是要交代的事实
+            return {"outcome": "construction_failed", "detail": type(error).__name__,
+                    "why_it_happens": EDGE_MUTATIONS[name][1]}
+        after = run_model(record["work"])
+        rebuilt = rebuild_and_run(record, root / "rebuild")
+        breaks = rebuilt is None or rebuilt != after
+        caught_by = sorted(k for k, fn in CHECKS.items() if not fn(record["work"], record))
+        return {"breaks_reproducibility": breaks, "caught_by": caught_by,
+                "rebuild_failed": rebuilt is None,
+                "outcome": ("not_a_mutation" if not breaks
+                            else "caught" if caught_by else "false_negative"),
+                "why_it_happens": EDGE_MUTATIONS[name][1]}
+
+
 def git_version() -> str:
     """结论绑定在这个 git 版本上，不是永久事实——边缘行为随版本变。"""
     return subprocess.run(["git", "--version"], capture_output=True,
@@ -283,6 +409,7 @@ def main() -> int:
         env_lock_sha256=provenance.file_digest(HERE / "env.lock"),
     )
     results = {name: evaluate_mutation(name) for name in sorted(MUTATIONS)}
+    edges = {name: evaluate_edge(name) for name in sorted(EDGE_MUTATIONS)}
 
     can_fail = criteria_can_fail(results)
     # S1: the packages installed *now* are exactly the ones `env.lock` recorded at the
@@ -294,18 +421,22 @@ def main() -> int:
     s1 = provenance.env_text() == (HERE / "env.lock").read_text(encoding="utf-8")
     s2 = all(r["breaks_reproducibility"] for r in results.values())
     s4 = all_caught(results)
+    # F5：construction_failed 与 not_a_mutation 都不进分子分母——不得拿测不出问题的
+    # 变异去判「判据抓住了」。判定的只是真的破坏了可复现性的那些。
+    judged = {k: v for k, v in edges.items() if v["outcome"] in ("caught", "false_negative")}
+    s5 = bool(judged) and all(v["outcome"] == "caught" for v in judged.values())
     # **"the criteria can fail" is its own visible slot in the conjunction, not a
     # detail nested inside another unit.** The first version folded it into a sub-field
     # of S2, so the registration read S0∧S1∧S2∧S3 while the code computed three —
     # the unit-alignment check in `newlife run` caught exactly this the first time it
     # ran against a real question folder.
-    # S5（边缘变异）刻意不在这里：pilot 会把每个产出单元记进 ledger 算作 seen，
-    # 先写出来就等于把唯一携带信息的那格跑掉。实现等 freeze 之后。
     units = {"S1_env_unchanged": {"passed": s1},
              "S2_mutations_really_break_it": {"passed": s2, "per_mutation": results},
              "S3_criteria_can_fail": {"passed": all(can_fail.values()),
                                       "demonstrations": can_fail},
-             "S4_known_mutations_caught": {"passed": s4}}
+             "S4_known_mutations_caught": {"passed": s4},
+             "S5_edge_mutations_caught": {"passed": s5, "per_mutation": edges,
+                                          "judged": sorted(judged)}}
 
     invalid = not s1                       # IC-2: a changed environment is not a judgement
     passed = all(u["passed"] for u in units.values())
