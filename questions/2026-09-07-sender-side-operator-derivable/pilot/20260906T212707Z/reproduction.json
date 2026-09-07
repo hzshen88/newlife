@@ -1,0 +1,8 @@
+{
+  "schema": "self-reproduction.v1",
+  "S0_byte_identical_on_rerun": false,
+  "verdict": "INVALID",
+  "verdict_before_reproduction": "INVALID",
+  "of": "summary.json",
+  "sha256": "5a8a8ea67dbd616dfbafdb6e5de9e129dcf2f58de988ea1e1cda9d7c38b5804d"
+}
