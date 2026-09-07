@@ -177,6 +177,52 @@ def agrees_with_hand_written(probed_all: dict) -> dict:
     return out
 
 
+FLIP = {"add": "set", "set": "add"}
+
+
+def negative_control(probed_all: dict) -> dict:
+    """S5（冻结判据的字面实现）：把手写算符取反后，探针判定必须与之不符。"""
+    out: dict = {}
+    for label, entry in probed_all.items():
+        probed = entry["probed"]
+        out[label] = {
+            port: {"flipped_declaration": FLIP[op], "probed": probed.get(port),
+                   "caught": probed.get(port) != FLIP[op]}
+            for port, op in sorted(entry["hand_written"].items()) if op in FLIP
+        }
+    return out
+
+
+def s5_vacuity_diagnosis() -> dict:
+    """**机械证明 S5 被 S4 逻辑蕴含**，因而判定力为零——由代码算，不由散文断言。
+
+    穷举 (探针判定, 手写声明) 的每一种组合，找「S4 真而 S5 假」的反例。
+    一个都找不到，就说明 S5 在 S4 成立时必真，不携带独立信息。
+
+    根因是结构性的，记在这里供收尾引用：登记 F6 要求探针**不得读取声明**，
+    所以声明的任何改动都影响不到探针的输出——「取反声明」这种负控对它无效。
+    **真正的负控必须改变被探对象的行为**（例如把 process 包一层使其返回绝对值，
+    S2 的 `LevelGrow` 正是这么做的），而不是改变声明。
+    """
+    counterexamples = [
+        {"probed": probed, "hand_written": hand}
+        for probed in OPS
+        for hand in ("add", "set")
+        if (probed == hand) and not (probed != FLIP[hand])
+    ]
+    return {
+        "claim": "S5 is implied by S4; it cannot go red unless S4 is already red",
+        "search_space": {"probed": list(OPS), "hand_written": ["add", "set"]},
+        "counterexamples_where_s4_true_and_s5_false": counterexamples,
+        "implied_by_s4": not counterexamples,
+    }
+
+
+def s5_can_go_red() -> bool:
+    """S5 能不能红——在 S4 为真的前提下。**返回 False 就是 F1 被违反的证据。**"""
+    return not s5_vacuity_diagnosis()["implied_by_s4"]
+
+
 def criteria_can_fail() -> dict:
     """**F1：每条判据都要能红。** 用合成输入在运行时证明，不靠散文断言。
 
@@ -192,6 +238,11 @@ def criteria_can_fail() -> dict:
         "S4 谓词对不一致的输入为假": agrees_with_hand_written(
             {"synthetic": {"probed": {"p": "set"}, "hand_written": {"p": "add"}}}
         )["synthetic"]["p"]["ok"] is False,
+        # **这一项会返回 False，而且是刻意让它返回 False 的。** S5 被 S4 逻辑蕴含，
+        # 永远不会红；F1 要求每条判据都能红，所以 S3 必须因此为假。
+        # 判据已冻结不得修改（登记的规矩），正确处置是让判定体系自己抓住它、
+        # 在产物里输出分类，而不是回头把 S5 改成能红的样子。
+        "S5 能红（恒真则为假）": s5_can_go_red(),
     }
 
 
@@ -219,19 +270,22 @@ def main() -> int:
     s1 = provenance.env_text() == (HERE / "env.lock").read_text(encoding="utf-8")
     s2 = all(entry["ok"] for entry in selftest.values())
     s4 = all(port["ok"] for case in agreement.values() for port in case.values())
+    negative = negative_control(probed_all)
+    s5 = all(port["caught"] for case in negative.values() for port in case.values())
     # **"the criteria can fail" is its own visible slot in the conjunction, not a
     # detail nested inside another unit.** The first version folded it into a sub-field
     # of S2, so the registration read S0∧S1∧S2∧S3 while the code computed three —
     # the unit-alignment check in `newlife run` caught exactly this the first time it
     # ran against a real question folder.
-    # **S5 刻意不在这里。** 它在登记里标 blind，实现要等 freeze 之后——
-    # `newlife pilot` 会把 runner 产出的每个单元记进 ledger 算作 seen，
-    # 先写出来就等于亲手把唯一携带信息的那格跑掉。
     units = {"S1_env_unchanged": {"passed": s1},
              "S2_probe_distinguishes": {"passed": s2, "selftest": selftest},
              "S3_criteria_can_fail": {"passed": all(can_fail.values()),
                                       "demonstrations": can_fail},
-             "S4_probe_matches_hand_written": {"passed": s4, "agreement": agreement}}
+             "S4_probe_matches_hand_written": {"passed": s4, "agreement": agreement},
+             # S5 照冻结的字面实现，同时把它恒真这件事作为分类输出在旁边——
+             # 冻结的判据不许为了让它变绿而修改。
+             "S5_negative_control": {"passed": s5, "per_case": negative,
+                                     "vacuity_diagnosis": s5_vacuity_diagnosis()}}
 
     invalid = not s1                       # IC-2: a changed environment is not a judgement
     passed = all(u["passed"] for u in units.values())

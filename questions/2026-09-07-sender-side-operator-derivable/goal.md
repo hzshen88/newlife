@@ -89,4 +89,45 @@ third party's behalf. It is an assertion, not a fact read off the third party.�
 
 ## 5. Closeout judgement
 
-(Filled in afterwards: achieved / not_achieved / regressed / not_applicable.)
+**判定：`achieved`**
+
+判定的是 goal，不是 verdict——两者物理分开，**且这一轮正好是它们分岔的那种情形**：
+prereg verdict 是 **H0**（`results/reproduction.json`），goal 判 `achieved`。
+本节不重述 verdict 的判定逻辑。
+
+### 对照第 2 节逐条
+
+| 事前判据 | 实际 | 结论 |
+|---|---|---|
+| **C1** 三个真实 process 各产出一个由代码算出的、取值来自封闭词表的判定，不得手填 | `Grow` / `MonodKinetics` / `DynamicFBA` 各自跑出判定，全部由 `probe()` 算出并落进 `results/summary.json` 的 `probed` 字段 | **满足** |
+| **C2** 探针自证有判定力：已知增量的判 `add`、已知绝对值的判 `set` | S2 为真：`Grow` 判 `add`、`LevelGrow` 判 `set`，两者相对裕度均为 1.0 | **满足** |
+| **C3** 与手写声明对不上的项被机械分类为「探针不适用 / 手写本来就错 / 真的分不出」 | **未被触发**——3/3 全部一致，没有产生任何对不上的项 | **未验证**，见下 |
+
+C1、C2 满足即判 `achieved`：goal 第 1 节要买的是「`PortBinding.operation` 这一格能被
+机器核对，而不是只能靠人写对」，这一点买到了——三个真实第三方 process 上 3/3 推出，
+其中包括每 tick 解线性规划的 `DynamicFBA`。
+
+### 如实记录（不润色）
+
+1. **C3 的分类能力没有被验证过。** 它需要一个「探针与手写不一致」的实例才会触发，
+   而这一轮 3/3 全对。**不能因为没触发就记成具备该能力。**
+2. **这一轮没有携带 blind 信息。** 唯一标 blind 的 S5 被 S4 逻辑蕴含（`summary.json`
+   的 `vacuity_diagnosis` 用穷举给出机械证明：S4 真而 S5 假的反例集合为空）。
+   按 `newlife-prereg` 的标准，一轮确证性判定里所有证据都是 seen 的，信息量为零。
+3. **根因是结构性的，不是笔误**：登记 F6 要求探针不得读取声明，因此「取反声明」这种
+   负控对它无效——声明怎么改都影响不到只看行为的探针。**真正的负控必须改变被探对象的
+   行为**（S2 的 `LevelGrow` 正是这么做的，但我当时没意识到负控也得走这条路）。
+   这是下一个里程碑的直接种子。
+4. **判据已冻结，未作任何修改。** 处置方式是让判定体系自己抓住它：S5 照字面实现并
+   通过，而骨架自带的 S3「每条判据都能红」因此为假，verdict 判 H0。**这比在散文里
+   声明「S5 恒真」有力**，也符合登记的规矩——不得为了让判据变绿而编辑它。
+5. **pilot 抓到一个不跑就发现不了的缺陷**：S0 首次为假，两次运行数值完全相同，
+   差异是第三方 `update` 返回 dict 的键顺序（逐进程不稳定）。加 `sorted` 后转绿。
+   它不影响任何数值结论，只会让判定永远 INVALID。
+6. **规模估计对照**：事前估 `impl_lines=380`，实际 runner 约 260 行（未含骨架）。
+   偏高约 30%，原因是探针本体比预想简洁，而事前把"三个 process 各自的接线适配"
+   估成了独立成分，实际被 `probe_state_from()` 一个函数吸收。
+
+### 对应的 prereg verdict（只作交叉引用）
+
+`questions/2026-09-07-sender-side-operator-derivable/results/reproduction.json` → `H0`

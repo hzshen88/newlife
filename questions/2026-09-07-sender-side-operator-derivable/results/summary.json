@@ -1,0 +1,240 @@
+{
+  "schema": "2026-09-07-sender-side-operator-derivable.v1",
+  "provenance": {
+    "newlife_version": "0.1.3",
+    "newlife_source_sha256": "3d2dab0a21b1651a302dfebba2e675031949c186b491b7ab4238d7c708e06ab8",
+    "newlife_location": "/Users/hzshen/Projects/newlife/packages/newlife/src/newlife",
+    "python": "3.12.8",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "preregistration_freeze": "3875a7057e5e6d8e5618fca220c45f78a598c2bd",
+    "env_lock_sha256": "696631c488d29ac5b94710cd978ccefd3add465b8c92351e289e8ecf801c33cb"
+  },
+  "probe": {
+    "dt_pair": [
+      0.5,
+      1.0
+    ],
+    "rel_eps": 1e-06,
+    "vocabulary": [
+      "add",
+      "set",
+      "indeterminate",
+      "AMBIGUOUS"
+    ]
+  },
+  "probed": {
+    "Grow": {
+      "probed": {
+        "mass": "add"
+      },
+      "hand_written": {
+        "mass": "add"
+      },
+      "synthesized_state_ports": [
+        "mass"
+      ],
+      "detail": {
+        "mass": {
+          "operation": "add",
+          "v0": 0.0,
+          "state": 1.0,
+          "rel_margin": 1.0
+        }
+      }
+    },
+    "MonodKinetics": {
+      "probed": {
+        "biomass": "add",
+        "substrates": "add"
+      },
+      "hand_written": {
+        "biomass": "add",
+        "substrates": "add"
+      },
+      "synthesized_state_ports": [],
+      "detail": {
+        "biomass": {
+          "operation": "add",
+          "v0": 0.0,
+          "state": 1.0,
+          "rel_margin": 1.0
+        },
+        "substrates": {
+          "per_key": {
+            "detritus": {
+              "operation": "indeterminate",
+              "v0": 0.0,
+              "state": 0.0,
+              "rel_margin": 0.0
+            },
+            "glucose": {
+              "operation": "add",
+              "v0": 0.0,
+              "state": 10.0,
+              "rel_margin": 1.0
+            }
+          },
+          "operation": "add"
+        }
+      }
+    },
+    "DynamicFBA": {
+      "probed": {
+        "biomass": "add",
+        "substrates": "add"
+      },
+      "hand_written": {
+        "biomass": "add",
+        "substrates": "add"
+      },
+      "synthesized_state_ports": [],
+      "detail": {
+        "biomass": {
+          "operation": "add",
+          "v0": 0.0,
+          "state": 0.1,
+          "rel_margin": 1.0
+        },
+        "substrates": {
+          "per_key": {
+            "acetate": {
+              "operation": "indeterminate",
+              "v0": 0.0,
+              "state": 0.0,
+              "rel_margin": 0.0
+            },
+            "glucose": {
+              "operation": "add",
+              "v0": 0.0,
+              "state": 10.0,
+              "rel_margin": 1.0
+            }
+          },
+          "operation": "add"
+        }
+      }
+    }
+  },
+  "units": {
+    "S1_env_unchanged": {
+      "passed": true
+    },
+    "S2_probe_distinguishes": {
+      "passed": true,
+      "selftest": {
+        "Grow": {
+          "expected": "add",
+          "got": "add",
+          "rel_margin": 1.0,
+          "ok": true
+        },
+        "LevelGrow": {
+          "expected": "set",
+          "got": "set",
+          "rel_margin": 1.0,
+          "ok": true
+        }
+      }
+    },
+    "S3_criteria_can_fail": {
+      "passed": false,
+      "demonstrations": {
+        "classify 对增量样本不返回 set": true,
+        "classify 对绝对值样本不返回 add": true,
+        "classify 在零裕度时拒绝给答案": true,
+        "S4 谓词对不一致的输入为假": true,
+        "S5 能红（恒真则为假）": false
+      }
+    },
+    "S4_probe_matches_hand_written": {
+      "passed": true,
+      "agreement": {
+        "Grow": {
+          "mass": {
+            "probed": "add",
+            "hand_written": "add",
+            "ok": true
+          }
+        },
+        "MonodKinetics": {
+          "biomass": {
+            "probed": "add",
+            "hand_written": "add",
+            "ok": true
+          },
+          "substrates": {
+            "probed": "add",
+            "hand_written": "add",
+            "ok": true
+          }
+        },
+        "DynamicFBA": {
+          "biomass": {
+            "probed": "add",
+            "hand_written": "add",
+            "ok": true
+          },
+          "substrates": {
+            "probed": "add",
+            "hand_written": "add",
+            "ok": true
+          }
+        }
+      }
+    },
+    "S5_negative_control": {
+      "passed": true,
+      "per_case": {
+        "Grow": {
+          "mass": {
+            "flipped_declaration": "set",
+            "probed": "add",
+            "caught": true
+          }
+        },
+        "MonodKinetics": {
+          "biomass": {
+            "flipped_declaration": "set",
+            "probed": "add",
+            "caught": true
+          },
+          "substrates": {
+            "flipped_declaration": "set",
+            "probed": "add",
+            "caught": true
+          }
+        },
+        "DynamicFBA": {
+          "biomass": {
+            "flipped_declaration": "set",
+            "probed": "add",
+            "caught": true
+          },
+          "substrates": {
+            "flipped_declaration": "set",
+            "probed": "add",
+            "caught": true
+          }
+        }
+      },
+      "vacuity_diagnosis": {
+        "claim": "S5 is implied by S4; it cannot go red unless S4 is already red",
+        "search_space": {
+          "probed": [
+            "add",
+            "set",
+            "indeterminate",
+            "AMBIGUOUS"
+          ],
+          "hand_written": [
+            "add",
+            "set"
+          ]
+        },
+        "counterexamples_where_s4_true_and_s5_false": [],
+        "implied_by_s4": true
+      }
+    }
+  },
+  "verdict_before_reproduction": "H0"
+}
