@@ -81,3 +81,97 @@ keep the rest.
 > **Why "proves it can fail" is a required slot**: this project shipped a negative
 > control that was true by construction and nobody noticed for a whole milestone.
 > See `docs/zh/worlds/019-yield-input-or-outcome.md` §6 (Chinese).
+
+---
+
+# Bringing your own code
+
+`newlife blocks` lists what is *installed*. Two other sources of code are just as common
+and neither is covered by that listing: **a local library of your own** (a checkout you
+`pip install -e`, not something published to an index) and **code written directly inside
+the question folder**. Both run fine today. What neither gets today is a place in the
+reproducibility chain — and the failure is silent: the artifact is produced, `S1` stays
+green, `newlife audit` returns PASS, and none of it means the run can be repeated.
+
+## Why the version string is not enough
+
+`provenance.package_digest` says it in one line: **"A version string can lie about what is
+installed. This cannot."** newlife records its own `newlife_source_sha256` for exactly this
+reason, because a source checkout's version is whatever `pyproject.toml` last said —
+typically `0.1.0`, forever. Edit the code, rerun, and `env.lock` does not move a byte.
+
+This is not a hypothetical about someone else's project. **newlife and proofroot are
+themselves installed editable**, pointing at a source tree; every `dist-info/direct_url.json`
+with `dir_info.editable` true is a library in this category. The rule below is the one
+newlife already applies to itself, written down so it can be applied to yours.
+
+## Three things, not one
+
+A git commit is the natural answer and it is one third of one. Each of these blocks a
+different failure:
+
+| | Blocks | Existing part |
+|---|---|---|
+| **commit** | losing the code — a digest you cannot resolve back to source | the freeze commit already does this for `prereg.md` |
+| **content digest + a dirty check** | *"that is not what ran"* — a commit says nothing about uncommitted edits | `provenance.package_digest` |
+| **data checksums** | *"the code was right, the inputs moved"* — for whatever `.gitignore` excludes | `prereg.sh freeze <prereg> [raw-data ...]`, verified by audit's `DATA` line |
+
+Take any one away and something real gets through. **Commit alone**: a working tree with
+uncommitted edits produces a verdict whose code exists in no commit, and nobody — including
+you — can rebuild it. **Digest alone**: you can prove what ran and never get it back.
+**Neither**: a checkout that excludes its inputs is a repository that does not run.
+
+Record all three, and put the first three fields **inside the conjunction**, not merely in
+`provenance`. The reasoning is the one already established for solver identity: a fact that
+only sits in the artifact cannot change the verdict, so changing the code would leave the
+judgement untouched.
+
+## Declare which level you are at, and let it be checked
+
+The point is not that every question must reach the highest level. It is that **the level
+is declared and the declaration is mechanically checkable** — the same rule as "waiving is
+fine, skipping quietly is not".
+
+| Level | What it adds | Mechanical test | Who can rerun it |
+|---|---|---|---|
+| `local` | dirty check, source digest, data checksums | `git status --porcelain` empty | **you, on this machine** |
+| `portable` | the code is retrievable; the data has a fetch script plus checksums | `git branch -r --contains <commit>` non-empty **after a fetch**, or a `git bundle` containing that commit stored beside the question | anyone with a network |
+| `archived` | code *and* data in immutable public archives | the recorded DOI or archive URL resolves — not a placeholder string | an anonymous third party, years later |
+
+Two warnings about the middle row, both found by testing rather than reasoning:
+the check reads **remote-tracking branches**, so a stale local view answers for the remote
+unless you fetch first; and **a reachable remote is not necessarily a public one** — a
+private repository passes this test and still cannot be retrieved by a reviewer. No
+mechanical test settles that; say which it is.
+
+## Record the fact, not the promise
+
+A level decays. `portable` today is `local` after the host account is deleted, and this is
+the same rot that `verdict_rot` measures for verdicts. So do not write a standing claim:
+
+    reproducibility: portable          # a lie three years from now
+
+Write what was verified, and when:
+
+    code_remote_checked_at_freeze: "github.com/…", commit reachable, 2026-09-07
+
+That sentence stays true forever, because it is about the freeze, not about today. It is
+the same reason `unevaluable` exists as a separate verdict state: a conclusion that can no
+longer be re-evaluated was not thereby wrong.
+
+## Code and data get separate levels
+
+Publishing code is a push. Publishing data often is not — too large, or licensed so that
+it cannot be redistributed at all. A registration is allowed to say
+
+    code: archived
+    data: restricted — GAEZ v4 requires registration; fetch script and checksums provided
+
+and that is **better than a single optimistic word covering both**. Claiming the data is
+public when a reviewer will hit a login wall is the failure this whole section exists to
+prevent.
+
+> **Status**: the levels above are a convention, not yet a gate. Nothing currently refuses
+> a freeze that claims `portable` from a repository with no remote. Whether such a gate can
+> actually catch the mutation it is meant to catch — a local library edited without the
+> verdict moving — is itself a question worth registering rather than assuming.

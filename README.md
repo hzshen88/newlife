@@ -108,7 +108,9 @@ FBA with GLPK, diffusion, particles) or `"newlife[process-bigraph]"` for the run
 declared contract: a mechanism says which state paths it owns and which effects it may
 emit, and writing anywhere else is refused by the contract layer, not by your solver.
 [`docs/writing-a-world.md`](docs/writing-a-world.md) shows the twenty lines that wrap a
-simulator which is not a process-bigraph `Process`.
+simulator which is not a process-bigraph `Process`, and — for code that is **not** an
+installed package, such as a local checkout of your own or sources written inside the
+question folder — what has to be recorded for the run to be repeatable, and by whom.
 
 ## This repository
 
