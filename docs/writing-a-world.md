@@ -171,7 +171,33 @@ and that is **better than a single optimistic word covering both**. Claiming the
 public when a reviewer will hit a login wall is the failure this whole section exists to
 prevent.
 
+## A known false negative: submodules
+
+That question was registered and answered
+(`questions/2026-09-07-repro-class-gate-false-negatives`, verdict **H0**). One of the four
+edge cases tested gets through all three criteria and still does not run:
+
+**A dependency in a git submodule.** The worktree is clean, the commit is reachable on the
+remote, the digest and the data checksums both match — and a rebuilt clone has an empty
+submodule directory. Each criterion misses it for its own reason: `git status --porcelain`
+is empty for an uninitialised submodule; `git ls-files` records a **gitlink, not a file**,
+so the submodule's content never enters the digest; and the commit really is on the remote.
+
+The deeper problem is that **a registration has nowhere to say "this repository has a
+submodule, clone it with `--recursive`"**, and a rebuild is not allowed to depend on
+knowledge that lives outside the registration. Until that is fixed, a repository with
+submodules **cannot honestly claim `portable`** on the strength of these three checks
+alone; say so, or vendor the dependency.
+
+Three other edge cases — a shallow clone, a `.gitattributes` smudge filter, and an
+unfetched LFS pointer — came back `not_a_mutation`, and **that phrase means two different
+things**. The shallow clone is genuinely harmless for this rebuild path: the code is
+complete and checking out the recorded commit succeeds. The filter and LFS cases more
+likely failed to construct over a local `file://` remote at all. **"Tested and fine" must
+not stand in for "could not be built"**, and neither says the criteria are safe: finding
+one false negative does not mean there is only one.
+
 > **Status**: the levels above are a convention, not yet a gate. Nothing currently refuses
-> a freeze that claims `portable` from a repository with no remote. Whether such a gate can
-> actually catch the mutation it is meant to catch — a local library edited without the
-> verdict moving — is itself a question worth registering rather than assuming.
+> a freeze that claims `portable` from a repository with no remote — or from one with an
+> uninitialised submodule, which is the sharper case now that it is known. Results are
+> bound to git 2.50.1; edge behaviour moves with the version.
