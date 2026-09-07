@@ -67,6 +67,35 @@ exploring, or a boundary ready to hand off.
 Say the stage in one sentence, then what you are about to do. `NEXT.md` in the repository
 carries the same loop for the person to read.
 
+## If their model is a local checkout of their own
+
+Not everything is an installed package. A user's own repository, installed editable, runs
+fine and has **no place in the reproducibility chain by default** — and the failure is
+silent: the artifact is produced, S1 stays green, `newlife audit` returns PASS, and none of
+it means the run can be repeated. `env.lock` will carry a line like `theirpkg==0.1.0`
+that never changes when they edit the code.
+
+Three facts go into `provenance.snapshot(...)`, and **the first two belong inside the
+conjunction**, for the reason already established for solver identity — a fact that only
+sits in the artifact cannot change the verdict:
+
+    <name>_source_sha256    provenance.package_digest(module)  — a version string can lie about
+                            what is installed; this cannot
+    <name>_git_dirty        `git status --porcelain` non-empty means the code that ran is in
+                            no commit and nobody, including them, can rebuild it → hard-fail
+    code_retrievable_from   the URL, plus the date it was checked. **Record the fact and its
+                            date, never a standing level like "portable"** — the future
+                            revokes levels, and a frozen file then says something false
+
+Data usually needs its own line: publishing code is a push, publishing data often is not.
+`restricted — needs registration; fetch script and checksums provided` is better than one
+optimistic word covering both.
+
+**A known gap, measured**: a dependency in a git submodule passes every one of those checks
+and still does not run — clean worktree, reachable commit, matching digest, empty `lib/`.
+Nothing in a registration can say "clone this with `--recursive`". Say so on the record, or
+vendor the dependency.
+
 ## What does not belong here
 
 Skills for developing newlife itself (an author's `newlife-milestone`, with a

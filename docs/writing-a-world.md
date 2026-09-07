@@ -137,50 +137,58 @@ Record all three, and put the first three fields **inside the conjunction**, not
 only sits in the artifact cannot change the verdict, so changing the code would leave the
 judgement untouched.
 
-## Declare which level you are at, and let it be checked
+## Record what was checked, and when — do not assign a level
 
-The point is not that every question must reach the highest level. It is that **the level
-is declared and the declaration is mechanically checkable** — the same rule as "waiving is
-fine, skipping quietly is not".
-
-| Level | What it adds | Mechanical test | Who can rerun it |
-|---|---|---|---|
-| `local` | dirty check, source digest, data checksums | `git status --porcelain` empty | **you, on this machine** |
-| `portable` | the code is retrievable; the data has a fetch script plus checksums | `git branch -r --contains <commit>` non-empty **after a fetch**, or a `git bundle` containing that commit stored beside the question | anyone with a network |
-| `archived` | code *and* data in immutable public archives | the recorded DOI or archive URL resolves — not a placeholder string | an anonymous third party, years later |
-
-Two warnings about the middle row, both found by testing rather than reasoning:
-the check reads **remote-tracking branches**, so a stale local view answers for the remote
-unless you fetch first; and **a reachable remote is not necessarily a public one** — a
-private repository passes this test and still cannot be retrieved by a reviewer. No
-mechanical test settles that; say which it is.
-
-## Record the fact, not the promise
-
-A level decays. `portable` today is `local` after the host account is deleted, and this is
-the same rot that `verdict_rot` measures for verdicts. So do not write a standing claim:
+The tempting move here is a ladder: `local` / `portable` / `archived`, one word summarising
+how far the code and data can travel. **Do not.** A level is a claim about the future
+("someone else can get this"), and the future revokes it: an account is deleted, a
+repository goes private, a host shuts down. Written into a frozen registration, the word
+becomes false while the file still says it.
 
     reproducibility: portable          # a lie three years from now
 
-Write what was verified, and when:
+Record the fact and its date instead. This stays true forever, because it is about the
+freeze rather than about today:
 
-    code_remote_checked_at_freeze: "github.com/…", commit reachable, 2026-09-07
+    code_retrievable_from:  "github.com/…"     # or: none — local checkout only
+    code_checked_at:        2026-09-07          # the commit was reachable on that date
+    data_retrievable_from:  "scripts/fetch.sh + checksums"   # or a DOI, or: restricted — …
 
-That sentence stays true forever, because it is about the freeze, not about today. It is
-the same reason `unevaluable` exists as a separate verdict state: a conclusion that can no
-longer be re-evaluated was not thereby wrong.
+It is the same reasoning that gives `unevaluable` its own verdict state: a conclusion that
+can no longer be re-evaluated was not thereby wrong, and a repository that can no longer be
+fetched was not un-fetchable on the day it was frozen.
 
-## Code and data get separate levels
+**The distinction the ladder was reaching for survives anyway**, and more honestly: a
+`github.com/…` and a `doi.org/…` are visibly different retrieval promises, and the reader
+judges them without a middleman word. What the ladder added was not information but a
+false air of permanence.
 
-Publishing code is a push. Publishing data often is not — too large, or licensed so that
-it cannot be redistributed at all. A registration is allowed to say
+### The checks that establish those facts
 
-    code: archived
-    data: restricted — GAEZ v4 requires registration; fetch script and checksums provided
+These are how you find out what to write down — **not a grading scheme**:
 
-and that is **better than a single optimistic word covering both**. Claiming the data is
-public when a reviewer will hit a login wall is the failure this whole section exists to
-prevent.
+| Fact | How to establish it | What it does not tell you |
+|---|---|---|
+| the worktree matches the commit | `git status --porcelain` is empty | nothing about files `.gitignore` excludes |
+| the commit is reachable from a remote | `git branch -r --contains <commit>` non-empty **after a fetch** | whether that remote is *public*: a private repository passes and a reviewer still cannot clone it. **No mechanical test settles this — say which it is.** |
+| the content is what was recorded | `provenance.package_digest` | nothing about a dependency in a submodule, see below |
+| the inputs are what were recorded | `prereg.sh freeze <prereg> [raw-data …]`, verified by audit's `DATA` line | nothing about data you could not commit at all |
+
+Two of those "does not tell you" columns were found by measurement, not by reasoning: the
+stale-remote-view problem, and the submodule case below.
+
+**Data usually needs its own line.** Publishing code is a push; publishing data often is
+not — too large, or licensed so it cannot be redistributed. Writing
+
+    data_retrievable_from: restricted — GAEZ v4 requires registration; fetch script and checksums provided
+
+is **better than one optimistic word covering both**. Claiming the data is public when a
+reviewer will hit a login wall is the failure this section exists to prevent.
+
+> **Not to be confused with `@reproduction_class`**, which is already a registered anchor
+> and means something else entirely: `deterministic` / `seeded` / `stochastic`, i.e. whether
+> *this world's outcome* varies between runs. That one is checked at the freeze. The facts
+> above are about whether *the code and data* can be obtained, and nothing checks them yet.
 
 ## A known false negative: submodules
 
@@ -197,8 +205,9 @@ so the submodule's content never enters the digest; and the commit really is on 
 The deeper problem is that **a registration has nowhere to say "this repository has a
 submodule, clone it with `--recursive`"**, and a rebuild is not allowed to depend on
 knowledge that lives outside the registration. Until that is fixed, a repository with
-submodules **cannot honestly claim `portable`** on the strength of these three checks
-alone; say so, or vendor the dependency.
+submodules **cannot honestly write a plain `code_retrievable_from` line** on the strength
+of these checks alone: the URL is real and the clone still comes up short. Say so on the
+record, or vendor the dependency.
 
 Three other edge cases — a shallow clone, a `.gitattributes` smudge filter, and an
 unfetched LFS pointer — came back `not_a_mutation`, and **that phrase means two different
@@ -208,7 +217,8 @@ likely failed to construct over a local `file://` remote at all. **"Tested and f
 not stand in for "could not be built"**, and neither says the criteria are safe: finding
 one false negative does not mean there is only one.
 
-> **Status**: the levels above are a convention, not yet a gate. Nothing currently refuses
-> a freeze that claims `portable` from a repository with no remote — or from one with an
-> uninitialised submodule, which is the sharper case now that it is known. Results are
-> bound to git 2.50.1; edge behaviour moves with the version.
+> **Status**: the fields above are a convention, not yet a gate. Nothing currently refuses
+> a freeze whose `code_retrievable_from` names a repository with no remote — or one with an
+> uninitialised submodule, which is the sharper case now that it is known. Nothing writes
+> those fields for you either; the checks are run by hand. Results are bound to git 2.50.1;
+> edge behaviour moves with the version.

@@ -26,6 +26,20 @@ INNER = "_NEWLIFE_INNER_RUN"        # marks the inner reproduction run; stops in
 
 # ─────────────────────────────────────────────────────────────────────
 # YOUR WORLD. **Replace everything from here down to "criteria" with your own.**
+#
+# Wrapping a simulator that is not a process-bigraph `Process`? Two things bite silently,
+# both measured rather than guessed (docs/writing-a-world.md has the detail):
+#
+#   1. Whether your `update` returns a **change** or a **level** is invisible in its
+#      signature — `outputs()` gives a type, never that. Declare it in the binding, and
+#      read what your `update` actually returns before you do.
+#   2. Whether a write **replaces or accumulates** is decided by the **port's registered
+#      type**, not by the binding. `list` appends (`apply(list,[1,2],[9]) -> [1,2,9]`), so
+#      a process returning its whole state through a `list[...]` port doubles that state
+#      every tick with nothing raising. Use `overwrite` when the value replaces.
+#
+# Both failures produce plausible numbers in the right units, and the pilot records them
+# as covered.
 # ─────────────────────────────────────────────────────────────────────
 SWEEP = (1.0, 2.0, 4.0, 8.0)
 
