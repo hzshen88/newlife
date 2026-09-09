@@ -47,18 +47,28 @@ GitHub plan; without them the tag push itself is the only gate.
 
 ## exloop goes first
 
-`newlife` depends on `exloop>=0.1,<0.2`, a separate package released **by hand from the
+`newlife` depends on `exloop>=0.2,<0.3`, a separate package released **by hand from the
 exloop repository**, not by this workflow. The build job's smoke test installs the built
 wheels with PyPI enabled precisely so that it proves `pip install newlife` brings the
-exploration skill along — which means the exloop version that satisfies the range must
+exploration skills along — which means the exloop version that satisfies the range must
 already be on PyPI when the tag is pushed. Releasing exloop:
 
-    uv build --out-dir dist && python scripts/check_release_artifacts.py dist && uv publish
+    rm -rf dist && uv build --out-dir dist && python scripts/check_release_artifacts.py dist && uv publish
 
-The check refuses any file outside the skill, the helper, `README.pypi.md` and `LICENSE`;
+**`rm -rf dist` is not tidiness.** That check takes exactly one `exloop-*.whl` and one
+`exloop-*.tar.gz` and reads the version out of the wheel's filename; a previous release
+still sitting in `dist/` makes it exit before it has checked anything.
+
+The check refuses any file outside the skills, the helper, `README.md` and `LICENSE`;
 that repository also holds sealed explorations that must never ship. Once exloop is on
 PyPI, run `uv lock` here and commit the lock together with the version bump — until then
 the lock cannot resolve the dependency and `uv run` needs `--frozen`.
+
+**Between the two, `main` is briefly unbuildable, and that is expected.** The moment the
+`exloop` range in `packages/newlife/pyproject.toml` moves ahead of what PyPI holds,
+`uv lock --check` fails and `lint.yml` goes red on `main` — `uv sync` cannot resolve a
+version that does not exist yet. Nothing is broken; the fix is to finish the exloop
+release. Do not paper over it by widening the range.
 
 ## Release
 
@@ -73,7 +83,7 @@ the lock cannot resolve the dependency and `uv run` needs `--frozen`.
 
 2. If `proofroot` crosses a minor version, update the constraint `proofroot<0.2,>=0.1`
    in `packages/newlife/pyproject.toml` in the same commit; the same goes for
-   `exloop<0.2,>=0.1`. `check_release_artifacts.py` checks that the wheel declares both
+   `exloop<0.3,>=0.2`. `check_release_artifacts.py` checks that the wheel declares both
    bounded constraints, but **nothing checks that the pairing is right.**
 
 3. Commit, merge to `main`, then create and push a matching tag:

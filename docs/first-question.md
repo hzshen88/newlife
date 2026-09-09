@@ -24,13 +24,14 @@ Open ~/my-research in your AI tool (Claude Code, Codex, ...) and say:
 The rest is conversation. NEXT.md in the repository says what happens from here.
 ```
 
-`start` also copies the four skills into every AI tool directory it finds on the machine
+`start` also copies the five skills into every AI tool directory it finds on the machine
 (`~/.claude/skills`, `~/.codex/skills`, ...). Here they were already present and identical,
 so nothing was printed for them.
 
-A real question begins with that sentence: the `exloop` skill explores with you, and when a
-boundary becomes decidable it hands the record into the question folder's `origin/`. This
-walkthrough skips straight to the folder.
+A real question begins with that sentence: the `exloop` skill explores with you. If several
+explanations fit, it invokes `idea-lab` inside the same conversation; this is not another
+choice or worksheet for you. When a boundary becomes decidable, `exloop` hands the record
+into the question folder's `origin/`. This walkthrough skips straight to the folder.
 
 ## 2. Scaffold a question
 

@@ -110,7 +110,7 @@ SKIP_PARTS = frozenset({"__pycache__", ".ruff_cache", ".pytest_cache"})
 def _skill_sources() -> list[tuple[str, Path]]:
     """Every skill this install can offer: newlife's own, plus exloop's.
 
-    exloop is the exploration stage upstream of newlife and a separate package on purpose —
+    exloop owns the exploration stage upstream of newlife and is a separate package on purpose —
     one master, in its own repository — and a declared dependency, so it is normally present;
     the ImportError branch is a broken or partial install. newlife never imports its code; it only finds its
     files, and the interface between the two stays files (`handoff` writes into a question's
@@ -138,8 +138,8 @@ def _skills(args) -> int:
     The master and the deployed copy are the same bytes. "two copies drift apart" is a
     shape this project has paid for repeatedly: a skill telling the user to run a command
     the library does not have yet, with no mechanical defence that would notice. Whole
-    directories are copied, not just `SKILL.md` — the exploration skill carries references
-    and a helper script, and the first version of this command could not install it.
+    directories are copied, not just `SKILL.md` — the exploration skills carry references
+    and a helper script, and the first version of this command could not install them.
     """
     sources = _skill_sources()
     has_exloop = any(provider == "exloop" for provider, _ in sources)
@@ -147,7 +147,7 @@ def _skills(args) -> int:
         for provider, skill in sources:
             print(f"{skill / 'SKILL.md'}  [{provider}]")
         if not has_exloop:
-            print("(the exploration skill is not listed: the exloop package is not installed)",
+            print("(the exploration skills are not listed: the exloop package is not installed)",
                   file=sys.stderr)
         return 0
 
@@ -179,8 +179,8 @@ def _skills(args) -> int:
         print(f"  skipped {t} — already present with different content. "
               f"Your edits are not overwritten; pass --force if you meant to.")
     if not has_exloop:
-        print("\nThe exploration skill was not installed: the exloop package is not present "
-              "(pip install exloop). newlife's own two skills were.")
+        print("\nThe exploration skills were not installed: the exloop package is not present "
+              "(pip install exloop). newlife's own three skills were.")
     print("\nFor another AI: `newlife skills path` prints the masters — paste one in whole.")
     return 1 if skipped else 0
 

@@ -31,9 +31,11 @@ guessing one.
 ## What happens, in your words
 
 1. **Explore.** Your AI asks one or two honing questions, then walks one edge at a time and
-   keeps a map silently. You answer and decide. (This stage is the `exloop` skill from the
+   keeps a map silently. When several explanations fit, it uses idea-lab's
+   Draw–Attack–Compare–Check reasoning inside the same conversation; you never choose a
+   second workflow. You answer and decide. (`exloop` and `idea-lab` ship together in the
    [`exloop`](https://pypi.org/project/exloop/) package; newlife depends on it, so the same
-   install brings it.)
+   install brings both.)
 2. **Hand off.** When a boundary can be stated as "what measurement would make the answer
    different", the AI says so once. If you agree, a question folder appears with the
    exploration record inside it.
@@ -100,7 +102,7 @@ siblings, not a chain: a question's verdict never runs another question's runner
 |---|---|---|
 | `newlife` | The harness: scaffold, gates, freeze, verdict runner template, audit, and the `newlife`, `newlife-goal`, `newlife-prereg` skills. | [`packages/newlife`](packages/newlife/), [PyPI](https://pypi.org/project/newlife/) |
 | `proofroot` | Language-neutral trust core: named RNG stream derivation, run phases, evidence tiers, canonical serialization with cross-language vectors. Zero dependencies. | [`packages/proofroot`](packages/proofroot/), [PyPI](https://pypi.org/project/proofroot/) |
-| `exloop` | The exploration skill and the zero-dependency state helper it runs. A dependency of newlife; its own repository. | [github.com/hzshen88/exloop](https://github.com/hzshen88/exloop), [PyPI](https://pypi.org/project/exloop/) |
+| `exloop` | The exploration skills (`exloop` plus its nested `idea-lab`) and the zero-dependency state helper they use. A dependency of newlife; its own repository. | [github.com/hzshen88/exloop](https://github.com/hzshen88/exloop), [PyPI](https://pypi.org/project/exloop/) |
 
 Optional simulation backends: `pip install "newlife[spatio-flux]"` (Monod kinetics, dynamic
 FBA with GLPK, diffusion, particles) or `"newlife[process-bigraph]"` for the runtime alone;

@@ -1,6 +1,6 @@
 ---
 name: newlife
-description: Use when the person asks how newlife or exloop works, how to use it, where to start, what happens next, or which step a question is at. Answer in terms of what they say and decide — never a table of shell commands; the assistant runs every command. Also the router to the three stage skills (exloop, newlife-goal, newlife-prereg). Not for doing a stage's work; that is the stage skill.
+description: Use when the person asks how newlife, exloop, or idea-lab works, how to use it, where to start, what happens next, or which step a question is at. Answer in terms of what they say and decide — never a table of shell commands; the assistant runs every command. Also the router to the stage skills. Not for doing a stage's work; that is the stage skill.
 ---
 
 # newlife — how this works, said for the person
@@ -16,10 +16,14 @@ type them. This exact misreading has happened.
 
 ## What the person does, in their words
 
-1. **They say "Explore this with me: X".** The `exloop` skill: you ask one or two honing
-   questions, walk one edge at a time, keep the map silently, offer reachable directions.
-   They answer and decide. First time in a repository, you also do the setup (that skill's
-   bootstrap section): install `newlife` if missing, run `newlife start .`.
+1. **They say "Explore this with me: X".** This is the only front door. The `exloop`
+   skill owns the conversation and its persistent map: you ask one or two honing questions,
+   walk one edge at a time, and offer reachable directions. When one observation has
+   several plausible explanations, use `idea-lab`'s Draw–Attack–Compare–Check reasoning
+   **inside that same exploration**. The person does not choose between skills or fill a
+   second worksheet; they just answer and decide. First time in a repository, you also do
+   the setup (the exloop skill's bootstrap section): install `newlife` if missing, run
+   `newlife start .`.
 2. **You notice a boundary has become decidable** — they can say what measurement would
    make the answer different. You say so once; if they say yes, you run `newlife init` and
    `handoff`. They see: a question folder exists, with the exploration record in `origin/`.
@@ -105,6 +109,8 @@ two-repository layout) do not apply to a research repository laid out as
 ## Setup, if they ask how to install
 
 `pip install newlife`, then `newlife start .` in their research folder, which also
-installs these skills into every AI tool on the machine. The exploration skill ships in
-the `exloop` package, a dependency of newlife, so the same install brings it; if it is
-somehow missing, `start` says so and exits non-zero, and `pip install exloop` repairs it. You can do all of that for them; the exploration skill says how.
+installs these skills into every AI tool on the machine. The exploration skills `exloop`
+and `idea-lab` ship together in the `exloop` package, a dependency of newlife, so the same
+install brings both; if that package is somehow missing, `start` says so and exits
+non-zero, and `pip install exloop` repairs it. You can do all of that for them; the exloop
+skill says how.

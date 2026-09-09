@@ -15,6 +15,24 @@ has its own version and its own repository. Dates are the PyPI upload dates.
   positive on the user's next commit. A test runs `init` and refuses a list that has fallen
   behind what the scaffold actually writes.
 
+### Changed
+
+- **`exloop>=0.2,<0.3`.** The exploration stage now ships two skills, `exloop` and
+  `idea-lab`, and both live in the `exloop` package, so one `pip install newlife` still
+  brings the whole stage. exloop 0.2 must already be on PyPI when this tag is pushed —
+  the build job's smoke install resolves it from there; `docs/releasing.md` says why.
+- **Idea Lab is a reasoning pattern inside exploration, not a second front door.** "Explore
+  this with me" stays the only entry point: `exloop` keeps the conversation, the persistent
+  map, the pivots and the handoff, and reaches for `idea-lab`'s Draw—Attack—Compare—Check
+  when one observation has several plausible explanations. The person never chooses between
+  skills or fills in a second worksheet. The `newlife` skill, `NEXT.md`, both READMEs and
+  `docs/first-question.md` now say it that way, and `newlife skills` counts five skills
+  instead of four.
+- **An anchor you cannot fill is no longer read as "drop the question".** `NEXT.md`'s triage
+  step now has the AI offer candidate wording, narrow the question, or return to exploration
+  first; only when no genuine counterparty and no changed decision survive that does the
+  question stay an unfrozen curiosity — a useful outcome, not a failure.
+
 ## 0.1.3 — 2026-09-06
 
 ### Added

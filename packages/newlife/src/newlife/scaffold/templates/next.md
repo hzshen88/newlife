@@ -17,16 +17,21 @@ answer off this repository — stage, what is done, what blocks, what you have t
 
 1. **Explore** (skill: exloop). The AI asks one or two honing questions, then
    walks one edge at a time, keeps a map silently, and offers reachable directions at the
-   end of each turn. You only answer and decide. While it runs, the record lives in
-   `~/.exloop/explorations/<slug>/` and follows you across tools; when it closes, the AI
-   archives it into `explorations/<slug>/` in this repository, next to `questions/`.
+   end of each turn. When several explanations fit the same observation, it uses idea-lab's
+   Draw–Attack–Compare–Check reasoning inside the same exploration — there is no second
+   workflow for you to choose or fill in. You only answer and decide. While it runs, the
+   record lives in `~/.exloop/explorations/<slug>/` and follows you across tools. When it
+   closes, the AI archives it into `explorations/<slug>/` in this repository, next to
+   `questions/`.
 2. **Hand off.** When a boundary can be stated as "what measurement would make the answer
    different", the AI says so once and asks. If you agree, it runs `newlife init <slug>`
    and `handoff`; `questions/<slug>/origin/` then holds the map and a pre-filled goal draft.
 3. **Triage** (skill: newlife-goal). The AI asks only what the map cannot supply: who
    would bet the other way, is the answer settled by the design or by the run, who changes
-   what they do. Six anchors go into `goal.md`. An anchor you cannot fill is the signal to
-   drop the question — that is allowed, and cheap here.
+   what they do. Six anchors go into `goal.md`. If you cannot fill one yet, the AI offers
+   candidate wording, narrows the question with you, or returns to exploration. Only if no
+   genuine counterparty or changed decision remains after that should the question stay an
+   unfrozen curiosity — a useful outcome, not a failure.
 4. **World and pilot.** Your simulator goes into `verdict.py`. `newlife pilot` runs it into
    `pilot/`, never `results/`. Everything a pilot produces counts as seen.
 5. **Criteria** (skill: newlife-prereg). Every row of `prereg.md` §2 is marked seen /

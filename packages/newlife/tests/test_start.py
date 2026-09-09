@@ -46,8 +46,15 @@ def test_start_creates_the_repo_next_md_and_installs_every_skill(
 
     assert (root / ".git").is_dir()
     assert (root / "NEXT.md").exists() and (root / ".gitignore").exists()
+    next_text = (root / "NEXT.md").read_text(encoding="utf-8")
+    assert "idea-lab" in next_text and "inside the same exploration" in next_text
+    assert "An anchor you cannot fill is the signal to drop the question" not in next_text
     sources = cli._skill_sources()
     assert len(sources) >= 2, "包里至少要有 newlife 自己的两个 skill"
+    if EXLOOP_PRESENT:
+        assert {"exloop", "idea-lab"} <= {
+            skill.name for provider, skill in sources if provider == "exloop"
+        }
     for _provider, skill in sources:
         for src in cli._skill_files(skill):
             assert (
@@ -134,4 +141,3 @@ def test_start_refreshes_a_stale_next_md_but_not_a_persons_own(
     (root / "NEXT.md").write_text("# my own notes\n", encoding="utf-8")
     cli._start(_args(root, dest))
     assert (root / "NEXT.md").read_text(encoding="utf-8") == "# my own notes\n"
-

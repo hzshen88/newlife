@@ -18,7 +18,7 @@ classifiers = [
 ]
 # exloop 是探索阶段的 skill，独立的包、独立的仓库。写成硬依赖，用户只需 `pip install newlife`；
 # `start` 里"缺 exloop"的分支退成保险丝。newlife 不 import 它的代码，只找它的文件。
-dependencies = ["proofroot>=0.1,<0.2", "exloop>=0.1,<0.2"]
+dependencies = ["proofroot>=0.1,<0.2", "exloop>=0.2,<0.3"]
 
 [project.optional-dependencies]
 process-bigraph = ["process-bigraph==1.8.3"]

@@ -25,8 +25,10 @@ guessing one.
 ## What happens, in your words
 
 1. **Explore.** Your AI asks one or two honing questions, then walks one edge at a time and
-   keeps a map silently. You answer and decide. (This stage is the `exloop` skill from the
-   `exloop` package; newlife depends on it, so the same install brings it.)
+   keeps a map silently. When several explanations fit, it uses idea-lab's
+   Draw–Attack–Compare–Check reasoning inside the same conversation; you never choose a
+   second workflow. You answer and decide. (`exloop` and `idea-lab` ship together in the
+   `exloop` package; newlife depends on it, so the same install brings both.)
 2. **Hand off.** When a boundary can be stated as "what measurement would make the answer
    different", the AI says so once. If you agree, a question folder appears with the
    exploration record inside it.
