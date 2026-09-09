@@ -270,3 +270,22 @@ def test_a_registration_missing_the_placeholder_still_audits(tmp_path: Path) -> 
     a, b = show(frozen), show(head)
     assert len(a) == len(b), "stamp 必须是行内替换：行数一变，INTEGRITY 就再也过不去"
     assert [i for i, (x, y) in enumerate(zip(a, b)) if x != y] == [1], "只有 stamp 那一行可以变"
+
+
+def test_question_top_level_covers_what_init_actually_writes(tmp_path: Path) -> None:
+    """导出的骨架表必须盖住 `init` 真正写出来的东西。
+
+    这张表是给**别的仓库**用的：研究仓库拿它做自己的目录检查，不再抄一份副本。
+    抄本会过期，而过期的表会把一次例行升级变成用户下一次提交时的假报警。
+    所以这里不描述、直接跑一遍 `init`，让真实产物来判这张表对不对。
+    `SCAFFOLD_FILES` 也一并对齐——它是第一天的子集，不该跑到表外面去。
+    """
+    repo = _repo(tmp_path)
+    folder = scaffold.init("2026-09-05-x", cwd=repo)
+
+    written = {entry.name for entry in folder.iterdir()}
+    assert written <= scaffold.QUESTION_TOP_LEVEL, (
+        f"init 写出了骨架表没有的顶层项：{sorted(written - scaffold.QUESTION_TOP_LEVEL)}"
+    )
+    day_one = {name.split("/", 1)[0] for name in scaffold.SCAFFOLD_FILES}
+    assert day_one <= scaffold.QUESTION_TOP_LEVEL

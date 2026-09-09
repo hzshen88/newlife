@@ -64,6 +64,32 @@ question came from. None of the first four real questions recorded that.
 filled in. A scaffold that satisfied its own gate would make that gate true by
 construction, and it would never once ask the user a question.
 """
+QUESTION_TOP_LEVEL = frozenset({
+    "goal.md",
+    "origin",
+    "prereg.md",
+    "verdict.py",
+    "env.lock",
+    "pilot",
+    "results",
+    "data",
+    "judgement-design.json",
+})
+"""Every name newlife puts at a question folder's top level over the question's whole life.
+
+`SCAFFOLD_FILES` is only what `init` writes on day one; this set also carries what the
+freeze, the pilot and the run add later, and what the gates read.
+
+**Exported for the layout checkers research repositories write for themselves.** A
+repository that keeps its own copy of this list is fine until newlife grows the skeleton,
+and then the copy turns a routine upgrade into a false positive on the user's next commit
+— which is a bad way to learn that a release happened. newlife owns the skeleton, so
+newlife states it. Names a repository adds by its own convention, a `diagnostics/` folder
+or an audit document, belong in that repository's checker; they are not newlife's and are
+deliberately absent here.
+"""
+
+
 SAFE_SLUG = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\Z")
 
 

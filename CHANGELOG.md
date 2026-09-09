@@ -3,6 +3,18 @@
 `proofroot` and `newlife` are released together under one version from one tag; `exloop`
 has its own version and its own repository. Dates are the PyPI upload dates.
 
+## Unreleased
+
+### Added
+
+- **`newlife.scaffold.QUESTION_TOP_LEVEL`** — every name newlife puts at a question
+  folder's top level, exported for the layout checkers research repositories write for
+  themselves. `SCAFFOLD_FILES` is only day one; this set also carries what the freeze, the
+  pilot and the run add later. A repository that keeps its own copy of the list is fine
+  until newlife grows the skeleton, and then the copy turns a routine upgrade into a false
+  positive on the user's next commit. A test runs `init` and refuses a list that has fallen
+  behind what the scaffold actually writes.
+
 ## 0.1.3 — 2026-09-06
 
 ### Added
