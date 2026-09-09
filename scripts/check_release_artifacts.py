@@ -63,7 +63,11 @@ def check_wheels(dist: pathlib.Path) -> None:
             _require_suffix(names, suffix, newlife.name)
         metadata = _metadata(archive)
         requirements = metadata.get_all("Requires-Dist", [])
-        for dependency in ("proofroot<0.2,>=0.1", "exloop<0.2,>=0.1"):
+        # Stated here by hand on purpose: reading the range back out of pyproject.toml
+        # would make this true by construction and check nothing. Moving a range means
+        # editing this line too — docs/releasing.md step 2 says so, because forgetting it
+        # is how a bump first shows up as a failed build.
+        for dependency in ("proofroot<0.2,>=0.1", "exloop<0.3,>=0.2"):
             if not any(
                 requirement.replace(" ", "").lower() == dependency
                 for requirement in requirements

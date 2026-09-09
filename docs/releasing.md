@@ -84,7 +84,11 @@ release. Do not paper over it by widening the range.
 2. If `proofroot` crosses a minor version, update the constraint `proofroot<0.2,>=0.1`
    in `packages/newlife/pyproject.toml` in the same commit; the same goes for
    `exloop<0.3,>=0.2`. `check_release_artifacts.py` checks that the wheel declares both
-   bounded constraints, but **nothing checks that the pairing is right.**
+   bounded constraints, but **nothing checks that the pairing is right** — and the ranges
+   it compares against are written out by hand in that script, so **a moved range has to be
+   edited there too**. 0.1.4 learned this the slow way: the build failed on
+   `does not declare the bounded dependency exloop<0.2,>=0.1` after everything else was
+   already green.
 
 3. Commit, merge to `main`, then create and push a matching tag:
 
