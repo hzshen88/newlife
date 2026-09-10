@@ -38,7 +38,13 @@ import re
 import sys
 from typing import Iterable
 
-TABLE_ROW = re.compile(r"^\|\s*\*\*([A-Z]+\d+)\*\*\s*\|")
+TABLE_ROW = re.compile(r"^\|\s*\*\*([^*]+)\*\*\s*\|")
+"""(Row head, the bolded cell.) **A row may carry an alias**: `| **U0 (S0)** | …`
+(2026-09-09-proteome-*) — the row's own name first, the artifact's name second. The cell
+is captured whole and split in `declared()`; a pattern that demanded `**` right after the
+name read those rows as absent and produced an alarm about the parser, aimed at the
+author. Reading both names as independent units was a second way to be wrong: the table
+then claimed a unit the conjunction could not mention."""
 # Stops at a period of either script. **Written for Chinese text first**: with only `。`
 # in the class, an English line `verdict = S0 ∧ S1. Any one false -> H0` swallowed the
 # whole sentence and reported `H0` as an undefined unit. The selftest missed it because
@@ -53,19 +59,52 @@ UNIT_TOKEN = re.compile(r"\b([A-Z]+\d+)\b")        # in prose: S0 ∧ S1 ∧ …
 UNIT_KEY = re.compile(r"^([A-Z]+\d+)(?:_|$)")
 
 
-def declared(prereg_text: str) -> tuple[set[str], set[str]]:
-    """(units declared in the table, units appearing in the conjunction)."""
+def declared(prereg_text: str) -> tuple[set[str], set[str], dict[str, str]]:
+    """(units declared in the table, units appearing in the conjunction, alias -> primary).
+
+    **A table row may carry an alias — `| **U0 (S0)** | …`** (2026-09-09-proteome-*): the
+    row's own name first, then the name the artifact keys use. An alias is the *same*
+    unit, not a second one, so it is recorded as a mapping and never as a table member —
+    treating both names as independent made the table claim a unit the conjunction could
+    not mention, and the gate then reported the registration for a naming choice the
+    registration had already declared. A pattern that demanded `**` right after the name
+    read those rows as absent and produced a third alarm, from the parser itself.
+    """
     # silent-degradation: ok — per-line filtering: skipping a non-table row is this
     # function's normal branch. The aggregate outcome "nothing matched at all" is reported
     # explicitly by `check()` (an empty table goes red immediately).
-    table = {m.group(1) for line in prereg_text.splitlines()
-             if (m := TABLE_ROW.match(line))}
+    table: set[str] = set()
+    aliases: dict[str, str] = {}
+    for line in prereg_text.splitlines():
+        m = TABLE_ROW.match(line)
+        if not m:
+            continue
+        names = UNIT_TOKEN.findall(m.group(1))
+        if not names:
+            continue
+        table.add(names[0])
+        for alias in names[1:]:
+            aliases[alias] = names[0]
     conj: set[str] = set()
     # silent-degradation: ok — as above; a missing conjunction is reported by `check()`
     # as "declared in the table, absent from the conjunction".
     for m in CONJUNCTION.finditer(prereg_text):
-        conj |= set(UNIT_TOKEN.findall(m.group(1)))
-    return table, conj
+        body = m.group(1)
+        # **Only a line that actually conjoins is a conjunction.** Two false alarms,
+        # 2026-09-10, both from prose that merely names a result: `verdict=H1`
+        # (backbone-v2 §0, one token) and `verdict=H0：S3 标签失败、S0/S1/S2/S4/S5 过`
+        # (backbone §0, several — so "at least two tokens" does not separate them).
+        # Every real conjunction line carries `∧`; requiring it removes both alarms
+        # without weakening the check.
+        if "∧" not in body:
+            continue
+        conj |= set(UNIT_TOKEN.findall(body))
+    return table, conj, aliases
+
+
+def canon(names: Iterable[str], aliases: dict[str, str]) -> set[str]:
+    """Resolve aliases to the row's own name so the three sets compare in one namespace."""
+    return {aliases.get(n, n) for n in names}
 
 
 def units_in(keys: Iterable[str]) -> set[str]:
@@ -93,18 +132,21 @@ def produced(folder: pathlib.Path) -> set[str]:
     return found
 
 
-def check(table: set[str], conj: set[str], made: set[str]) -> list[str]:
+def check(table: set[str], conj: set[str], made: set[str],
+          aliases: dict[str, str] | None = None) -> list[str]:
     """**A pure predicate** — which is what lets the selftest prove it can go red."""
+    aliases = aliases or {}
+    tbl, cj, md = canon(table, aliases), canon(conj, aliases), canon(made, aliases)
     problems = []
     if not table:
         problems.append("no judgement unit parsed out of prereg.md §2 — table rows must "
                         "look like `| **S1** | … |`. On an empty set, \"everything lines "
                         "up\" is true by construction.")
         return problems
-    for missing in sorted(table - conj):
+    for missing in sorted(tbl - cj):
         problems.append(f"{missing}: declared in the table but absent from the "
                         f"`verdict = …` conjunction — it takes no part in the judgement")
-    for extra in sorted(conj - table):
+    for extra in sorted(cj - tbl):
         problems.append(f"{extra}: appears in the conjunction but is not defined in the "
                         f"table — nobody can say what it means")
     if not made:
@@ -114,10 +156,10 @@ def check(table: set[str], conj: set[str], made: set[str]) -> list[str]:
                         "wrong character in the parser once reported all four units as "
                         "missing, pointing the reader somewhere entirely wrong.")
         return problems
-    for missing in sorted(table - made):
+    for missing in sorted(tbl - md):
         problems.append(f"{missing}: declared in the registration but absent from the "
                         f"artifact — the criterion is on paper, the power is not in the code")
-    for extra in sorted(made - table):
+    for extra in sorted(md - tbl):
         problems.append(f"{extra}: computed in the artifact but never declared — a "
                         f"criterion added after the fact, HARKing at the unit level")
     return problems
@@ -134,6 +176,27 @@ SELFTEST_PREREG = """
 sentence after the period. The first fixture ended at `。` and therefore never exercised
 the case that actually broke."""
 
+SELFTEST_PROSE_WITH_RESULT = """
+The predecessor round reproduced the same number; its verdict=H1 after the fix.
+Earlier, quoting v1: （…，verdict=H0：S3 标签失败、S0/S1/S2/S4/S5 过）。The rest is prose.
+"""
+"""**Prose that names a verdict, not a conjunction — in both observed shapes.** 2026-09-10:
+`verdict=H1` (chemistry-fim-backbone-v2 §0) and `verdict=H0：S3 …、S0/S1/…` (backbone §0)
+each produced a permanent, unresolvable false alarm ("appears in the conjunction but is
+not defined in the table"). The second has several unit-shaped tokens, which is why the
+separator — not the token count — is what tells a conjunction apart. The fixture keeps
+both cases reachable."""
+
+SELFTEST_ALIASED_ROW = """
+| **U0 (S0)** | self-reproduction | … |
+| **U1** | environment unchanged | … |
+
+**verdict = U0 ∧ U1.** Any one false -> H0.
+"""
+"""**A row may carry an alias.** 2026-09-09-proteome-* write `| **U0 (S0)** | …`; a
+pattern demanding `**` right after the name read that row as absent and then reported
+the aliased unit twice — once from each side of the comparison."""
+
 
 def _selftest() -> int:
     """Negative control: four kinds of mismatch must each go red, the aligned case green;
@@ -148,8 +211,14 @@ def _selftest() -> int:
     ok = True
     if units_in(["S1_env_unchanged", "S0_byte_identical_on_rerun", "schema"]) != {"S0", "S1"}:
         print("  [FAIL] unit names in JSON keys not recognised"); ok = False
-    if declared(SELFTEST_PREREG) != ({"S0", "S1", "S2"}, {"S0", "S1", "S2"}):
+    if declared(SELFTEST_PREREG) != ({"S0", "S1", "S2"}, {"S0", "S1", "S2"}, {}):
         print("  [FAIL] unit names in the prereg table or conjunction not recognised"); ok = False
+    if declared(SELFTEST_PREREG + SELFTEST_PROSE_WITH_RESULT) != ({"S0", "S1", "S2"}, {"S0", "S1", "S2"}, {}):
+        print("  [FAIL] prose naming a result (verdict=H1 / verdict=H0：…) was read as a conjunction"); ok = False
+    if declared(SELFTEST_ALIASED_ROW) != ({"U0", "U1"}, {"U0", "U1"}, {"S0": "U0"}):
+        print("  [FAIL] an aliased table row (**U0 (S0)**) was not read as U0 with alias S0"); ok = False
+    if check({"U0", "U1"}, {"U0", "U1"}, {"S0", "U1"}, {"S0": "U0"}):
+        print("  [FAIL] an artifact keyed by the row's alias was reported as undeclared"); ok = False
     print(f"  [{'green' if ok else 'RED'}] parsers: JSON keys and the prereg table/conjunction")
 
     full = {"S0", "S1", "S2"}
@@ -188,9 +257,9 @@ def main(argv: list[str] | None = None) -> int:
     if not prereg.exists():
         print(f"{prereg} does not exist — this is not a question folder.")
         return 1
-    table, conj = declared(prereg.read_text())
+    table, conj, aliases = declared(prereg.read_text())
     made = produced(args.folder)
-    problems = check(table, conj, made)
+    problems = check(table, conj, made, aliases)
     for p in problems:
         print(f"{args.folder}: {p}")
     if problems:
