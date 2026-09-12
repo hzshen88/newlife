@@ -51,8 +51,10 @@ guessing one.
 6. **Freeze.** The one irreversible step; the AI asks you first. Two gates refuse on their
    own if the goal is unfilled or a criterion was never piloted. Your environment and any
    downloaded data are pinned by hash at this moment.
-7. **Verdict.** H1, H0 or INVALID, computed by your runner from the frozen conjunction,
-   never written by hand, with an audit from git history alone.
+7. **Execute and close.** The execution skill resumes the real repository state, runs and
+   verifies the frozen question, diagnoses anomalies without changing its rules, audits it,
+   and delivers the report. H1, H0 or INVALID is computed by the runner, never written by
+   hand. The AI asks separately before committing `results/`.
 
 Two moments are yours alone: the freeze, and committing the results.
 
@@ -100,7 +102,7 @@ siblings, not a chain: a question's verdict never runs another question's runner
 
 | Package | What it is | Where |
 |---|---|---|
-| `newlife` | The harness: scaffold, gates, freeze, verdict runner template, audit, and the `newlife`, `newlife-goal`, `newlife-prereg` skills. | [`packages/newlife`](packages/newlife/), [PyPI](https://pypi.org/project/newlife/) |
+| `newlife` | The harness: scaffold, gates, freeze, verdict runner template, audit, and the `newlife`, `newlife-goal`, `newlife-prereg`, `newlife-execute` skills. | [`packages/newlife`](packages/newlife/), [PyPI](https://pypi.org/project/newlife/) |
 | `proofroot` | Language-neutral trust core: named RNG stream derivation, run phases, evidence tiers, canonical serialization with cross-language vectors. Zero dependencies. | [`packages/proofroot`](packages/proofroot/), [PyPI](https://pypi.org/project/proofroot/) |
 | `exloop` | The exploration skills (`exloop` plus its nested `idea-lab`) and the zero-dependency state helper they use. A dependency of newlife; its own repository. | [github.com/hzshen88/exloop](https://github.com/hzshen88/exloop), [PyPI](https://pypi.org/project/exloop/) |
 

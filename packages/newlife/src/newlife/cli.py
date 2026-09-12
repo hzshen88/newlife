@@ -180,7 +180,7 @@ def _skills(args) -> int:
               f"Your edits are not overwritten; pass --force if you meant to.")
     if not has_exloop:
         print("\nThe exploration skills were not installed: the exloop package is not present "
-              "(pip install exloop). newlife's own three skills were.")
+              "(pip install exloop). The available NewLife skills were installed.")
     print("\nFor another AI: `newlife skills path` prints the masters — paste one in whole.")
     return 1 if skipped else 0
 

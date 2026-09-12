@@ -3,6 +3,26 @@
 `proofroot` and `newlife` are released together under one version from one tag; `exloop`
 has its own version and its own repository. Dates are the PyPI upload dates.
 
+## Unreleased
+
+### Added
+
+- **`newlife-execute`** resumes a prepared or frozen question and owns execution,
+  diagnosis, verification, review, reporting, and closeout without introducing another
+  scientific state machine.
+- **One documented workflow contract.** NewLife's router and stage skills now share the
+  same rules for clarification, authorization reuse, evidence reuse, and partial completion.
+- Analysis-design, anomaly, verification, review, and closeout references derived from the
+  MIT-licensed Science-Superpowers project are included with source provenance and a
+  third-party notice.
+
+### Changed
+
+- **`exloop>=0.3,<0.4`.** This is the first exloop release whose Idea Lab evidence check is
+  self-contained and does not invoke an installed Science-Superpowers skill.
+- The NewLife router resumes repository state and honors bounded direct requests instead of
+  forcing every research-related task back through exploration.
+
 ## 0.1.4 — 2026-09-09
 
 ### Added

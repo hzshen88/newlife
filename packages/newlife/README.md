@@ -44,8 +44,10 @@ guessing one.
 6. **Freeze.** The one irreversible step; the AI asks you first. Two gates refuse on their
    own if the goal is unfilled or a criterion was never piloted. Your environment and any
    downloaded data are pinned by hash at this moment.
-7. **Verdict.** H1, H0 or INVALID, computed by your runner from the frozen conjunction,
-   never written by hand, with an audit from git history alone.
+7. **Execute and close.** The execution skill resumes the real repository state, runs and
+   verifies the frozen question, diagnoses anomalies without changing its rules, audits it,
+   and delivers the report. H1, H0 or INVALID is computed by the runner, never written by
+   hand. The AI asks separately before committing `results/`.
 
 Two moments are yours alone: the freeze, and committing the results.
 

@@ -1,116 +1,98 @@
 ---
 name: newlife
-description: Use when the person asks how newlife, exloop, or idea-lab works, how to use it, where to start, what happens next, or which step a question is at. Answer in terms of what they say and decide — never a table of shell commands; the assistant runs every command. Also the router to the stage skills. Not for doing a stage's work; that is the stage skill.
+description: Use when the person asks how NewLife or exloop works, where an existing research question stands, what happens next, or which NewLife stage owns a request. Not for doing a stage's work, and not a universal gate for direct answers, reviews, programming, or collaboration tasks.
 ---
 
-# newlife — how this works, said for the person
+# NewLife — explain and route the research workflow
 
-## The one rule for answering "how do I use this"
+The person says what they want to understand or finish. You inspect the available context
+and state, explain the next meaningful decision in ordinary language, and do the command or
+stage work for them. Do not make them choose a skill name or print a command menu.
 
-**The person never types a command. You do.** When they ask how it works, where to start,
-what comes next, or where they are, answer with what *they* will say and decide and what
-*you* will do for them. Do not print the CLI table; `newlife init / pilot / freeze / run /
-check / audit` and exloop's `archive / handoff` are your instruments, documented in the
-stage skills, and a person who sees them listed reasonably concludes they are expected to
-type them. This exact misreading has happened.
+Read [the workflow contract](references/workflow-contract.md) when routing, resuming a
+question, or deciding whether a pause is a real gate. It is the shared source for approval,
+clarification, evidence reuse and completion behavior.
 
-## What the person does, in their words
+## Route the request that actually exists
 
-1. **They say "Explore this with me: X".** This is the only front door. The `exloop`
-   skill owns the conversation and its persistent map: you ask one or two honing questions,
-   walk one edge at a time, and offer reachable directions. When one observation has
-   several plausible explanations, use `idea-lab`'s Draw–Attack–Compare–Check reasoning
-   **inside that same exploration**. The person does not choose between skills or fill a
-   second worksheet; they just answer and decide. First time in a repository, you also do
-   the setup (the exloop skill's bootstrap section): install `newlife` if missing, run
-   `newlife start .`.
-2. **You notice a boundary has become decidable** — they can say what measurement would
-   make the answer different. You say so once; if they say yes, you run `newlife init` and
-   `handoff`. They see: a question folder exists, with the exploration record in `origin/`.
-3. **You ask them three things the map cannot supply** (`newlife-goal`): who would bet the
-   other way, is the answer settled by design or by running, who changes what they do.
-   Six anchors go into `goal.md`. An anchor they cannot fill **yet** is not a verdict
-   on them or on the question: offer two or three candidate wordings, or narrow the
-   question, or go back to exploring exactly that gap — all normal exits. Only when,
-   after that, nobody can be named who would bet the other way or change a decision is
-   the question not worth freezing; say so plainly, and that keeping it as a curiosity
-   is a fine outcome. Reproducing a known result to learn the toolchain is legitimate
-   too: waive the goal gate on the record and label the verdict a reproduction.
-4. **You write the world with them** into `verdict.py` and run `newlife pilot`. They see
-   numbers; everything seen is now *seen*.
-5. **You write the criteria with them** (`newlife-prereg`): every row marked seen / blind /
-   mechanical; they choose the blind one.
-6. **You ask before freezing. They say yes. You run `newlife freeze`.** The one
-   irreversible step. Two gates (goal, pilot) refuse on their own if something is missing;
-   you relay the reason in their words.
-7. **You run the verdict** (it also checks that the units line up with the registration),
-   commit `results/` (ask first), `audit`, and report H1 / H0 / INVALID. The closeout goes into `goal.md` §5 and the map.
+1. **Direct answer, review, implementation, debugging, programming or collaboration:** do
+   that task with its normal workflow. Research subject matter alone does not require an
+   exploration or a NewLife question.
+2. **“Where are we?” or work in a repository with `questions/`:** run `newlife status` on
+   the relevant question folders and read their files. Resume the stage the state shows. Do
+   not ask the person to reconstruct the history or repeat an approved goal.
+3. **Open curiosity with no decidable boundary:** use `exloop`. When several explanations
+   are live, use Idea Lab inside the same exploration. A source check returns to that
+   exploration; it does not automatically start formal design.
+4. **A new formal question that is not mechanically decidable yet:** use `newlife-goal`.
+5. **A clear goal that still needs design, pilot classification or freeze preparation:**
+   use `newlife-prereg`.
+6. **An existing question that must run, resume, diagnose, verify, audit, report or close:**
+   use `newlife-execute`.
 
-Two moments are theirs alone: the freeze, and committing results.
+If a requested confirmatory analysis would expose outcomes before its prediction and
+decision rule are fixed, say what would become exploratory and route to preparation. An
+explicitly exploratory task may proceed with that label; do not pretend later that it was
+confirmatory.
 
-## How you ask, whichever stage
+## What the person decides
 
-- Restate what you already understood before asking anything; do not ask twice.
-- One question at a time, and say what it decides ("this fixes which rows can be blind").
-- When they are stuck, offer concrete candidate phrasings and the difference between them.
-- "Hold this", "keep exploring", "narrow it" are normal exits, not failures. A clearer
-  question is a fine result of a first session.
+The person owns these consequential transitions:
 
-## "Where are we?" — run `newlife status`, do not ask them and do not guess
+- whether an exploration becomes a formal question;
+- whether to enter or leave feasibility mode, its compute envelope and its abandonment
+  condition;
+- the concrete question/version to freeze;
+- whether to commit a concrete `results/` set;
+- any merge, publication, external send or destructive discard not already authorized.
 
-For each folder under `questions/`, run `newlife status <folder>` and relay what it says:
-the stage, what is done, what blocks, what comes next, and what the person has to decide.
-It reads the folder the way the gates do, and it knows the one case a glance gets wrong —
-`results/summary.json` present but `reproduction.json` missing is a run that died before
-the self-reproduction, not a verdict.
+For the same object, version, scope and action, an approval already given remains valid.
+Do not ask twice. Silence is not approval, and approval of one item does not expand its
+scope. Prepare and deliver every independent artifact before asking for a remaining gate.
 
-Before any question exists: no `NEXT.md` or not a git repository means setup (the exloop
-skill's bootstrap section); a repository with `NEXT.md` and no `questions/` means still
-exploring, or a boundary ready to hand off.
+Two NewLife repository actions are always called out: **ask before freezing, and ask before
+committing `results/`.** A freeze is immutable evidence; a result commit makes its chronology
+part of that evidence. Routine status checks, inspection, drafting, isolated setup,
+authorized execution and reporting do not each need another confirmation.
 
-Say the stage in one sentence, then what you are about to do. `NEXT.md` in the repository
-carries the same loop for the person to read.
+## What the stages look like to the person
 
-## If their model is a local checkout of their own
+- During exploration they discuss one useful distinction or discriminator at a time. A
+  persistent map is kept only when requested.
+- At goal preparation they see the question, counterparty, decision, scope and what could
+  falsify it. Existing answers are reused.
+- During preregistration they see what was already observed, what remains blind, how each
+  criterion can fail and the exact freeze candidate.
+- During execution they receive progress while work continues, then verified artifacts,
+  the NewLife verdict/audit status, limitations and the concrete result-commit state.
 
-Not everything is an installed package. A user's own repository, installed editable, runs
-fine and has **no place in the reproducibility chain by default** — and the failure is
-silent: the artifact is produced, S1 stays green, `newlife audit` returns PASS, and none of
-it means the run can be repeated. `env.lock` will carry a line like `theirpkg==0.1.0`
-that never changes when they edit the code.
+No stage creates a second scientific status system. The question directory and `newlife
+status` remain authoritative for formal work; an exloop map remains the exploratory record.
 
-Three facts go into `provenance.snapshot(...)`, and **the first two belong inside the
-conjunction**, for the reason already established for solver identity — a fact that only
-sits in the artifact cannot change the verdict:
+## Local checkouts used by a question
 
-    <name>_source_sha256    provenance.package_digest(module)  — a version string can lie about
-                            what is installed; this cannot
-    <name>_git_dirty        `git status --porcelain` non-empty means the code that ran is in
-                            no commit and nobody, including them, can rebuild it → hard-fail
-    code_retrievable_from   the URL, plus the date it was checked. **Record the fact and its
-                            date, never a standing level like "portable"** — the future
-                            revokes levels, and a frozen file then says something false
+An editable local package can run correctly while `env.lock` records only a version string.
+For each such dependency, put the source digest and dirty-worktree state inside the verdict's
+mechanical conjunction, because a fact that appears only in prose cannot change the verdict:
 
-Data usually needs its own line: publishing code is a push, publishing data often is not.
-`restricted — needs registration; fetch script and checksums provided` is better than one
-optimistic word covering both.
+```text
+<name>_source_sha256    provenance.package_digest(module)
+<name>_git_dirty        git status --porcelain is empty
+code_retrievable_from   URL or archive identity plus the date checked
+```
 
-**A known gap, measured**: a dependency in a git submodule passes every one of those checks
-and still does not run — clean worktree, reachable commit, matching digest, empty `lib/`.
-Nothing in a registration can say "clone this with `--recursive`". Say so on the record, or
-vendor the dependency.
+Record data retrieval separately. A reachable code commit does not make restricted or
+unpublished data retrievable. Git submodules need an explicit recursive-fetch instruction
+or vendoring; a clean parent checkout with an empty submodule can otherwise pass superficial
+source checks and still fail to run.
 
-## What does not belong here
+## Setup when requested or required
 
-Skills for developing newlife itself (an author's `newlife-milestone`, with a
-two-repository layout) do not apply to a research repository laid out as
-`questions/<slug>/`. Do not import their path tables.
+Install NewLife, then run `newlife start .` in the research repository. The assistant runs
+these commands. `start` initializes the repository if needed, writes its guidance and
+installs the NewLife and exloop skills into detected hosts. If exloop is missing, install a
+compatible exloop package and rerun. Report exactly what changed and where; do not install
+unrelated tools on the strength of this setup request.
 
-## Setup, if they ask how to install
-
-`pip install newlife`, then `newlife start .` in their research folder, which also
-installs these skills into every AI tool on the machine. The exploration skills `exloop`
-and `idea-lab` ship together in the `exloop` package, a dependency of newlife, so the same
-install brings both; if that package is somehow missing, `start` says so and exits
-non-zero, and `pip install exloop` repairs it. You can do all of that for them; the exloop
-skill says how.
+Methods adapted during the Science-Superpowers consolidation are recorded in
+[method provenance](references/method-provenance.md).

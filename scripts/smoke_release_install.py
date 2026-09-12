@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import tempfile
@@ -64,6 +65,24 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory(prefix="newlife-release-smoke-") as raw:
         root = pathlib.Path(raw)
+        # Prove that the candidate really needs the candidate exloop wheel. Without
+        # it, an offline resolver must fail instead of silently selecting an older
+        # published exloop whose Idea Lab still invokes Science-Superpowers.
+        missing_venv = root / ".missing-dependency-venv"
+        _run(uv, "venv", missing_venv, "--python", "3.12")
+        _run(
+            uv,
+            "pip",
+            "install",
+            "--python",
+            missing_venv / "bin" / "python",
+            "--no-index",
+            "--find-links",
+            dist,
+            *wheels,
+            expected=1,
+        )
+
         venv = root / ".venv"
         _run(uv, "venv", venv, "--python", "3.12")
         python = venv / "bin" / "python"
@@ -93,6 +112,45 @@ def main() -> int:
         listed = _run(newlife, "skills", "path")
         if "[exloop]" not in listed or "[newlife]" not in listed:
             raise SystemExit(f"`newlife skills path` does not list both providers:\n{listed}")
+
+        skill_dest = root / "explicit-skill-target"
+        _run(newlife, "skills", "install", "--dest", skill_dest)
+        expected_skills = {
+            "exloop",
+            "idea-lab",
+            "newlife",
+            "newlife-execute",
+            "newlife-goal",
+            "newlife-prereg",
+        }
+        installed_skills = {
+            path.name for path in skill_dest.iterdir() if (path / "SKILL.md").is_file()
+        }
+        if installed_skills != expected_skills:
+            raise SystemExit(f"unexpected installed skill set: {installed_skills}")
+        _run(newlife, "skills", "install", "--dest", skill_dest)
+
+        missing_references: list[str] = []
+        for document in skill_dest.rglob("*.md"):
+            for target in re.findall(
+                r"\[[^]]+\]\(([^)#]+)(?:#[^)]*)?\)",
+                document.read_text(encoding="utf-8"),
+            ):
+                if "://" in target:
+                    continue
+                if not (document.parent / target).resolve().exists():
+                    missing_references.append(
+                        f"{document.relative_to(skill_dest)} -> {target}"
+                    )
+        if missing_references:
+            raise SystemExit(f"installed skill references do not close: {missing_references}")
+
+        edited = skill_dest / "exloop" / "SKILL.md"
+        edited.write_text(edited.read_text(encoding="utf-8") + "\nlocal edit\n", encoding="utf-8")
+        before = edited.read_bytes()
+        _run(newlife, "skills", "install", "--dest", skill_dest, expected=1)
+        if edited.read_bytes() != before:
+            raise SystemExit("protected skill update changed a locally edited file")
 
         repo = root / "user-repository"
         repo.mkdir()

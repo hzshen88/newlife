@@ -1,12 +1,18 @@
 ---
 name: newlife-prereg
-description: Help the user write a preregistration whose criteria will not sabotage themselves, then freeze it. Use when the question is already clear and they are writing prereg.md, fixing H1/H0 and the judgement units, or about to run `newlife freeze`. The core rule is "pilot before freezing, covering every quantity that appears in a criterion". Not for a question that has not taken shape yet (that is newlife-goal), and not for ordinary code changes.
+description: Use when a NewLife goal is clear but the analysis design, feasibility boundary, pilot evidence, seen/blind/mechanical criteria, or concrete freeze candidate is incomplete. Not for an unformed question, ordinary code changes, or running/reporting an already-frozen question.
 ---
 
 # newlife-prereg — writing criteria that will not sabotage themselves
 
 > **Commands in this file are for you, the assistant, to run; the person decides.**
 > Asked how this works or where they are, describe what *they* do — see the `newlife` skill.
+
+Read [analysis design](references/analysis-design.md) before writing the runner or criteria,
+and [the workflow contract](../newlife/references/workflow-contract.md) when deciding whether
+to ask or continue. If computation feasibility is genuinely unknown, offer the bounded
+feasibility branch described in the design reference. Only the person may select it, set
+its budget and abandonment condition, or leave it; nothing measured there is confirmatory.
 
 Once frozen, criteria cannot be changed. **Something unchangeable that is wrong costs you
 the whole round.**
@@ -309,6 +315,14 @@ that closeout cannot pretend it was never made.
       check reads only the latest
 - [ ] **the reproduction class is stated** (rule seven), and if it is `seeded` or
       `stochastic`, the unit that class obliges you to add is actually in the conjunction
+- [ ] **the runner's parsers fail hard without exemption comments** — the default
+      silent-degradation scan permits zero exemptions, so a comment cannot turn malformed
+      scientific input into a passing freeze. Reject malformed data explicitly and prove
+      documented structural lines are the only ones skipped
+- [ ] **the freeze command has enough time to complete** — environment capture and Git
+      commits can exceed a short shell timeout in a large environment. Use a timeout based
+      on the measured environment, and treat an interrupted freeze as a failed operation to
+      inspect, never as success
 - [ ] **everything the question needs is installed now** — S1 compares the live environment
       against `env.lock` character by character, so a package installed after the freeze
       turns it red (rule six)

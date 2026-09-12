@@ -47,7 +47,7 @@ GitHub plan; without them the tag push itself is the only gate.
 
 ## exloop goes first
 
-`newlife` depends on `exloop>=0.2,<0.3`, a separate package released **by hand from the
+`newlife` depends on `exloop>=0.3,<0.4`, a separate package released **by hand from the
 exloop repository**, not by this workflow. The build job's smoke test installs the built
 wheels with PyPI enabled precisely so that it proves `pip install newlife` brings the
 exploration skills along — which means the exloop version that satisfies the range must
@@ -83,7 +83,7 @@ release. Do not paper over it by widening the range.
 
 2. If `proofroot` crosses a minor version, update the constraint `proofroot<0.2,>=0.1`
    in `packages/newlife/pyproject.toml` in the same commit; the same goes for
-   `exloop<0.3,>=0.2`. `check_release_artifacts.py` checks that the wheel declares both
+   `exloop<0.4,>=0.3`. `check_release_artifacts.py` checks that the wheel declares both
    bounded constraints, but **nothing checks that the pairing is right** — and the ranges
    it compares against are written out by hand in that script, so **a moved range has to be
    edited there too**. 0.1.4 learned this the slow way: the build failed on

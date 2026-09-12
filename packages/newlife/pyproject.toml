@@ -1,11 +1,11 @@
 [project]
 name = "newlife"
-version = "0.1.4"
+version = "0.1.5"
 description = "Preregistration harness for simulation: freeze what would count as an answer in git, compute the verdict mechanically, and prove from commit ancestry that the outputs post-date the freeze."
 readme = "README.md"
 requires-python = ">=3.12"
 license = "Apache-2.0"
-license-files = ["LICENSE"]
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 authors = [{ name = "hzshen88" }]
 keywords = ["preregistration", "reproducibility", "simulation", "provenance",
             "systems-biology", "scientific-workflow"]
@@ -18,7 +18,7 @@ classifiers = [
 ]
 # exloop 是探索阶段的 skill，独立的包、独立的仓库。写成硬依赖，用户只需 `pip install newlife`；
 # `start` 里"缺 exloop"的分支退成保险丝。newlife 不 import 它的代码，只找它的文件。
-dependencies = ["proofroot>=0.1,<0.2", "exloop>=0.2,<0.3"]
+dependencies = ["proofroot>=0.1,<0.2", "exloop>=0.3,<0.4"]
 
 [project.optional-dependencies]
 process-bigraph = ["process-bigraph==1.8.3"]

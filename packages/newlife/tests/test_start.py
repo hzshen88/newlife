@@ -50,7 +50,9 @@ def test_start_creates_the_repo_next_md_and_installs_every_skill(
     assert "idea-lab" in next_text and "inside the same exploration" in next_text
     assert "An anchor you cannot fill is the signal to drop the question" not in next_text
     sources = cli._skill_sources()
-    assert len(sources) >= 2, "包里至少要有 newlife 自己的两个 skill"
+    assert {"newlife", "newlife-goal", "newlife-prereg", "newlife-execute"} <= {
+        skill.name for provider, skill in sources if provider == "newlife"
+    }
     if EXLOOP_PRESENT:
         assert {"exloop", "idea-lab"} <= {
             skill.name for provider, skill in sources if provider == "exloop"
@@ -92,6 +94,7 @@ def test_start_reports_a_missing_git_identity_but_still_does_the_rest(
     assert "config user.name" in out and "config user.email" in out
     assert (root / ".git").is_dir() and (root / "NEXT.md").exists()
     assert (dest / "newlife-goal" / "SKILL.md").exists()
+    assert (dest / "newlife-execute" / "SKILL.md").exists()
 
 
 def test_start_with_no_ai_skills_dir_on_the_machine_says_so(

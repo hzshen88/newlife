@@ -55,19 +55,31 @@ def check_wheels(dist: pathlib.Path) -> None:
             "newlife/scaffold/templates/prereg.md",
             "newlife/scaffold/templates/verdict.py.template",
             "newlife/skills/newlife/SKILL.md",
+            "newlife/skills/newlife/references/workflow-contract.md",
+            "newlife/skills/newlife/references/method-provenance.md",
+            "newlife/skills/newlife-execute/SKILL.md",
+            "newlife/skills/newlife-execute/references/anomaly-and-verification.md",
+            "newlife/skills/newlife-execute/references/review-and-closeout.md",
             "newlife/skills/newlife-goal/SKILL.md",
             "newlife/skills/newlife-goal/references/evidence.md",
             "newlife/skills/newlife-prereg/SKILL.md",
+            "newlife/skills/newlife-prereg/references/analysis-design.md",
             "newlife/skills/newlife-prereg/references/cases.md",
+            "newlife/skills/newlife-prereg/references/design.md",
         ):
             _require_suffix(names, suffix, newlife.name)
+        _require_suffix(
+            names,
+            ".dist-info/licenses/THIRD_PARTY_NOTICES.md",
+            newlife.name,
+        )
         metadata = _metadata(archive)
         requirements = metadata.get_all("Requires-Dist", [])
         # Stated here by hand on purpose: reading the range back out of pyproject.toml
         # would make this true by construction and check nothing. Moving a range means
         # editing this line too — docs/releasing.md step 2 says so, because forgetting it
         # is how a bump first shows up as a failed build.
-        for dependency in ("proofroot<0.2,>=0.1", "exloop<0.3,>=0.2"):
+        for dependency in ("proofroot<0.2,>=0.1", "exloop<0.4,>=0.3"):
             if not any(
                 requirement.replace(" ", "").lower() == dependency
                 for requirement in requirements
@@ -86,13 +98,25 @@ def check_wheels(dist: pathlib.Path) -> None:
             raise SystemExit(
                 f"{newlife.name} does not expose the newlife console command"
             )
+        active = "\n".join(
+            archive.read(name).decode("utf-8")
+            for name in names
+            if "/skills/" in name and name.endswith(".md")
+        )
+        if "science-superpowers:" in active:
+            raise SystemExit(
+                f"{newlife.name} contains an active Science-Superpowers invocation"
+            )
 
 
 def check_sdists(dist: pathlib.Path) -> None:
     for package in PACKAGES:
         sdist = _one(dist, f"{package}-*.tar.gz")
         with tarfile.open(sdist, "r:gz") as archive:
-            _require_suffix(set(archive.getnames()), "/LICENSE", sdist.name)
+            names = set(archive.getnames())
+            _require_suffix(names, "/LICENSE", sdist.name)
+            if package == "newlife":
+                _require_suffix(names, "/THIRD_PARTY_NOTICES.md", sdist.name)
 
 
 def main() -> int:

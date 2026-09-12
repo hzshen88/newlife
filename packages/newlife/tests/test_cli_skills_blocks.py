@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 from pathlib import Path
 
 import pytest
@@ -36,6 +37,35 @@ def test_every_skill_declares_a_name_that_matches_its_directory() -> None:
         assert "description:" in head, f"{name} 缺 description"
 
 
+def test_newlife_owns_one_complete_four_skill_flow() -> None:
+    assert SKILL_DIRS == ["newlife", "newlife-execute", "newlife-goal", "newlife-prereg"]
+    router = (cli.SKILLS / "newlife" / "SKILL.md").read_text()
+    execute = (cli.SKILLS / "newlife-execute" / "SKILL.md").read_text()
+    prereg = (cli.SKILLS / "newlife-prereg" / "SKILL.md").read_text()
+    normalized_router = " ".join(router.split())
+    normalized_execute = " ".join(execute.split())
+    assert "ask before freezing" in normalized_router
+    assert "ask before committing `results/`" in normalized_router
+    assert "No reply is not approval" in normalized_execute
+    assert "Ask the person before running it" in prereg
+    assert "newlife check" not in normalized_execute
+    assert "science-superpowers:" not in "\n".join(
+        p.read_text(encoding="utf-8") for p in cli.SKILLS.rglob("*.md")
+    )
+
+
+def test_local_markdown_references_resolve_after_install(tmp_path: Path) -> None:
+    assert cli._skills(_args(tmp_path)) == 0
+    missing: list[str] = []
+    for document in tmp_path.rglob("*.md"):
+        for target in re.findall(r"\[[^]]+\]\(([^)#]+)(?:#[^)]*)?\)", document.read_text()):
+            if "://" in target:
+                continue
+            if not (document.parent / target).resolve().exists():
+                missing.append(f"{document.relative_to(tmp_path)} -> {target}")
+    assert missing == []
+
+
 def test_install_is_verbatim_and_idempotent(tmp_path: Path) -> None:
     """**整个目录，不只 SKILL.md。** 第一版只拷一个文件，装不了带 references/ 与 scripts/
     的探索 skill；这里按 `_skill_sources()` 逐文件比对，exloop 装了就一并覆盖到。"""
@@ -59,6 +89,14 @@ def test_install_refuses_to_clobber_an_edited_skill(tmp_path: Path) -> None:
     assert "我自己改的" in edited.read_text()
     assert cli._skills(_args(tmp_path, force=True)) == 0
     assert "我自己改的" not in edited.read_text()
+
+
+def test_ordinary_install_does_not_retire_unrelated_or_stale_entries(tmp_path: Path) -> None:
+    stale = tmp_path / "surveying-prior-work" / "SKILL.md"
+    stale.parent.mkdir()
+    stale.write_text("stale entry remains until an explicit migration\n")
+    assert cli._skills(_args(tmp_path)) == 0
+    assert stale.read_text() == "stale entry remains until an explicit migration\n"
 
 
 def test_path_prints_masters_without_touching_anything(tmp_path: Path, capsys) -> None:

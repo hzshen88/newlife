@@ -38,15 +38,17 @@ answer off this repository — stage, what is done, what blocks, what you have t
    blind / mechanical, and at least one row is blind.
 6. **Freeze.** The one irreversible step. The AI must ask you first, then runs
    `newlife freeze`. Two gates (goal, pilot) refuse on their own if something is missing.
-7. **Verdict.** `newlife run` (it also checks that the units the registration declares are
-   exactly the ones the runner computed), commit `results/`, `newlife audit`. H1, H0 or
-   INVALID. The closeout goes back into `goal.md` §5 and the map.
+7. **Execute and close** (skill: newlife-execute). The AI runs the frozen question through
+   its verdict, reproduction, checks, audit and report without stopping at routine progress
+   updates. H1, H0 or INVALID comes from the mechanical record. It delivers the report,
+   then asks before a concrete `results/` commit if you have not already approved it.
 
 ## The two moments that are yours alone
 
 - **The freeze** (step 6). After it the criteria cannot change; a wrong criterion means a
   new registration, never an edit.
-- **Committing `results/`** (step 7). What is committed provably post-dates the freeze.
+- **Committing `results/`** (step 7). What is committed provably post-dates the freeze; the
+  report does not wait behind this separate decision.
 
 ## If you would rather type
 

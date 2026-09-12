@@ -1,6 +1,6 @@
 ---
 name: newlife-goal
-description: Turn any question into one that the later steps can actually settle — first triage whether simulation should answer it at all and whether it can be judged, then reshape an unjudgeable one until it can be. Produces an anchored goal draft for the execution system. Use when asked how to frame a question, whether something is worth simulating, how to make it decidable, or to start a goal. Not for a question whose criteria are already clear and only need writing up (that is newlife-prereg), nor for implementing and judging an already-decidable question (that is newlife init / freeze / run).
+description: Use when a new formal NewLife question is not yet mechanically decidable, has incomplete goal anchors, or still needs triage about whether simulation can answer it. Not for direct answers/reviews, criteria that only need preregistration, or execution of an existing question.
 ---
 
 # newlife-goal — turning a question into a solvable, real one
@@ -10,11 +10,23 @@ description: Turn any question into one that the later steps can actually settle
 
 > This is **step one**: pure method, conducted in conversation, producing a text. Step two
 > (the criteria) is `newlife-prereg`; step three (execution and judgement) is
-> `newlife init / freeze / run / check / audit`.
+> `newlife-execute` using `newlife status / run / audit`.
 
 **Its output is the next step's input**: an anchored goal draft. It belongs in
 `goal.md` inside the question folder, where a machine gate reads it — **whatever you
 cannot state, `newlife freeze` refuses.**
+
+Before asking anything, read the existing `goal.md`, any `origin/goal-draft.md`, the
+exploration record and the session's decisions. Preserve answers that are already explicit
+and work only on missing or contradictory anchors. A request for a direct answer, review,
+implementation or already-frozen execution does not become a goal exercise.
+
+For a new confirmatory question, establish the question, outcome/measurement boundary,
+population or system, comparison/counterparty, what result would disconfirm the claim, and
+what has already been seen before outcome inspection. Do not demand a statistical H0, p
+value or sample-size formula when the question is mechanistic, formal or deterministic; the
+later design must still specify a mechanical counter-result. Source checks are bounded
+evidence operations and return here without creating another workflow stage.
 
 ---
 
