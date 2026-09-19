@@ -525,11 +525,11 @@ wheels = [
 
 [[package]]
 name = "exloop"
-version = "0.2.0"
+version = "0.3.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ff/e5/6765786e257bc3746ff7804fb46c14a62322d10ef783118fe3dff41b46a8/exloop-0.2.0.tar.gz", hash = "sha256:447fec487caddbfc3ff2b782ff19e76b44f4651ff418df8195be91a28eb5ec7f", size = 30408, upload-time = "2026-09-09T14:28:03.506Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/18/ac/d4fecdb9a13b2280f8760762c5a614a976ef853b414016676aebd73c6321/exloop-0.3.0.tar.gz", hash = "sha256:03abf4cd5c49913cd08c08ed9f5b2dcb293a3c7a8f352c5851287854931e33f7", size = 32290, upload-time = "2026-09-19T00:29:40.5Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bf/cc/0901866911fdf6dd6f4469c7fa429f7ea4ba3725ae6326b465bbc026b6a0/exloop-0.2.0-py3-none-any.whl", hash = "sha256:d9783d07a2ca0f35d36e803483a496fd9fc51900563276f1a4f80fedcd5400f4", size = 36851, upload-time = "2026-09-09T14:28:02.05Z" },
+    { url = "https://files.pythonhosted.org/packages/ee/98/d9fd241cadc670f40582aa055033a0ea61699ed625f080920db268845d3c/exloop-0.3.0-py3-none-any.whl", hash = "sha256:b436f7efed937157b3bd081f5db73440ff355d6add9f2fa1a5a43fe5a0f75f56", size = 39364, upload-time = "2026-09-19T00:29:39.34Z" },
 ]
 
 [[package]]
@@ -1274,7 +1274,7 @@ wheels = [
 
 [[package]]
 name = "newlife"
-version = "0.1.4"
+version = "0.1.5"
 source = { editable = "packages/newlife" }
 dependencies = [
     { name = "exloop" },
@@ -1296,7 +1296,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "exloop", specifier = ">=0.2,<0.3" },
+    { name = "exloop", specifier = ">=0.3,<0.4" },
     { name = "process-bigraph", marker = "extra == 'process-bigraph'", specifier = "==1.8.3" },
     { name = "proofroot", editable = "packages/proofroot" },
     { name = "spatio-flux", marker = "extra == 'spatio-flux'", specifier = "==1.4.0" },
@@ -1682,7 +1682,7 @@ wheels = [
 
 [[package]]
 name = "proofroot"
-version = "0.1.4"
+version = "0.1.5"
 source = { editable = "packages/proofroot" }
 
 [package.dev-dependencies]
