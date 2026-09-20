@@ -2,7 +2,7 @@
 
 | Document | For whom | What it answers |
 |---|---|---|
-| [`first-question.md`](first-question.md) | someone who just ran `pip install newlife` | One question end to end in about ten minutes, with the real output of every command. |
+| [`first-question.md`](first-question.md) | someone who just ran `pip install newlife` | The decisions, pilot, freeze, interruption and closeout of a first question. |
 | [`writing-a-world.md`](writing-a-world.md) | someone whose simulator is not a process-bigraph `Process` | The twenty lines that wrap it, the authority declaration, and the one timestep pitfall. |
 | [`milestones.md`](milestones.md) | someone asking how newlife itself was built | The acceptance pipeline, the verdict table of all closed milestones, what is public and what is not, lineage. |
 | [`releasing.md`](releasing.md) | maintainers | How a tag becomes two PyPI releases, and why exloop goes first. |

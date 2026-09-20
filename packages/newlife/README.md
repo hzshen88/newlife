@@ -16,7 +16,8 @@ and say:
 > Explore this with me: *your curiosity*
 
 `NEXT.md` in that folder says what happens from here. If you get lost, ask your AI "how does
-this work" or "which step are we at" — the installed `newlife` skill answers in your terms.
+this work" or "where are we?" — the installed `newlife` skill runs one authoritative status
+check and answers in your terms.
 
 Requires Python 3.12 or newer and `git` (the freeze is a git commit; that is what makes the
 timestamp real). `start` tells you if git has no identity to sign with, rather than
@@ -37,14 +38,16 @@ guessing one.
    Six anchors go into `goal.md`. One you cannot fill yet means keep exploring or narrow —
    not a failure.
 4. **World and pilot.** Your simulator goes into `verdict.py`; a pilot run shows you every
-   quantity a criterion will name. Everything seen is now *seen*.
+   quantity a criterion will name. Emitted values are *seen*; a named withheld unit stays
+   blind only when its value is absent. Failed executions never enter the pilot ledger.
 5. **Criteria.** Every judgement unit is marked seen / blind / mechanical, and at least one
    is blind — a confirmatory round in which every number was already seen carries no
    information.
 6. **Freeze.** The one irreversible step; the AI asks you first. Two gates refuse on their
    own if the goal is unfilled or a criterion was never piloted. Your environment and any
    downloaded data are pinned by hash at this moment.
-7. **Execute and close.** The execution skill resumes the real repository state, runs and
+7. **Execute and close.** `newlife status` first names the one next step from the real
+   repository state. The execution skill runs and
    verifies the frozen question, diagnoses anomalies without changing its rules, audits it,
    and delivers the report. H1, H0 or INVALID is computed by the runner, never written by
    hand. The AI asks separately before committing `results/`.
@@ -68,7 +71,7 @@ reached, not a failure to tidy away.
 
 ```
 newlife init <slug>       newlife pilot <folder>      newlife freeze <folder> [--data FILE...]
-newlife run <folder>      newlife status <folder>
+newlife run <folder>      newlife status [folder]
 newlife audit <folder>
 newlife skills install    newlife skills path         newlife blocks
 ```
