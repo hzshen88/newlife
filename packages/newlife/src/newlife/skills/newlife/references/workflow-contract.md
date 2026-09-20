@@ -7,8 +7,9 @@ Lab and method references are reasoning operations inside their caller, never ne
 
 1. Honor a direct bounded request. Do not start exploration merely because the subject is
    scientific.
-2. Read existing session decisions, `newlife status` and question files before asking. Resume
-   the current stage; do not replay framing.
+2. Run repository-level `newlife status`, then read the selected question's detail and
+   existing session decisions before asking. Resume its one reported next step; do not
+   replay framing or derive state from filenames yourself.
 3. Protect confirmatory outcomes before they are exposed. Anything already seen remains
    exploratory for that registration.
 4. A source or method check returns evidence and limitations to its caller. It does not
@@ -38,9 +39,11 @@ solely to repeat the same supported statement.
 Report execution, reproduction, verdict/audit, report/archive, result commit and external
 publication as separate states. Deliver completed artifacts before asking for the remaining
 concrete action. A launched long run is not complete until exit/artifacts are checked or a
-truthful recovery/monitoring handoff is established.
+truthful recovery/monitoring handoff is established. H1, H0 and INVALID are artifact
+outcomes from a completed run, not shell failures: a completed runner exits zero. Non-zero
+means execution is incomplete and cannot enter the pilot ledger or be treated as a
+scientific outcome.
 
 Never edit a frozen hypothesis, threshold, blind unit, decision rule or implementation
 constraint in place. Diagnose it, preserve the record and create a new registration for a
 new confirmatory attempt.
-

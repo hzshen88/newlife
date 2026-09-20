@@ -15,8 +15,9 @@ Before a scientific report or closeout read [review and closeout](references/rev
 
 ## 1. Recover state before asking
 
-Run `newlife status <question>` and inspect `goal.md`, `prereg.md`, `verdict.py`, the latest
-pilot/results and available audit evidence. Check Git status and preserve unrelated staged,
+Run `newlife status` first; use `newlife status <question>` for the selected question's
+detail. Inspect `goal.md`, `prereg.md`, `verdict.py`, the latest pilot/results and available
+audit evidence. Check Git status and preserve unrelated staged,
 modified and untracked work. State the stage, what is already valid, and what the request
 authorizes.
 
@@ -40,6 +41,11 @@ For long runs record the launch command, PID or task identifier, log and output 
 expected exit, and recovery/check command. Launching a detached process is not completion.
 Track it to checked artifacts, or establish a truthful host-supported monitoring/handoff if
 the task cannot remain active.
+
+A completed scientific run returns process exit 0 whether its artifact says H1, H0 or
+INVALID. Non-zero means execution failed or stopped before a usable verdict; diagnose or
+resume it and do not interpret it as H0. A pilot with non-zero exit is deliberately absent
+from `pilot/ledger.jsonl`.
 
 Do not commit each step automatically. Never use `git add -A`, stash, reset or include
 unrelated work. The freeze has its own approval in `newlife-prereg`; `results/` has the

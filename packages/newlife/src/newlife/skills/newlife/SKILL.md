@@ -18,9 +18,11 @@ clarification, evidence reuse and completion behavior.
 1. **Direct answer, review, implementation, debugging, programming or collaboration:** do
    that task with its normal workflow. Research subject matter alone does not require an
    exploration or a NewLife question.
-2. **“Where are we?” or work in a repository with `questions/`:** run `newlife status` on
-   the relevant question folders and read their files. Resume the stage the state shows. Do
-   not ask the person to reconstruct the history or repeat an approved goal.
+2. **“Where are we?” or work in a repository with `questions/`:** run `newlife status`
+   once at the repository level. It names only questions that need a decision, continued
+   work or repair and aggregates completed ones. Run `newlife status <question>` only for
+   the selected question's detail. Resume the one next step it reports; do not reconstruct
+   the lifecycle from filenames or ask the person to repeat an approved goal.
 3. **Open curiosity with no decidable boundary:** use `exloop`. When several explanations
    are live, use Idea Lab inside the same exploration. A source check returns to that
    exploration; it does not automatically start formal design.

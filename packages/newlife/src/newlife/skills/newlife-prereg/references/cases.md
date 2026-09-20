@@ -27,12 +27,11 @@ rules stay short; open this file when a rule needs its evidence.
 
 ### Limits of rule one
 
-Three gaps, worth stating rather than papering over:
+Two remaining gaps, worth stating rather than papering over:
 
-- **Exit 1 has no landing place in the tooling.** `goal.md` §5's closeout is filled in after
-  a freeze; a round that correctly stops before freezing currently leaves a `pilot/`
-  directory and nothing that records what was concluded. Write it up by hand until that
-  exists.
+Exit 1 now lands in `goal.md` §5: a pre-freeze exploratory closeout is terminal, and
+`newlife status` reports it as such. Abandoned and superseded questions use the explicit
+`@disposition` anchor. This records the ending without pretending it was confirmatory.
 - **Blind data is not a blind analyst.** Exit 2 keeps the *data* unread, but after seeing
   the first dataset your priors are already shaped by it — what you choose to measure next,
   which direction you expect, what size feels convincing. Clinical trials answer this with

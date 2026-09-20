@@ -40,10 +40,12 @@ every measurable quantity in it. For each one ask: **have I actually run this an
 the number?** If not, either measure it now or delete that criterion.
 
 `newlife pilot <folder>` is how you look: it runs the runner into `pilot/<stamp>/` (never
-`results/`) and appends the units it produced to `pilot/ledger.jsonl`. **The freeze reads
-that ledger** — a row marked `seen` with no run behind it is refused. Anything that came in
-through `origin/` (the exploration's record) is seen as well, even though no ledger line
-says so.
+`results/`) and appends the completed run's `seen_units` and `withheld_units` to
+`pilot/ledger.jsonl`. **The freeze reads only seen units as coverage.** A withheld unit's
+name may be present, but its value must be absent; a unit emitted under `units` is seen even
+if another field calls it withheld. H1, H0 and INVALID are values in a completed artifact
+and return exit 0. A non-zero runner exit means incomplete execution and is not entered in
+the ledger. Anything that came in through `origin/` is already seen even without a ledger.
 
 > **"I derived it, so I know" does not count as having looked.** Numerical integration,
 > floating point and discrete timesteps all get a vote.
@@ -162,6 +164,11 @@ rather than interpolate.
 Derive the blind unit **from the mechanism**; do not guess. Put the derivation in §1 of the
 registration, so that it means something when it holds and you know which step was wrong
 when it does not.
+
+When one program handles exploratory and blind units together, it must omit every blind
+unit's value from the pilot artifact and list only its name in `withheld_units`. Do not put
+a placeholder, encrypted value or pass/fail bit for it under `units`; emitted values are
+seen regardless of their label.
 
 ---
 

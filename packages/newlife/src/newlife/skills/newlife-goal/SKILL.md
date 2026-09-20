@@ -163,6 +163,12 @@ counterparty, or piece 4. The second half of `newlife-prereg` rule one covers th
 the pilot has already answered the main criterion; the short version: **reporting it as an
 exploratory negative result is a legitimate ending, and flipping H1 on the same data is not.**
 
+When the person chooses that ending, write the exploratory closeout in `goal.md` §5. If
+there is no scientific closeout because the question was abandoned or replaced, record
+`<!--@disposition: abandoned — reason-->` or `superseded` with the replacement. `newlife
+status` then treats the question as terminal instead of repeatedly sending it back to the
+pilot stage. Never infer this decision without the person making it.
+
 ### The shape of the criteria
 
 - **A conjunction, not a weighted score.** Any one false makes the whole false.
