@@ -51,12 +51,13 @@ blind — in prose. **Prose does not stop a freeze.** This gate does.
 
    A ledger with no goal digest (written before this existed) stays green.
 
-## What is not mechanical
+## What the runner must say
 
-Whether a `blind` row is genuinely blind. The ledger records which *units* a run
-computed, not which *numbers* a person looked at; a runner that computes everything in
-one pass produces the blind unit too. So the gate does not cross-check `blind` against
-the ledger — that judgement stays with the person, the way it always did.
+New artifacts may declare `seen_units` and `withheld_units`. A withheld unit's value must
+not appear in the artifact at all; otherwise the pilot is contradictory and is not
+recorded. Old artifacts remain compatible and conservatively count every recognised unit
+key as seen. The gate still cannot prove what a person saw outside the artifact, but it no
+longer mistakes an explicitly withheld name for an exposed value.
 
     python -m newlife.gates.pilot_coverage <question-folder>
     python -m newlife.gates.pilot_coverage --selftest
@@ -123,16 +124,60 @@ def units_in(keys) -> set[str]:
     return {m.group(1) for k in keys if (m := UNIT_KEY.match(k))}
 
 
-def produced(out_dir: pathlib.Path) -> set[str]:
-    """Units a pilot run computed: `summary.json` and `reproduction.json` read together."""
-    found: set[str] = set()
+def exposure(out_dir: pathlib.Path) -> tuple[set[str], set[str], bool]:
+    """Return (seen, withheld, explicit) across a pilot's two artifacts.
+
+    Unit values present in an artifact are necessarily seen. A unit may be withheld only
+    when its value is absent and its name is declared in `withheld_units`. Older artifacts
+    have neither exposure field; all recognised unit keys remain seen for compatibility.
+    """
+    computed: set[str] = set()
+    declared_seen: set[str] = set()
+    withheld: set[str] = set()
+    explicit = False
     for name in ("summary.json", "reproduction.json"):
         path = out_dir / name
         if not path.exists():
             continue
         data = json.loads(path.read_text(encoding="utf-8"))
-        found |= units_in(list(data.get("units", {})) + list(data))
-    return found
+        units = data.get("units", {})
+        if not isinstance(units, dict):
+            raise SystemExit(f"{path}: `units` must be an object when present")
+        computed |= units_in(list(units) + list(data))
+        for key, target in (("seen_units", declared_seen), ("withheld_units", withheld)):
+            if key not in data:
+                continue
+            explicit = True
+            values = data[key]
+            if not isinstance(values, list) or not all(isinstance(v, str) for v in values):
+                raise SystemExit(f"{path}: `{key}` must be a list of unit names")
+            normalised = units_in(values)
+            if len(normalised) != len(set(values)):
+                raise SystemExit(
+                    f"{path}: `{key}` contains an unrecognised or duplicate unit name"
+                )
+            target |= normalised
+    missing_values = declared_seen - computed
+    if missing_values:
+        names = " ".join(sorted(missing_values))
+        raise SystemExit(
+            f"pilot exposure names {names} as seen, but emits no value for it. A seen "
+            "unit needs an artifact value; otherwise the ledger would be an assertion, "
+            "not evidence."
+        )
+    overlap = computed & withheld
+    if overlap:
+        names = " ".join(sorted(overlap))
+        raise SystemExit(
+            f"pilot exposure is contradictory: {names} are withheld but their values "
+            "were also emitted or declared seen. Omit a withheld unit's value entirely."
+        )
+    return computed, withheld, explicit
+
+
+def produced(out_dir: pathlib.Path) -> set[str]:
+    """Units known to have been seen in a completed pilot."""
+    return exposure(out_dir)[0]
 
 
 def ledger_units(ledger: pathlib.Path) -> set[str]:
@@ -149,12 +194,29 @@ def ledger_units(ledger: pathlib.Path) -> set[str]:
         entry = json.loads(
             line
         )  # malformed ledger lines raise: a broken record is not a record
-        units = entry.get("units")
+        units = entry.get("seen_units", entry.get("units"))
         if not isinstance(units, list):
             raise SystemExit(
-                f"{ledger} line {number} has no `units` list — not a pilot record"
+                f"{ledger} line {number} has no `seen_units` or legacy `units` list — "
+                "not a pilot record"
             )
         found |= set(units)
+    return found
+
+
+def ledger_withheld(ledger: pathlib.Path) -> set[str]:
+    """Every unit explicitly withheld by completed, new-format pilot runs."""
+    if not ledger.exists():
+        return set()
+    found: set[str] = set()
+    for number, line in enumerate(ledger.read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        entry = json.loads(line)
+        values = entry.get("withheld_units", [])
+        if not isinstance(values, list) or not all(isinstance(v, str) for v in values):
+            raise SystemExit(f"{ledger} line {number} has an invalid `withheld_units` list")
+        found |= set(values)
     return found
 
 

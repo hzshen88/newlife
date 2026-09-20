@@ -4,15 +4,15 @@
                              NEXT.md, and the skills installed into every AI tool found
     newlife init <slug>      scaffold and commit it (prereg.md deliberately excluded)
     newlife pilot <folder>   run the runner BEFORE the freeze: outputs land in pilot/<stamp>/,
-                             never in results/, and the units it produced are recorded in
-                             pilot/ledger.jsonl — everything a pilot produces counts as seen
+                             never in results/; completed runs record which units were seen
+                             and which values remained withheld
     newlife freeze <folder>  freeze the criteria — this commit IS the timestamp
                              (refused while goal.md is unfilled, or while a criterion marked
                              `seen` has no pilot run behind it, or nothing is blind);
                              --data FILE... pins external inputs by hash, re-checked by audit
     newlife run <folder>     compute the verdict
-    newlife status <folder>  where is this question: stage, what is done, what blocks, what is
-                             next, what the person has to decide — read from the folder
+    newlife status [folder]  without a folder, show what needs attention in the workspace;
+                             with one, show its state, trust and single next step
     newlife blocks           list the third-party building blocks in this environment
     newlife skills install   put the question-shaping skills where your AI reads them
     newlife audit <folder>   the criteria were never edited, and the outputs post-date the freeze
@@ -252,8 +252,8 @@ def _pilot(folder: Path) -> int:
     quantity nobody had looked at. **This is the looking.** Outputs never touch `results/`;
     the child process gets `NEWLIFE_PILOT=1`, which is the only condition under which
     `provenance.frozen_at` tolerates an unfrozen registration; and the units the run
-    produced are appended to `pilot/ledger.jsonl`, which the freeze reads
-    (`pilot_coverage`). Everything a pilot produces counts as seen.
+    exposed units are appended to `pilot/ledger.jsonl`, which the freeze reads
+    (`pilot_coverage`). A withheld unit is named but its value is absent.
     """
     # **The earliest place this can be caught.** Without the stamp placeholder the runner
     # dies inside `provenance.frozen_at` with "it is not a registration", the pilot records
@@ -268,12 +268,23 @@ def _pilot(folder: Path) -> int:
     out = out_dir / "summary.json"
     proc = subprocess.run([sys.executable, str(folder / "verdict.py"), "--out", str(out)],
                           env={**os.environ, "NEWLIFE_PILOT": "1"})
+    if proc.returncode != 0:
+        print(
+            f"\nThe runner exited {proc.returncode}. This pilot is incomplete and was not "
+            "added to pilot/ledger.jsonl. Any files in "
+            f"{out_dir.relative_to(folder)}/ are diagnostic only; fix the execution error "
+            "and run `newlife pilot` again. H1, H0 and INVALID belong in the artifact; a "
+            "completed scientific run returns 0."
+        )
+        return proc.returncode if proc.returncode > 0 else 1
     if not out.exists():
         print(f"\nThe runner exited {proc.returncode} and wrote nothing to "
               f"{out.relative_to(folder)}. Nothing was recorded. The runner must honour "
               f"--out (the scaffolded one does).")
         return 1
-    units = sorted(pilot_coverage.produced(out_dir))
+    seen, withheld, explicit = pilot_coverage.exposure(out_dir)
+    seen_units = sorted(seen)
+    withheld_units = sorted(withheld)
     # **Which environment this pilot ran in.** Without it the pilot proves only that the
     # runner ran *somewhere*: install a package afterwards and the freeze records the new
     # environment, S1 goes green against it, and nothing ever executed the runner there.
@@ -287,15 +298,25 @@ def _pilot(folder: Path) -> int:
     goal_sha = (pilot_coverage.goal_commitments(goal_md.read_text(encoding="utf-8"))
                 if goal_md.exists() else None)
     entry = {"at": stamp, "out": str(out.relative_to(folder)),
-             "returncode": proc.returncode, "units": units,
+             "returncode": proc.returncode, "seen_units": seen_units,
+             "withheld_units": withheld_units,
              "env_sha256": provenance.env_digest(), "goal_sha256": goal_sha,
              "python": sys.executable}
     with (folder / "pilot" / "ledger.jsonl").open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(entry) + "\n")
-    print(f"\nPilot recorded in pilot/ledger.jsonl: {' '.join(units) or 'no unit recognised'} "
-          f"(runner exit {proc.returncode}; here H0 is information, not failure).\n"
-          f"Everything this run produced now counts as seen: mark those rows `seen` in "
-          f"prereg.md section 2,\nand keep at least one row you have never run as `blind`.")
+    print(
+        "\nPilot recorded in pilot/ledger.jsonl:\n"
+        f"  seen       {' '.join(seen_units) or '(none recognised)'}\n"
+        f"  withheld  {' '.join(withheld_units) or '(none)'}\n"
+        + (
+            "  exposure   inferred from legacy artifact keys; new runners should emit "
+            "seen_units / withheld_units\n"
+            if not explicit
+            else ""
+        )
+        + "Mark seen rows `seen` in prereg.md section 2. A withheld unit stays `blind`; "
+        "its value must not appear in the artifact."
+    )
     return 0
 
 
@@ -315,10 +336,15 @@ def main(argv: list[str] | None = None) -> int:
                              "the freeze impossible")
     for name, help_ in (("pilot", "run the runner into pilot/, before the freeze"),
                         ("freeze", "freeze the criteria"), ("run", "compute the verdict"),
-                        ("status", "where is this question: stage, blockers, next step"),
+                        ("status", "what needs attention here, or in one question"),
                         ("audit", "audit the freeze")):
         p = sub.add_parser(name, help=help_)
-        p.add_argument("folder", type=Path, help="question folder")
+        p.add_argument(
+            "folder",
+            nargs="?" if name == "status" else None,
+            type=Path,
+            help="question folder (omit for workspace status)" if name == "status" else "question folder",
+        )
         if name == "freeze":
             p.add_argument("--data", nargs="+", type=Path, default=(), metavar="FILE",
                            help="external input files the verdict reads (downloaded data, "
@@ -363,8 +389,8 @@ def main(argv: list[str] | None = None) -> int:
               f"freeze is refused until it is filled in, or the stage waived. "
               f"If this question came out of an exploration, its record goes in {rel}/origin/.\n"
               f"  1. edit {rel}/verdict.py and put your world in it (exploratory for now)\n"
-              f"  2. newlife pilot {rel}       <- look at every quantity a criterion will name; "
-              f"everything it produces counts as seen\n"
+              f"  2. newlife pilot {rel}       <- exercise every measurement; emitted values "
+              f"are seen, explicitly withheld values stay blind\n"
               f"  3. edit {rel}/prereg.md and write the criteria; mark every row "
               f"seen / blind / mechanical. Each one must be able to go red.\n"
               f"  4. newlife freeze {rel}      <- do not commit prereg.md before this "
@@ -372,6 +398,9 @@ def main(argv: list[str] | None = None) -> int:
               f"  5. newlife run {rel} && git add {rel}/results && git commit\n"
               f"  6. newlife audit {rel}")
         return 0
+
+    if args.cmd == "status" and args.folder is None:
+        return status.main([])
 
     folder = args.folder.resolve()
     if not folder.is_dir():

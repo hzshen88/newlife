@@ -9,9 +9,9 @@ Begin with one sentence:
 
     "Explore this with me: <your curiosity>"
 
-Lost at any point? Ask your AI "how does this work" or "which step are we at": the
-`newlife` skill answers in your terms, and `newlife status <folder>` is how it reads the
-answer off this repository — stage, what is done, what blocks, what you have to decide.
+Lost at any point? Ask your AI "how does this work" or "where are we?": the `newlife`
+skill runs `newlife status` once for the workspace, then opens one question only when it
+needs detail. It reports state, trust and the single next step.
 
 ## The loop
 
@@ -33,7 +33,8 @@ answer off this repository — stage, what is done, what blocks, what you have t
    genuine counterparty or changed decision remains after that should the question stay an
    unfrozen curiosity — a useful outcome, not a failure.
 4. **World and pilot.** Your simulator goes into `verdict.py`. `newlife pilot` runs it into
-   `pilot/`, never `results/`. Everything a pilot produces counts as seen.
+   `pilot/`, never `results/`. Emitted values are seen; an explicitly withheld unit stays
+   blind only while its value is absent. Failed runs do not enter the ledger.
 5. **Criteria** (skill: newlife-prereg). Every row of `prereg.md` §2 is marked seen /
    blind / mechanical, and at least one row is blind.
 6. **Freeze.** The one irreversible step. The AI must ask you first, then runs
@@ -53,7 +54,7 @@ answer off this repository — stage, what is done, what blocks, what you have t
 ## If you would rather type
 
     newlife init <slug>        newlife pilot <folder>       newlife freeze <folder> [--data FILE...]
-    newlife run <folder>       newlife status <folder>
+    newlife run <folder>       newlife status [folder]
     newlife audit <folder>     newlife skills install       newlife blocks
 
 Never `git add -A` before the freeze: `prereg.md` must be committed by the freeze itself,

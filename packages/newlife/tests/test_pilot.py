@@ -85,7 +85,8 @@ def test_pilot_writes_to_pilot_dir_records_ledger_and_leaves_results_alone(
     lines = (folder / "pilot" / "ledger.jsonl").read_text(encoding="utf-8").splitlines()
     assert len(lines) == 1
     entry = json.loads(lines[0])
-    assert {"S0", "S1", "S2", "S3"} <= set(entry["units"])
+    assert {"S0", "S1", "S2", "S3"} <= set(entry["seen_units"])
+    assert entry["withheld_units"] == []
     assert entry["out"] == str(runs[0].relative_to(folder))
 
     summary = json.loads(runs[0].read_text(encoding="utf-8"))
@@ -131,6 +132,75 @@ def test_freeze_reports_the_goal_gate_before_the_pilot_gate(tmp_path: Path) -> N
     with pytest.raises(SystemExit) as excinfo:
         scaffold.freeze(folder, cwd=repo)
     assert "goal_gate" in str(excinfo.value) and "pilot_gate" not in str(excinfo.value)
+
+
+def test_nonzero_runner_is_not_recorded_even_if_it_writes_summary(tmp_path: Path) -> None:
+    repo = _repo(tmp_path)
+    folder = scaffold.init("2026-09-05-crashed", cwd=repo)
+    (folder / "verdict.py").write_text(
+        "import argparse, json\n"
+        "p=argparse.ArgumentParser(); p.add_argument('--out'); a=p.parse_args()\n"
+        "open(a.out, 'w').write(json.dumps({'units': {'S2': {'passed': False}}}))\n"
+        "raise SystemExit(1)\n",
+        encoding="utf-8",
+    )
+
+    assert cli._pilot(folder) == 1
+    assert not (folder / "pilot" / "ledger.jsonl").exists()
+
+
+def test_withheld_unit_is_not_counted_seen(tmp_path: Path) -> None:
+    out = tmp_path / "pilot"
+    out.mkdir()
+    (out / "summary.json").write_text(
+        json.dumps(
+            {
+                "units": {"S1_env": {"passed": True}},
+                "seen_units": ["S1"],
+                "withheld_units": ["H1"],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    seen, withheld, explicit = pilot_coverage.exposure(out)
+    assert seen == {"S1"}
+    assert withheld == {"H1"}
+    assert explicit
+
+
+def test_a_withheld_unit_cannot_also_emit_its_value(tmp_path: Path) -> None:
+    out = tmp_path / "pilot"
+    out.mkdir()
+    (out / "summary.json").write_text(
+        json.dumps(
+            {
+                "units": {"H1_answer": {"passed": True}},
+                "withheld_units": ["H1"],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit, match="contradictory"):
+        pilot_coverage.exposure(out)
+
+
+def test_a_seen_unit_needs_an_artifact_value(tmp_path: Path) -> None:
+    out = tmp_path / "pilot"
+    out.mkdir()
+    (out / "summary.json").write_text(
+        json.dumps({"seen_units": ["S2"], "withheld_units": []}), encoding="utf-8"
+    )
+
+    with pytest.raises(SystemExit, match="emits no value"):
+        pilot_coverage.exposure(out)
+
+
+def test_legacy_ledger_units_remain_valid(tmp_path: Path) -> None:
+    ledger = tmp_path / "ledger.jsonl"
+    ledger.write_text(json.dumps({"units": ["S1", "S2"]}) + "\n", encoding="utf-8")
+    assert pilot_coverage.ledger_units(ledger) == {"S1", "S2"}
 
 
 

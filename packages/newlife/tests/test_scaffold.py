@@ -166,6 +166,21 @@ def test_audit_partial_is_nonzero(tmp_path: Path) -> None:
     assert scaffold.audit(folder, cwd=repo) == 3
 
 
+def test_question_commands_use_the_target_repo_not_the_shell_repo(tmp_path: Path) -> None:
+    target = _repo(tmp_path / "target")
+    elsewhere = _repo(tmp_path / "elsewhere")
+    for repo in (target, elsewhere):
+        (repo / "baseline.txt").write_text("base\n")
+        subprocess.run(["git", "-C", str(repo), "add", "baseline.txt"], check=True)
+        subprocess.run(["git", "-C", str(repo), "commit", "-qm", "baseline"], check=True)
+
+    folder = scaffold.init("2026-09-05-absolute", cwd=target)
+    _waive_goal(folder)
+    _waive_pilot(folder)
+    assert scaffold.freeze(folder, cwd=elsewhere) == 0
+    assert scaffold.audit(folder, cwd=elsewhere) == 3
+
+
 def test_freeze_refuses_and_says_how_to_recover(tmp_path: Path) -> None:
     """撞上墙 3 之后必须给出可执行的补救，而不只是拒绝——历史已经在那，撤不掉。"""
     repo = _repo(tmp_path)

@@ -55,3 +55,10 @@ not whether the answer came out the way you wanted.)
 ## 5. Closeout judgement
 
 (Filled in afterwards: achieved / not_achieved / regressed / not_applicable.)
+
+If the question ends before a freeze, write the exploratory closeout here. When no
+scientific closeout applies because the question was abandoned or replaced, record the
+user's decision explicitly:
+
+    <!--@disposition: abandoned — <reason>-->
+    <!--@disposition: superseded — <replacement question and reason>-->

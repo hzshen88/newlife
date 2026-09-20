@@ -41,11 +41,15 @@ pass itself off as the real one.
 **Fill in the "Piloted?" column for every unit** — `seen` / `blind` / `mechanical`.
 A confirmatory round in which nothing is blind carries no information.
 
-`newlife pilot` runs the runner into `pilot/<stamp>/` (never `results/`) and appends the
-units it produced to `pilot/ledger.jsonl`. **The freeze reads that ledger against this
-table**: every row must say how it was piloted, every `seen` row must have a run behind
-it, and at least one row must be `blind`. If this round genuinely has nothing blind (a
-toolchain smoke test, say), waive it on the record rather than inventing one:
+`newlife pilot` runs the runner into `pilot/<stamp>/` (never `results/`) and appends its
+`seen_units` and `withheld_units` to `pilot/ledger.jsonl`. A withheld unit's value must be
+absent from the artifact; naming it without revealing it does not make it seen. **The
+freeze reads that ledger against this table**: every row must say how it was piloted,
+every `seen` row must have a completed run behind it, and at least one row must be
+`blind`. H1, H0 and INVALID are artifact values from a completed run, which exits 0;
+non-zero means the execution was incomplete and is never entered in the ledger. If this
+round genuinely has nothing blind (a toolchain smoke test, say), waive it on the record
+rather than inventing one:
 
     <!--@pilot_gate: no_blind_waived — <why>-->
 

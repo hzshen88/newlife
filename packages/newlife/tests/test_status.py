@@ -40,9 +40,8 @@ def test_every_stage_along_one_question(tmp_path: Path) -> None:
 
     r = status.inspect(folder)
     assert r.stage == "goal" and r.blockers and "newlife-goal" in r.next
-    assert r.origin_files == 0 and "where did this question come from" in status.render(
-        r
-    )
+    assert r.origin_files == 0
+    assert "state      goal" in status.render(r)
 
     (folder / "goal.md").write_text(
         "<!--@goal_gate: not_applicable — 走一遍生命周期-->\n\n## 5. Closeout judgement\n\n"
@@ -54,7 +53,7 @@ def test_every_stage_along_one_question(tmp_path: Path) -> None:
     assert cli._pilot(folder) == 0
     r = status.inspect(folder)
     assert r.stage == "criteria"
-    assert any("S2" in b for b in r.blockers) and any("blind" in d for d in r.decisions)
+    assert any("S2" in b for b in r.blockers)
     assert any("pilot run" in d for d in r.done)
 
     prereg = folder / "prereg.md"
@@ -83,15 +82,15 @@ def test_every_stage_along_one_question(tmp_path: Path) -> None:
         "H0",
         "INVALID",
     }
-    assert any("commit" in d for d in r.decisions)
+    assert r.category == status.DECISION
 
     rel = folder.relative_to(repo) / "results"
     subprocess.run(["git", "-C", str(repo), "add", str(rel)], check=True)
     subprocess.run(["git", "-C", str(repo), "commit", "-qm", "verdict"], check=True)
     r = status.inspect(folder)
     assert r.stage == "closeout"
+    assert r.audit == "PASS"
     assert any("section 5" in b for b in r.blockers)  # §5 仍是占位符
-    assert "audit" in r.next
     assert status.main([str(folder)]) == 0
 
 
@@ -160,3 +159,101 @@ def test_a_runner_of_ones_own_that_records_s0_in_summary_is_not_interrupted(
     assert r.stage == "verdict computed, not committed"
     assert r.verdict and "not derived" in r.verdict
 
+
+def test_a_frozen_legacy_question_is_not_sent_back_to_goal(tmp_path: Path) -> None:
+    repo = _repo(tmp_path)
+    folder = scaffold.init("2026-09-06-legacy", cwd=repo)
+    (folder / "goal.md").write_text(
+        "<!--@goal_gate: not_applicable — legacy test-->\n", encoding="utf-8"
+    )
+    with (folder / "prereg.md").open("a", encoding="utf-8") as fh:
+        fh.write("\n<!--@pilot_gate: not_applicable — legacy test-->\n")
+    assert scaffold.freeze(folder, cwd=repo) == 0
+    subprocess.run([sys.executable, str(folder / "verdict.py")], check=True)
+    subprocess.run(
+        ["git", "-C", str(repo), "add", str(folder.relative_to(repo) / "results")],
+        check=True,
+    )
+    (folder / "goal.md").unlink()
+    subprocess.run(
+        ["git", "-C", str(repo), "add", "-u", str(folder.relative_to(repo) / "goal.md")],
+        check=True,
+    )
+    subprocess.run(["git", "-C", str(repo), "commit", "-qm", "legacy result"], check=True)
+
+    report = status.inspect(folder)
+    assert report.stage == "complete (legacy)"
+    assert report.audit == "PASS"
+    assert report.category == status.DONE
+
+
+def test_a_committed_unfrozen_prereg_is_never_ready_to_freeze(tmp_path: Path) -> None:
+    repo = _repo(tmp_path)
+    folder = scaffold.init("2026-09-06-poisoned", cwd=repo)
+    (folder / "goal.md").write_text(
+        "<!--@goal_gate: not_applicable — history test-->\n", encoding="utf-8"
+    )
+    rel = folder.relative_to(repo) / "prereg.md"
+    subprocess.run(["git", "-C", str(repo), "add", str(rel)], check=True)
+    subprocess.run(["git", "-C", str(repo), "commit", "-qm", "committed too early"], check=True)
+
+    report = status.inspect(folder)
+    assert report.stage == "preregistration cannot be frozen"
+    assert report.category == status.REPAIR
+    assert "-v2" in report.next
+
+
+def test_a_prefreeze_closeout_is_terminal_even_when_the_draft_was_committed(
+    tmp_path: Path,
+) -> None:
+    repo = _repo(tmp_path)
+    folder = scaffold.init("2026-09-06-exploratory", cwd=repo)
+    (folder / "goal.md").write_text(
+        "<!--@goal_gate: not_applicable — exploratory close-->\n\n"
+        "## 5. Closeout judgement (filled afterwards)\n\n"
+        "not_achieved — the ruler failed its own control.\n",
+        encoding="utf-8",
+    )
+    subprocess.run(
+        ["git", "-C", str(repo), "add", str(folder.relative_to(repo) / "prereg.md")],
+        check=True,
+    )
+    subprocess.run(["git", "-C", str(repo), "commit", "-qm", "preserve draft"], check=True)
+
+    report = status.inspect(folder)
+    assert report.stage == "exploratory closed"
+    assert report.category == status.DONE
+    assert "no confirmatory conclusion" in report.trust
+
+
+def test_workspace_status_shows_only_actionable_questions_and_a_done_summary(
+    tmp_path: Path, monkeypatch, capsys,
+) -> None:
+    repo = _repo(tmp_path)
+    decision = scaffold.init("2026-09-06-decision", cwd=repo)
+    progress = scaffold.init("2026-09-06-progress", cwd=repo)
+    (progress / "goal.md").write_text(
+        "<!--@goal_gate: not_applicable — workspace test-->\n", encoding="utf-8"
+    )
+    done = scaffold.init("2026-09-06-done", cwd=repo)
+    (done / "goal.md").write_text(
+        "<!--@disposition: abandoned — scope no longer matters-->\n", encoding="utf-8"
+    )
+    repair = scaffold.init("2026-09-06-repair", cwd=repo)
+    subprocess.run(
+        ["git", "-C", str(repo), "add", str(repair.relative_to(repo) / "prereg.md")],
+        check=True,
+    )
+    subprocess.run(["git", "-C", str(repo), "commit", "-qm", "poison prereg"], check=True)
+
+    root, reports = status.inspect_workspace(repo)
+    text = status.render_workspace(root, reports)
+    assert decision.name in text and "YOUR DECISION" in text
+    assert progress.name in text and "IN PROGRESS" in text
+    assert repair.name in text and "NEEDS REPAIR" in text
+    assert "DONE  1" in text
+    assert done.name not in text  # completed questions are deliberately aggregated
+
+    monkeypatch.chdir(repo)
+    assert cli.main(["status"]) == 0
+    assert "YOUR DECISION" in capsys.readouterr().out

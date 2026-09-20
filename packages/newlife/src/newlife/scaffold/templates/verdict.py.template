@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 
 from newlife import provenance
-from newlife.core.verdict_seam import RenderSpec, decide, emit, exit_code
+from newlife.core.verdict_seam import RenderSpec, decide, emit
 
 HERE = Path(__file__).resolve().parent
 INNER = "_NEWLIFE_INNER_RUN"        # marks the inner reproduction run; stops infinite recursion
@@ -114,6 +114,11 @@ def main() -> int:
 
     summary = {"schema": "{slug}.v1", "provenance": prov,
                "sweep": list(SWEEP), "observed": observed, "units": units}
+    if os.environ.get("NEWLIFE_PILOT"):
+        # Everything whose value appears in a pilot artifact is seen. To keep a future
+        # unit blind, list its name under withheld_units and omit its value entirely.
+        summary["seen_units"] = list(units)
+        summary["withheld_units"] = []
     args.out.parent.mkdir(parents=True, exist_ok=True)
     # **The key name says "S0 not counted yet".** S0 cannot be written into the file it
     # reproduces — doing so would make the two runs differ by construction — so the final
@@ -124,7 +129,7 @@ def main() -> int:
                       RenderSpec(verdict_key="verdict_before_reproduction"), args.out)
 
     if os.environ.get(INNER):
-        return exit_code(verdict)
+        return 0
 
     # ── S0: run this file again in a separate process, compare bytes ────────────
     # **The record goes in a different file.** Written into summary.json itself, the two
@@ -136,10 +141,16 @@ def main() -> int:
     s0 = probe.exists() and probe.read_bytes() == args.out.read_bytes()
     probe.unlink(missing_ok=True)
     final = verdict if s0 else "INVALID"     # S0 false = this run had no discriminating power
+    reproduction = {
+        "schema": "self-reproduction.v1", "S0_byte_identical_on_rerun": s0,
+        "verdict": final, "verdict_before_reproduction": verdict,
+        "of": args.out.name, "sha256": provenance.file_digest(args.out),
+    }
+    if os.environ.get("NEWLIFE_PILOT"):
+        reproduction["seen_units"] = ["S0"]
+        reproduction["withheld_units"] = []
     (args.out.parent / "reproduction.json").write_text(json.dumps(
-        {"schema": "self-reproduction.v1", "S0_byte_identical_on_rerun": s0,
-         "verdict": final, "verdict_before_reproduction": verdict,
-         "of": args.out.name, "sha256": provenance.file_digest(args.out)},
+        reproduction,
         indent=2, ensure_ascii=False) + "\n")
 
     for name, unit in units.items():
@@ -150,7 +161,9 @@ def main() -> int:
              else "verdict")
     print(f"\n{label}: {final}"
           + ("" if s0 else "   <- the two runs disagreed; this run has no power"))
-    return exit_code(final)
+    # H1, H0 and INVALID are scientific outcomes recorded above, not process failures.
+    # Non-zero is reserved for an incomplete execution that produced no usable verdict.
+    return 0
 
 
 if __name__ == "__main__":

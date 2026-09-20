@@ -40,6 +40,7 @@ import re
 import shutil
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 from newlife import provenance
@@ -93,6 +94,20 @@ deliberately absent here.
 SAFE_SLUG = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\Z")
 
 
+@dataclass(frozen=True)
+class QuestionContext:
+    """A question resolved against the repository that owns it.
+
+    Commands that take a question folder must not depend on the shell's current
+    repository.  A person or an AI can pass an absolute path from anywhere and get the
+    same answer.
+    """
+
+    folder: Path
+    repo_root: Path
+    relative_folder: Path
+
+
 def _git(root: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess:
     return subprocess.run(["git", "-C", str(root), *args],
                           capture_output=True, text=True, check=check)
@@ -117,6 +132,23 @@ def repo_root(start: Path) -> Path:
     # Canonicalise once so every later relative-path calculation uses the
     # same namespace.
     return Path(out.stdout.strip()).resolve()
+
+
+def question_context(folder: Path) -> QuestionContext:
+    """Resolve *folder* and the git repository that contains it."""
+    resolved = folder.resolve()
+    if not resolved.is_dir():
+        raise SystemExit(f"{folder} is not a directory.")
+    if not (resolved / "prereg.md").is_file():
+        raise SystemExit(
+            f"{resolved} has no prereg.md, so it is not a NewLife question folder."
+        )
+    root = repo_root(resolved)
+    try:
+        relative = resolved.relative_to(root)
+    except ValueError as exc:  # defensive: git should already guarantee containment
+        raise SystemExit(f"{resolved} is not contained by its git repository {root}.") from exc
+    return QuestionContext(resolved, root, relative)
 
 
 def init(slug: str, *, cwd: Path, commit: bool = True) -> Path:
@@ -243,9 +275,11 @@ def freeze(folder: Path, *, cwd: Path, data: tuple[Path, ...] = ()) -> int:
     bet against is otherwise something you find out about only when the verdict turns out
     to carry no information. The freeze is where it is enforced.
     """
-    root = repo_root(cwd)
-    prereg = (folder / "prereg.md").resolve()
-    rel = prereg.relative_to(root)
+    context = question_context(folder)
+    folder = context.folder
+    root = context.repo_root
+    prereg = folder / "prereg.md"
+    rel = context.relative_folder / "prereg.md"
     history = _git(root, "log", "--format=%h", "--", str(rel), check=False).stdout.strip()
     if history:
         raise SystemExit(
@@ -351,9 +385,29 @@ def audit(folder: Path, *, cwd: Path) -> int:
 
     **The scope is narrowed to this question automatically.**
     """
-    root = repo_root(cwd)
-    rel = (folder / "prereg.md").resolve().relative_to(root)
+    context = question_context(folder)
+    root = context.repo_root
+    rel = context.relative_folder / "prereg.md"
     return _run_prereg(root, "audit", "--results", str(rel.parent / "results"), str(rel))
+
+
+def audit_capture(folder: Path) -> subprocess.CompletedProcess[str]:
+    """Run the read-only audit and capture its report for `newlife status`."""
+    context = question_context(folder)
+    rel = context.relative_folder / "prereg.md"
+    return subprocess.run(
+        [
+            "sh",
+            str(PREREG_SH),
+            "audit",
+            "--results",
+            str(rel.parent / "results"),
+            str(rel),
+        ],
+        cwd=context.repo_root,
+        capture_output=True,
+        text=True,
+    )
 
 
 def _run_prereg(root: Path, *args: str) -> int:
