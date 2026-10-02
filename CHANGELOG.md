@@ -3,7 +3,7 @@
 `proofroot` and `newlife` are released together under one version from one tag; `exloop`
 has its own version and its own repository. Dates are the PyPI upload dates.
 
-## Unreleased
+## 0.1.5 — 2026-10-02
 
 ### Added
 
@@ -15,6 +15,21 @@ has its own version and its own repository. Dates are the PyPI upload dates.
 - Analysis-design, anomaly, verification, review, and closeout references derived from the
   MIT-licensed Science-Superpowers project are included with source provenance and a
   third-party notice.
+- **`newlife status` and the pilot records report what is actually there.** A question
+  folder is resolved against the git repository that contains it instead of the shell's
+  current directory, so the same absolute path gives the same answer from anywhere; the
+  status and pilot-coverage readers were reworked to read the registration they are handed
+  rather than a nearby approximation.
+
+### Fixed
+
+- **`unit_alignment` reported the parser instead of the registration.** Two shapes did it:
+  prose that merely named a result (`verdict=H1`, `verdict=H0：S3 …、S0/S1/…`) was captured
+  as a conjunction and reported as an undefined unit, and an aliased table row
+  (`| **U0 (S0)** |`) was read as absent — while reading both names as independent units
+  claimed a unit the conjunction could not mention. A conjunction now carries `∧`, and
+  aliases resolve to one unit before the three sets are compared. Rechecked against every
+  registration in the research repository: four improved (6→0, 7→0, 2→0, 1→0), none new.
 
 ### Changed
 
