@@ -1,6 +1,6 @@
 # observable validity：判据测的是不是它以为的那个量
 
-- **状态**：设计第三稿 · 2026-10-02 · **未实现**
+- **状态**：设计第三稿 · 2026-10-02 · **已实现**：接线测试 `fd52ae2`，M7 `023fe0a`，险情 B 回放 `tests/test_calibration_replay.py`；O1 暂缓（§4）
 - **落点**：`judgement-design.json` 的第七问 **M7（估计器校准）**，由现有的 `judgement_design` 闸门检查；前置一条 freeze 接线测试
 - **工作计划**：[`observable-validity-plan.md`](observable-validity-plan.md)
 - **上游证据**：my-research 的 4 起**险情**（§1）
