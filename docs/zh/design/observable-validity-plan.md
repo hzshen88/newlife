@@ -1,6 +1,6 @@
 # 工作计划：observable validity
 
-- **状态**：计划 · 2026-10-02 · 阶段 0 进行中
+- **状态**：计划 · 2026-10-02 · 阶段 0 已完成（`fd52ae2`）· 阶段 1 进行中
 - **设计**：[`gate-observable-validity.md`](gate-observable-validity.md)（第三稿）
 - **顺序**：阶段 0 → 阶段 1 → 阶段 2。每个阶段单独提交，中断后从最后一个绿的验收点续接
 

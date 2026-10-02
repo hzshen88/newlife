@@ -42,10 +42,24 @@ themselves.
           "budget":   {"max_n": 256, "seconds_per_sample": 2.0},   // M5
           "heavy_tail": {"detected": true, "evidence": "...",      // M6
                          "consequence": "..."},
-          "result":   {"n": 64, "power_curve": [[4, 0.10], [8, 0.28]]}
+          "result":   {"n": 64, "power_curve": [[4, 0.10], [8, 0.28]]},
+          "calibration": {"truth": -2.0,                           // M7
+                          "family": "...", "samples": "log10_tof@truth",
+                          "bias_accepted": null}
         }
       ]
     }
+
+**`calibration` (M7) asks whether the estimator reads the truth.** Run it on synthetic data
+whose answer is known from a different function family — an analytic result, not this
+estimator's own output — and put the raw readings, one per seed, in the pilot file under
+`samples` (a flat list). The gate takes their location with the quantity's own M2
+statistic, and compares the distance to `truth` with M1's `effect`: an estimator biased by
+as much as the effect cannot tell the effect from its own bias. When the bias is that large
+and the reading is still worth having, `bias_accepted` says why. When no estimator stands
+between the run and the number, `{"not_applicable": "why"}` instead. Why it exists: a
+critical-exponent fit once read +0.0325 above a known truth, while the effect it was meant
+to explain was about 0.03 — the claim and the bias were the same number.
 
 **`power_curve` is required, not decorative.** A bare N hides whether the answer was
 comfortable or marginal; the curve is what lets a reader see that 64 scraped past 0.80
@@ -67,7 +81,7 @@ METHODS = ("bootstrap_power",)
 REQUIRED_TOP = ("schema", "pilot", "sampling", "applicability", "quantities")
 REQUIRED_QUANTITY = ("name", "points", "effect", "location", "spread", "errors",
                      "derivation", "budget", "heavy_tail", "independence",
-                     "pilot_adequacy", "result")
+                     "pilot_adequacy", "result", "calibration")
 
 SUPPORTED_FORMS = ("two_group_location_shift",)
 """**What this derivation actually covers.** One form: two groups, compared on a location
@@ -183,4 +197,37 @@ def shape_problems(d: dict) -> list[str]:
         if "power_curve" in result and not result["power_curve"]:
             out.append(f"{where}: power_curve is empty — a bare N hides whether it "
                        f"scraped past the target or cleared it")
+        if "calibration" in q:
+            names = {x.get("name") for x in quantities}
+            out += [f"{where}: calibration{p}" for p in calibration_shape(q["calibration"], names)]
+    return out
+
+
+def calibration_shape(cal, quantity_names: set) -> list[str]:
+    """M7 is one of two shapes: a known truth with readings, or a reason there is none."""
+    if not isinstance(cal, dict):
+        return [" must be an object"]
+    if "not_applicable" in cal:
+        if set(cal) != {"not_applicable"}:
+            return [" mixes not_applicable with a calibration — say one or the other"]
+        if not str(cal["not_applicable"] or "").strip():
+            return [".not_applicable is empty — say why no estimator stands between the "
+                    "run and the number; it is not judged, but it is required"]
+        return []
+    out: list[str] = []
+    if not isinstance(cal.get("truth"), (int, float)) or isinstance(cal.get("truth"), bool):
+        out.append(".truth must be a number — the known answer the readings are compared with")
+    if not str(cal.get("family") or "").strip():
+        out.append(".family is empty — say where the truth comes from and why it is not "
+                   "this estimator's own output; calibrating an estimator against itself "
+                   "proves nothing")
+    samples = cal.get("samples")
+    if not isinstance(samples, str) or not samples.strip():
+        out.append(".samples must name the pilot-file key holding the raw readings")
+    elif samples in quantity_names:
+        out.append(f".samples={samples!r} is a quantity's own key — the readings on known "
+                   f"truth go under a key of their own")
+    accepted = cal.get("bias_accepted")
+    if accepted is not None and not str(accepted).strip():
+        out.append(".bias_accepted is empty — null when not needed, a reason when it is")
     return out

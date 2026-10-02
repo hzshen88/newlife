@@ -233,7 +233,7 @@ def reproduction_class_gate(folder: Path) -> str | None:
     """Rule seven at the freeze. Returns the class that applied, or None when refused.
 
     One anchor decides everything: `seeded` and `stochastic` worlds must account for their
-    repetition count in `judgement-design.json` (the six questions, and an N that re-derives
+    repetition count in `judgement-design.json` (the seven questions, and an N that re-derives
     from them); `deterministic` owes nothing beyond S0 as written. An absent or untouched
     anchor is treated as deterministic and said aloud, so that the default is never silent.
     """
@@ -324,7 +324,7 @@ def freeze(folder: Path, *, cwd: Path, data: tuple[Path, ...] = ()) -> int:
     if reproduction_class is None:
         raise SystemExit(
             "The repetition count is not accounted for (above), so the freeze is refused.\n"
-            f"Answer the six questions in {judgement_design.DESIGN_FILE} beside prereg.md\n"
+            f"Answer the seven questions in {judgement_design.DESIGN_FILE} beside prereg.md\n"
             "(newlife-prereg rule seven); the freeze pins that file with the criteria.")
     # Two scans of the runner that used to live in `newlife check`, advisory. A criterion
     # that is true by construction, or a parse failure that falls back to a convenient

@@ -9,10 +9,12 @@ nothing was asking where the number came from.
 So the design lives in `judgement-design.json` (see `newlife.stochastic.schema` for the
 shape and for why it is a file rather than an anchor), and this gate makes two passes:
 
-1. **Shape** — are the six answers there, one set per measured quantity, each with its
+1. **Shape** — are the seven answers there, one set per measured quantity, each with its
    reason written out.
 2. **Consistency** — re-run the power analysis from `effect`, `location`, `alpha`, `beta`
-   and the pilot samples. The N that comes out must equal the declared one.
+   and the pilot samples. The N that comes out must equal the declared one. And (M7) take
+   the estimator's readings on known truth, compute their location with the quantity's own
+   statistic, and compare the distance to the truth with `effect`.
 
 **The first pass never judges an answer.** Whether 2.0 is the right effect to care about
 is a scientific judgement, and checking it needs a referee who understands the question
@@ -57,7 +59,7 @@ def load(folder: pathlib.Path) -> tuple[dict | None, list[str]]:
     if not path.exists():
         return None, [
             f"no {DESIGN_FILE} — a stochastic registration must say where its repetition "
-            f"count came from. Six answers per measured quantity; see "
+            f"count came from. Seven answers per measured quantity; see "
             f"`newlife.stochastic.schema` for the shape."]
     try:
         return json.loads(path.read_text(encoding="utf-8")), []
@@ -94,6 +96,44 @@ def tail_crosscheck(d: dict, pilot: dict) -> list[str]:
     return [x for x in out if x]
 
 
+def calibration_problems(d: dict, pilot: dict) -> list[str]:
+    """M7: is the estimator's bias on known truth smaller than the effect it must resolve?
+
+    **The bias is computed here, never typed.** A design that wrote `bias: 0.01` next to its
+    effect would be a log, not a measurement; the readings are the measurement. Their
+    location is taken with the quantity's own M2 statistic, so effect and bias are measured
+    with one ruler. Whether the truth is really independent of the estimator is not judged —
+    `family` puts the claim on the record, and that is all a gate can do.
+    """
+    from newlife.stochastic.equivalence import LOCATION
+    out: list[str] = []
+    for q in d["quantities"]:
+        cal = q.get("calibration") or {}
+        if "not_applicable" in cal:
+            continue
+        name, key = q["name"], cal["samples"]
+        readings = pilot.get(key)
+        if (not isinstance(readings, list) or not readings
+                or not all(isinstance(x, (int, float)) and not isinstance(x, bool)
+                           for x in readings)):
+            out.append(f"{name}: calibration.samples={key!r} names no list of readings in "
+                       f"{d['pilot']} — without the readings the bias is an assertion")
+            continue
+        kind = q["location"]["statistic"]
+        estimate = LOCATION[kind](readings)
+        bias = abs(estimate - float(cal["truth"]))
+        effect = float(q["effect"]["value"])
+        if bias >= effect and not str(cal.get("bias_accepted") or "").strip():
+            out.append(
+                f"{name}: on known truth {cal['truth']} the estimator reads {estimate:.6g} "
+                f"({kind} of {len(readings)} readings) — a bias of {bias:.6g}, not smaller "
+                f"than the effect {effect:.6g} it must resolve. **The effect and the "
+                f"estimator's own bias are then the same number.** Fix the estimator, or "
+                f"say on the record why the reading is still worth having: "
+                f"calibration.bias_accepted.")
+    return out
+
+
 def consistency_problems(d: dict, folder: pathlib.Path) -> list[str]:
     """Re-derive N for every quantity. **This half cannot be satisfied by typing.**"""
     from newlife.stochastic.design import required_n
@@ -105,6 +145,7 @@ def consistency_problems(d: dict, folder: pathlib.Path) -> list[str]:
     pilot = json.loads(pilot_path.read_text(encoding="utf-8"))
     out: list[str] = []
     out += tail_crosscheck(d, pilot)
+    out += calibration_problems(d, pilot)
     for q in d["quantities"]:
         name = q["name"]
         by_point = pilot.get(name)
@@ -181,6 +222,9 @@ def _complete() -> dict:
             "independence": {"assumed": "iid", "evidence": "each call is issued independently, with no shared state"},
             "pilot_adequacy": {"min_per_point": 40, "why": ""},
             "result": {"n": 64, "power_curve": [[4, 0.1], [8, 0.3], [64, 0.83]]},
+            "calibration": {"truth": -2.0, "family": "a synthetic rate law with a known "
+                            "closed-form turnover, not this fit's output",
+                            "samples": "log10_tof@truth", "bias_accepted": None},
         }],
     }
 
@@ -206,7 +250,7 @@ def _selftest() -> int:
 
     import copy
     for field in ("effect", "location", "spread", "errors", "derivation", "budget",
-                  "heavy_tail", "result", "points"):
+                  "heavy_tail", "result", "points", "calibration"):
         d = copy.deepcopy(_complete())
         del d["quantities"][0][field]
         case(f"missing {field}", d, True)
@@ -257,6 +301,42 @@ def _selftest() -> int:
                                             "why": "the remote service rate-limits; eight is the whole budget"}
     case("a thin pilot argued on the record", d, False)
 
+    # M7, shape
+    d = copy.deepcopy(_complete())
+    d["quantities"][0]["calibration"] = {"not_applicable": "read directly off the counter"}
+    case("calibration not applicable, with a reason", d, False)
+    d = copy.deepcopy(_complete())
+    d["quantities"][0]["calibration"] = {"not_applicable": " "}
+    case("calibration not applicable, no reason", d, True)
+    d = copy.deepcopy(_complete())
+    d["quantities"][0]["calibration"]["family"] = ""
+    case("calibration with no word on where the truth comes from", d, True)
+    d = copy.deepcopy(_complete())
+    d["quantities"][0]["calibration"]["not_applicable"] = "x"
+    case("calibration that is both given and not applicable", d, True)
+    d = copy.deepcopy(_complete())
+    d["quantities"][0]["calibration"]["samples"] = "log10_tof"
+    case("calibration readings under the quantity's own key", d, True)
+
+    # M7, the arithmetic — a pure function of the design and the pilot file
+    def arith(name: str, d: dict, pilot: dict, want_red: bool) -> None:
+        nonlocal ok
+        red = bool(calibration_problems(d, pilot))
+        good = red == want_red
+        ok &= good
+        print(f"  [{'RED' if red else 'green'}] {name}"
+              f"{'' if good else '  <-- expected the opposite'}")
+
+    near = {"log10_tof@truth": [-2.3, -1.9, -2.1, -1.8, -2.2]}       # bias ~0.06 < 2.0
+    far = {"log10_tof@truth": [0.1, 0.4, 0.2, 0.3, 0.0]}             # bias ~2.2 >= 2.0
+    arith("bias well inside the effect", _complete(), near, False)
+    arith("bias as large as the effect, not accepted", _complete(), far, True)
+    d = copy.deepcopy(_complete())
+    d["quantities"][0]["calibration"]["bias_accepted"] = "only the sign is used downstream"
+    arith("bias as large as the effect, accepted on the record", d, far, False)
+    arith("readings absent from the pilot file", _complete(), {}, True)
+    arith("readings that are not numbers", _complete(), {"log10_tof@truth": ["a"]}, True)
+
     print(f"  [{'green' if ok else 'RED'}] selftest: every omission red, "
           f"the complete design green")
     return 0 if ok else 1
@@ -277,7 +357,8 @@ def main(argv: list[str] | None = None) -> int:
     if problems:
         print(f"\nThe repetition count is not accounted for: {len(problems)} item(s).")
         return 1
-    print("Judgement design: every quantity answers the six, and each n re-derives.")
+    print("Judgement design: every quantity answers the seven, each n re-derives, and "
+          "each estimator's bias on known truth is below its effect or accepted.")
     return 0
 
 

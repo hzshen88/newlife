@@ -3,6 +3,30 @@
 `proofroot` and `newlife` are released together under one version from one tag; `exloop`
 has its own version and its own repository. Dates are the PyPI upload dates.
 
+## Unreleased
+
+### Added
+
+- **M7, the seventh judgement-design question: does the estimator read the truth?** Each
+  quantity in `judgement-design.json` now carries `calibration`: a known truth from a
+  different function family, and the estimator's raw readings on it in the pilot file. The
+  freeze takes their location with the quantity's own M2 statistic and refuses when the
+  distance to the truth is not smaller than M1's effect, unless `bias_accepted` says why
+  the reading is still worth having. The bias is computed, never typed. Only `seeded` and
+  `stochastic` questions are affected; `goal.md` and `prereg.md` are unchanged.
+- A test that every shipped gate is called by `freeze` or `run`, or exempted with a reason.
+  Each gate's selftest already proved it could go red; nothing proved it was called.
+
+### Migration
+
+- **An unfrozen `seeded` or `stochastic` question will be refused at the freeze until each
+  quantity has `calibration`.** Add the readings, or
+  `"calibration": {"not_applicable": "<why no estimator stands between the run and the number>"}`.
+- Frozen questions are not re-checked. Re-running a frozen runner that calls
+  `judgement_design.check` on its own design file under this version will report the missing
+  field — that run is under a different newlife source than the one its record names, so it
+  is not a reproduction of that record.
+
 ## 0.1.5 — 2026-10-02
 
 ### Added

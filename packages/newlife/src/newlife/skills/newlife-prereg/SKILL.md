@@ -72,7 +72,7 @@ where rule three's blind unit comes from.)
 |---|---|---|
 | **what you measure, and which way you expect it** | H1's direction, the counterparty, which mutation would turn it red (`newlife-goal` §3, piece 4) | **fixed.** Changing it after seeing the pilot is HARKing, however reasonable the reason sounds |
 | **how you measure** | the statistic, the construction of the null, the sweep range of a nuisance parameter, regularisation strength | **must be free to move** — calibrating this is what the pilot is *for* |
-| **where the line falls** | thresholds, N, power | **the pilot fixes the value; how it would be fixed was written down beforehand** (rule seven, M1–M6) |
+| **where the line falls** | thresholds, N, power | **the pilot fixes the value; how it would be fixed was written down beforehand** (rule seven, M1–M7) |
 
 > **One line: the pilot may change how you measure, not what you measure or which way you
 > expect it to go.**
@@ -255,14 +255,15 @@ for two other kinds, so state which one you are in.
 
 `seeded` and `stochastic` owe a repetition count, and **there is no rule that supplies it**:
 it depends on the effect worth detecting, the shape of the noise and what a sample costs.
-**Before writing `judgement-design.json`, read `references/design.md`** — the six questions
-(M1–M6) whose answers determine N, why the statistic is chosen before N, why N comes from a
+**Before writing `judgement-design.json`, read `references/design.md`** — the seven questions
+(M1–M6 determine N; M7 checks that the estimator reads the truth), why the statistic is chosen before N, why N comes from a
 bootstrap power analysis and not a formula, and the scope (two groups compared on a
 location statistic; not trends, not proportions, not more than two groups).
 
 **The freeze runs this check** when the `@reproduction_class` anchor in `prereg.md` says
-`seeded` or `stochastic`: the six answers must be present with their reasons, and **the
-declared N must re-derive from the premises stated next to it**; the freeze pins
+`seeded` or `stochastic`: the seven answers must be present with their reasons, **the
+declared N must re-derive from the premises stated next to it**, and the estimator's bias
+on known truth must be smaller than the effect or accepted on the record; the freeze pins
 `judgement-design.json` with the criteria. It never judges whether an effect size is the
 right one to care about — that would need a referee who understands the question better
 than the person asking, and there is none. An anchor left as the template's placeholder is

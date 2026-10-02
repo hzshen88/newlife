@@ -16,7 +16,7 @@ discriminating design, not a second plan document.
 
 Use an effect size, interval, power calculation or multiplicity correction when the claim
 and data require them. Do not force these onto a deterministic invariant or formal
-counterexample. For seeded/stochastic two-group comparisons, the existing M1-M6 design in
+counterexample. For seeded/stochastic two-group comparisons, the existing M1-M7 design in
 `design.md` remains the required NewLife mechanism for choosing repeats.
 
 ## Prove the pipeline before freezing it

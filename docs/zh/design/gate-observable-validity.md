@@ -106,7 +106,7 @@
 
 ### 3.7 兼容
 
-- 已冻结的问题不再走 freeze，不受影响（本仓 `questions/` 下五个均已冻结）。
+- 已冻结的问题不再走 freeze，不受影响（本仓 `questions/` 下五个均已冻结）。**一个例外要说清**：`2026-09-06-judgement-design-method` 的 runner 在 S4 里对自己的设计文件调用 `judgement_design.check`，并要求它返回空。在新版本下重跑这个 runner，S4 会因缺 `calibration` 变红。这不算复现失败——它的 `summary.json` 记着当时的 `newlife_source_sha256`，换一版 newlife 源码重跑，本来就不是在复现那份记录；冻结的设计文件也不追溯补写。没有任何测试或脚本会重跑它（`scripts/check_record.py` 只核对记录）。
 - 未冻结的 `seeded` / `stochastic` 问题升级后会因缺 `calibration` 被拦——`CHANGELOG.md` 写迁移说明：补读数，或写 `not_applicable` 与理由。
 
 ---

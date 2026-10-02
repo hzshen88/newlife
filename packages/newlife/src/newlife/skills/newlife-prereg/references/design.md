@@ -1,8 +1,9 @@
 # Designing the repetition count (rule seven)
 
 Read before writing `judgement-design.json`. The freeze runs `newlife.gates.judgement_design`
-for `seeded` and `stochastic` worlds: the six answers below must be present with their reasons,
-and the declared N must re-derive from them.
+for `seeded` and `stochastic` worlds: the seven answers below must be present with their reasons,
+the declared N must re-derive from them, and the estimator's bias on known truth must sit below
+the effect.
 
 `seeded` and `stochastic` both owe a repetition count, and **there is no rule that supplies
 it**. It depends on the effect you care about, on the shape of your noise, and on what a
@@ -15,11 +16,12 @@ registration; the freeze pins it with the criteria):
 | | | Why it cannot be skipped |
 |---|---|---|
 | **M1** | The **effect worth detecting**, in your quantity's own units | Without a target, a convergence rule has nothing to aim at and ends up asking a proxy |
-| **M2** | Which **location statistic** is compared, and which estimates spread — **plus why it suits your data's shape** | The heaviest-consequence answer of the six; see below |
+| **M2** | Which **location statistic** is compared, and which estimates spread — **plus why it suits your data's shape** | The heaviest-consequence answer of the seven; see below |
 | **M3** | The false-alarm and miss rates you accept | "It could not be detected" is uninterpretable without them |
 | **M4** | How N follows from M1–M3 | So a reader can re-derive it rather than take it |
 | **M5** | The budget past which you declare the question **undecidable for now** | Without a ceiling the method returns a number nobody can run and nobody admits to |
 | **M6** | Whether the data is heavy-tailed, and if so why M2 is still defensible | Measured, not asserted — the gate cross-checks it |
+| **M7** | What the **estimator reads on known truth**: run it on synthetic data whose answer comes from a different function family (an analytic result, not this estimator's output), and put the raw readings in the pilot file — or say why no estimator stands between the run and the number | An estimator biased by as much as the effect cannot tell the effect from its own bias. The gate takes the readings' location with your M2 statistic and compares the distance to the truth with M1; when it is not smaller, fix the estimator or say why the reading is still worth having (`bias_accepted`) |
 
 **The order matters: shape first, then statistic, then N.** The regular bootstrap fails to
 estimate the distribution of a sample *mean* under heavy tails, while robust locations keep
